@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>자투리마켓 (Jaturi Market) - 산업용 자투리·잉여 자재 맞춤재단 전문 쇼핑몰</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --brand: #277381;
+      --brand-dark: #1d5863;
+      --brand-light: #eef6f7;
+      --brand-border: #b8d8de;
+      --price-red: #e03131;
+      --accent-orange: #d9480f;
+      --bg-body: #ffffff;
+      --bg-gray: #f8f9fa;
+      --bg-subtle: #f1f3f5;
+      --text-primary: #212529;
+      --text-secondary: #495057;
+      --text-muted: #868e96;
+      --border-color: #dee2e6;
+      --border-strong: #ced4da;
+      --border-dark: #343a40;
+      --font-sans: 'Pretendard', 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Consolas', 'Courier New', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-sans); background-color: var(--bg-body); color: var(--text-primary); font-size: 13px; line-height: 1.45; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font-family: inherit; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+
+    /* TOP UTILITY BAR */
+    .util-bar { background: var(--bg-gray); border-bottom: 1px solid var(--border-color); font-size: 12px; color: var(--text-secondary); }
+    .util-inner { max-width: 1280px; margin: 0 auto; padding: 0 16px; height: 34px; display: flex; justify-content: space-between; align-items: center; }
+    .util-links { display: flex; align-items: center; gap: 12px; list-style: none; }
+    .util-links li { display: flex; align-items: center; gap: 12px; }
+    .util-links li + li::before { content: ""; display: inline-block; width: 1px; height: 10px; background: var(--border-strong); }
+    .util-btn { background: none; border: none; font-size: 12px; color: var(--text-secondary); cursor: pointer; padding: 2px 4px; }
+    .util-btn:hover { color: var(--brand); text-decoration: underline; }
+    
+    .role-switch-group { display: inline-flex; background: #fff; border: 1px solid var(--border-strong); border-radius: 3px; overflow: hidden; }
+    .role-switch-btn { border: none; background: #fff; color: var(--text-secondary); font-size: 11.5px; font-weight: 600; padding: 4px 10px; cursor: pointer; border-right: 1px solid var(--border-color); transition: background 0.15s; }
+    .role-switch-btn:last-child { border-right: none; }
+    .role-switch-btn.active { background: var(--brand); color: #fff; }
+
+    /* MAIN BRAND HEADER */
+    .main-header { background: #fff; padding: 20px 0 18px; }
+    .header-grid { display: grid; grid-template-columns: 270px 1fr 250px; align-items: center; gap: 24px; }
+    @media (max-width: 980px) {
+      .header-grid { grid-template-columns: 1fr; gap: 14px; padding: 0 8px; }
+      .header-quick-icons { justify-content: flex-start !important; margin-top: 6px; }
+    }
+    .brand-box { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .brand-title-wrap .mall-tag { font-size: 11px; color: var(--brand); font-weight: 700; display: block; margin-bottom: 2px; }
+    .brand-title-wrap h1 { font-size: 24px; font-weight: 800; color: var(--text-primary); line-height: 1.1; }
+    .brand-title-wrap p { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; }
+
+    .search-area { max-width: 580px; width: 100%; margin: 0 auto; }
+    .search-form-box { display: flex; border: 2px solid var(--brand); border-radius: 3px; height: 42px; background: #fff; overflow: hidden; }
+    .search-scope { border: none; border-right: 1px solid var(--border-color); padding: 0 12px; font-size: 12.5px; color: var(--text-secondary); background: var(--bg-gray); outline: none; cursor: pointer; }
+    .search-input-main { flex: 1; border: none; padding: 0 14px; font-size: 13.5px; outline: none; min-width: 0; }
+    .search-submit-btn { width: 48px; background: var(--brand); color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    .header-quick-icons { display: flex; justify-content: flex-end; gap: 18px; }
+    .quick-icon-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 11.5px; font-weight: 600; position: relative; }
+    .quick-icon-btn svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.7; fill: none; }
+
+    /* PARTNER BANNER */
+    .partner-banner-section { background: var(--bg-subtle); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 12px 0; margin-bottom: 20px; }
+    .partner-banner-inner { max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; gap: 12px; overflow-x: auto; }
+    .partner-card-banner { min-width: 260px; background: #fff; border: 1px solid var(--border-color); padding: 10px 14px; display: flex; align-items: center; gap: 12px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); cursor: pointer; transition: border-color 0.15s; }
+    .partner-card-banner:hover { border-color: var(--brand); }
+    .partner-card-banner img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-color); flex-shrink: 0; }
+    .partner-card-info .p-name { font-size: 13px; font-weight: 800; color: var(--text-primary); }
+    .partner-card-info .p-items { font-size: 11.5px; color: var(--brand); font-weight: 700; margin-top: 2px; }
+
+    /* GNB BAR */
+    .gnb-bar { background: #fff; border-top: 1px solid var(--border-color); border-bottom: 2px solid var(--brand); position: sticky; top: 0; z-index: 90; }
+    .gnb-inner { max-width: 1280px; margin: 0 auto; padding: 0 16px; height: 46px; display: flex; align-items: center; justify-content: space-between; }
+    .gnb-left { display: flex; align-items: center; height: 100%; overflow-x: auto; }
+    .all-cat-btn { height: 100%; background: var(--brand); color: #fff; border: none; padding: 0 20px; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 10px; cursor: pointer; margin-right: 16px; white-space: nowrap; flex-shrink: 0; }
+    .gnb-nav { display: flex; align-items: center; gap: 4px; list-style: none; height: 100%; white-space: nowrap; }
+    .gnb-link { height: 100%; padding: 0 14px; border: none; background: none; font-size: 13.5px; font-weight: 700; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; border-bottom: 2px solid transparent; }
+    .gnb-link:hover, .gnb-link.active { color: var(--brand); }
+    .spec-tag-outline { border: 1px solid var(--brand-border); background: var(--brand-light); color: var(--brand-dark); padding: 4px 10px; border-radius: 3px; font-weight: 700; font-size: 11.5px; cursor: pointer; white-space: nowrap; }
+    @media (max-width: 980px) { .gnb-right-meta { display: none; } }
+
+    /* MAIN CONTENT & RESPONSIVE LAYOUT */
+    .main-wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 48px; }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+
+    .shop-workspace { display: grid; grid-template-columns: 1fr 440px; gap: 20px; align-items: start; }
+    @media (max-width: 1100px) {
+      .shop-workspace { grid-template-columns: 1fr; }
+      .calc-sheet { position: static !important; margin-top: 24px; }
+    }
+
+    .section-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dark); padding-bottom: 10px; margin-bottom: 14px; }
+    .section-bar h3 { font-size: 16px; font-weight: 800; }
+    .section-bar .count-num { color: var(--brand); font-family: var(--font-mono); }
+
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    .prd-card { border: 1px solid var(--border-color); background: #fff; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; transition: border-color 0.15s; }
+    .prd-card:hover { border-color: var(--brand); }
+    .prd-card.selected { border: 2px solid var(--brand); box-shadow: 0 3px 10px rgba(39, 115, 129, 0.14); }
+    .prd-thumb { height: 120px; background: #f8f9fa; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; position: relative; }
+    .prd-info { padding: 12px 14px 14px; }
+    .prd-name { font-size: 13.5px; font-weight: 700; margin-bottom: 8px; }
+    .sale-price { font-size: 16px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono); }
+
+    /* CALCULATOR SHEET & CAD VIEWER */
+    .calc-sheet { border: 2px solid var(--border-dark); background: #fff; position: sticky; top: 56px; }
+    .calc-sheet-head { background: var(--border-dark); color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .calc-sheet-body { padding: 16px; }
+    .selected-item-box { background: var(--bg-gray); border: 1px solid var(--border-color); padding: 10px 12px; margin-bottom: 12px; }
+    .order-type-tabs { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border-strong); margin-bottom: 12px; }
+    .type-tab { padding: 9px; border: none; background: var(--bg-gray); color: var(--text-secondary); font-size: 12.5px; font-weight: 700; cursor: pointer; text-align: center; }
+    .type-tab.active { background: var(--brand); color: #fff; }
+
+    .cut-input-table { width: 100%; border-collapse: collapse; border: 1px solid var(--border-color); margin-bottom: 10px; font-size: 12px; }
+    .cut-input-table th { background: var(--bg-gray); padding: 7px 10px; text-align: left; border-right: 1px solid var(--border-color); font-weight: 700; width: 34%; }
+    .cut-input-table td { padding: 5px 8px; }
+    .unit-input-wrap { display: flex; align-items: center; gap: 6px; }
+    .unit-input-wrap input { width: 100%; padding: 6px; border: 1px solid var(--border-strong); font-family: var(--font-mono); font-weight: 700; text-align: right; }
+    .unit-label { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-secondary); width: 28px; }
+
+    .status-msg-box { padding: 8px 10px; font-size: 12px; margin-bottom: 10px; border: 1px solid; line-height: 1.45; }
+    .status-msg-box.ok { background: #ebfbee; border-color: #b2f2bb; color: #2b8a3e; }
+    .status-msg-box.err { background: #fff5f5; border-color: #ffc9c9; color: #c92a2a; }
+
+    .cad-viewer { border: 1px solid var(--border-strong); background: #ffffff; margin-bottom: 12px; }
+    .cad-viewer-bar { background: var(--bg-gray); border-bottom: 1px solid var(--border-color); padding: 6px 10px; display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-mono); color: var(--text-secondary); }
+    .cad-canvas { height: 150px; display: flex; align-items: center; justify-content: center; background-image: linear-gradient(to right, #f1f3f5 1px, transparent 1px), linear-gradient(to bottom, #f1f3f5 1px, transparent 1px); background-size: 16px 16px; overflow: hidden; }
+
+    .price-calc-table { width: 100%; border-collapse: collapse; border-top: 1px solid var(--border-strong); margin-bottom: 12px; font-size: 12px; }
+    .price-calc-table td { padding: 6px 4px; border-bottom: 1px solid var(--bg-subtle); }
+    .price-calc-table td.val { text-align: right; font-family: var(--font-mono); font-weight: 700; }
+    .total-pay-bar { background: var(--brand-light); border: 1px solid var(--brand-border); padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .total-pay-bar .amt { font-size: 20px; font-weight: 800; color: var(--price-red); font-family: var(--font-mono); }
+
+    .calc-btn-row { display: grid; grid-template-columns: 1fr 1.25fr; gap: 8px; }
+    .btn-mall { padding: 11px 12px; font-size: 13px; font-weight: 700; border-radius: 2px; cursor: pointer; text-align: center; border: 1px solid transparent; }
+    .btn-mall-white { background: #fff; border-color: var(--border-strong); color: var(--text-primary); }
+    .btn-mall-brand { background: var(--brand); color: #fff; }
+    .btn-mall-dark { background: var(--border-dark); color: #fff; }
+
+    /* ERP & TABLES */
+    .erp-header-box { border: 1px solid var(--border-strong); border-top: 2px solid var(--brand); background: #fff; padding: 16px 20px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .seller-split { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+    @media (max-width: 1024px) { .seller-split { grid-template-columns: 1fr; } }
+    .erp-box { border: 1px solid var(--border-color); background: #fff; margin-bottom: 20px; }
+    .erp-box-head { background: var(--bg-gray); border-bottom: 1px solid var(--border-color); padding: 11px 16px; font-size: 14px; font-weight: 800; }
+    .erp-box-body { padding: 16px; }
+    .form-row { margin-bottom: 12px; }
+    .form-row label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+    .erp-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 2px; font-size: 12.5px; }
+
+    /* MODALS */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .modal-backdrop.open { display: flex; }
+    .modal-win { background: #fff; border: 1px solid var(--border-dark); max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-close-btn { position: absolute; top: 14px; right: 16px; border: 1px solid var(--border-color); background: #fff; width: 28px; height: 28px; font-size: 16px; cursor: pointer; }
+
+    .auth-type-tabs { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border-strong); margin-bottom: 16px; }
+    .auth-tab { padding: 10px; border: none; background: var(--bg-gray); font-weight: 700; cursor: pointer; text-align: center; }
+    .auth-tab.active { background: var(--brand); color: #fff; }
+
+    .quote-sheet { border: 2px solid #000; padding: 22px; background: #fff; color: #000; }
+    .quote-header-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 16px; }
+    .quote-title { font-size: 24px; font-weight: 900; letter-spacing: 8px; }
+
+    .toast-wrap { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+    .toast-msg { background: #212529; color: #fff; padding: 11px 16px; border-left: 4px solid var(--brand); font-size: 12.5px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+  </style>
+</head>
+<body>
+
+  <!-- 1. TOP UTILITY BAR -->
+  <div class="util-bar no-print">
+    <div class="util-inner">
+      <ul class="util-links">
+        <li><button class="util-btn" onclick="showToast('즐겨찾기에 추가되었습니다.')">즐겨찾기 추가</button></li>
+        <li><button class="util-btn" onclick="openAuthModal('signup')">회원가입</button></li>
+        <li><button class="util-btn" id="top-auth-btn" onclick="openAuthModal('login')" style="color:var(--brand); font-weight:700;">로그인</button></li>
+        <li><button class="util-btn" onclick="switchRole('mypage')" style="font-weight:700; color:var(--accent-orange);">마이페이지</button></li>
+      </ul>
+
+      <div style="display:flex; align-items:center; gap:14px;">
+        <span id="logged-in-user-badge" style="font-weight:700; color:var(--text-secondary);">비로그인 상태</span>
+        <div class="role-switch-group" role="tablist">
+          <button class="role-switch-btn active" id="tab-buyer" onclick="switchRole('buyer')">구매자 쇼핑몰</button>
+          <button class="role-switch-btn" id="tab-seller" onclick="switchRole('seller')">공장 파트너센터</button>
+          <button class="role-switch-btn" id="tab-admin" onclick="switchRole('admin')">통합 어드민</button>
+          <button class="role-switch-btn" id="tab-mypage" onclick="switchRole('mypage')" style="background:#eef6f7; color:var(--brand);">마이페이지</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MAIN BRAND HEADER -->
+  <header class="main-header no-print">
+    <div class="container header-grid">
+      <div class="brand-box" onclick="switchRole('buyer')">
+        <div class="brand-title-wrap">
+          <span class="mall-tag">산업용 잉여·자투리 자재 맞춤재단 전문몰</span>
+          <h1>자투리마켓</h1>
+          <p>공장 직배송 B2B·메이커 오픈마켓</p>
+        </div>
+      </div>
+
+      <div class="search-area">
+        <div class="search-form-box">
+          <select class="search-scope" id="header-search-scope">
+            <option value="ALL">통합검색</option>
+            <option value="알루미늄">알루미늄</option>
+            <option value="스테인리스">스테인리스</option>
+          </select>
+          <input type="text" class="search-input-main" id="filter-search" placeholder="재질명, 규격, 상품코드를 입력하세요" oninput="renderCatalog()" />
+          <button class="search-submit-btn" onclick="renderCatalog()">검색</button>
+        </div>
+      </div>
+
+      <div class="header-quick-icons">
+        <button class="quick-icon-btn" onclick="openQuoteModal()">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>견적/명세서</span>
+        </button>
+        <button class="quick-icon-btn" onclick="switchRole('seller')">
+          <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <span>파트너센터</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- PARTNER COMPANY BANNER STRIP -->
+  <div class="partner-banner-section no-print">
+    <div class="partner-banner-inner" id="partner-banner-container"></div>
+  </div>
+
+  <!-- 3. GNB BAR -->
+  <nav class="gnb-bar no-print">
+    <div class="gnb-inner">
+      <div class="gnb-left">
+        <button class="all-cat-btn" onclick="setFilterCategory('ALL')">전체 카테고리</button>
+        <ul class="gnb-nav">
+          <li><button class="gnb-link active" onclick="setFilterCategory('ALL')">전체 자투리자재</button></li>
+          <li><button class="gnb-link" onclick="setFilterCategory('알루미늄')">알루미늄 (AL6061/5052)</button></li>
+          <li><button class="gnb-link" onclick="setFilterCategory('스테인리스')">스테인리스 (SUS304)</button></li>
+        </ul>
+      </div>
+      <div class="gnb-right-meta">
+        <button class="spec-tag-outline" onclick="openQuoteModal()">대학·연구실 카드결제 / 전자견적서 즉시발급</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 4. MAIN CONTAINER -->
+  <main class="main-wrap no-print">
+    <!-- VIEW 1: BUYER SHOPPING MALL -->
+    <section id="view-buyer" class="view-section active">
+      <div class="shop-workspace">
+        <div>
+          <div class="section-bar">
+            <h3>실시간 등록 자투리·잉여 자재 <span class="count-num" id="catalog-result-count">2</span>건</h3>
+          </div>
+          <div class="product-grid" id="material-grid"></div>
+        </div>
+
+        <aside class="calc-sheet">
+          <div class="calc-sheet-head">
+            <h3>맞춤 재단 치수 계산 및 주문서</h3>
+            <span>KERF 3.0mm 기준</span>
+          </div>
+          <div class="calc-sheet-body">
+            <div class="selected-item-box">
+              <div id="calc-mat-cat" style="font-size:11px; color:var(--text-secondary);">알루미늄</div>
+              <h4 id="calc-mat-name" style="font-size:13.5px; font-weight:800;">AL6061-T6 평판 자투리</h4>
+              <div id="calc-mat-spec" style="font-size:12px; font-weight:700; color:var(--brand);">규격: 600 × 400 × 10mm</div>
+            </div>
+
+            <div class="order-type-tabs">
+              <button class="type-tab active" id="mode-cut" onclick="setOrderMode('CUT')">맞춤 재단 주문</button>
+              <button class="type-tab" id="mode-raw" onclick="setOrderMode('RAW')">원판 그대로 구매</button>
+            </div>
+
+            <div id="custom-cut-controls">
+              <table class="cut-input-table">
+                <tbody>
+                  <tr><th>요청 가로 (W)</th><td><div class="unit-input-wrap"><input type="number" id="cut-w" value="250" min="20" max="3000" oninput="updateCalculator()" /><span class="unit-label">mm</span></div></td></tr>
+                  <tr><th>요청 세로 (L)</th><td><div class="unit-input-wrap"><input type="number" id="cut-l" value="180" min="20" max="3000" oninput="updateCalculator()" /><span class="unit-label">mm</span></div></td></tr>
+                  <tr><th>주문 수량</th><td><div class="unit-input-wrap"><input type="number" id="cut-qty" value="2" min="1" max="50" oninput="updateCalculator()" /><span class="unit-label">EA</span></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="status-msg-box ok" id="validation-box">
+              <strong>[유효성 검증 통과]</strong> 원판 1장 내에서 재단이 가능합니다.
+            </div>
+
+            <div class="cad-viewer">
+              <div class="cad-viewer-bar">
+                <span>2D 재단 배치 도면 (단위: mm)</span>
+                <span id="blueprint-yield">원판 활용률: 37.5%</span>
+              </div>
+              <div class="cad-canvas" id="blueprint-svg-wrap"></div>
+            </div>
+
+            <div class="form-row" style="margin-bottom:10px;">
+              <label for="buyer-org">연구실·기업명</label>
+              <input type="text" class="erp-input" id="buyer-org" value="미래자동차연구실" />
+            </div>
+
+            <table class="price-calc-table">
+              <tbody>
+                <tr><td id="cost-base-label">자투리 원판 공급가액</td><td class="val" id="cost-base-val">28,000원</td></tr>
+                <tr><td id="cost-cut-label">맞춤 재단 가공비</td><td class="val" id="cost-cut-val">8,000원</td></tr>
+                <tr><td>직배송 택배비</td><td class="val" id="cost-ship-val">4,000원</td></tr>
+                <tr><td>부가가치세 (VAT 10%)</td><td class="val" id="cost-vat-val">4,000원</td></tr>
+              </tbody>
+            </table>
+
+            <div class="total-pay-bar">
+              <span class="lbl" style="font-weight:800; color:var(--brand-dark);">총 결제예정금액</span>
+              <span class="amt" id="cost-total-val">44,000원</span>
+            </div>
+
+            <div class="calc-btn-row">
+              <button class="btn-mall btn-mall-white" onclick="openQuoteModal()">견적서 / 명세서</button>
+              <button class="btn-mall btn-mall-brand" onclick="openPaymentModal()">바로 구매하기 (포트원 결제)</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- VIEW 2: SELLER PARTNER CENTER -->
+    <section id="view-seller" class="view-section">
+      <div class="erp-header-box">
+        <div>
+          <h2 style="font-size:18px; font-weight:800;">공장 파트너 센터</h2>
+          <p style="font-size:12.5px; color:var(--text-secondary);">기업 회원 전용 — 자재 등록 및 맞춤 재단 발주서 확인</p>
+        </div>
+      </div>
+      <div class="seller-split">
+        <div class="erp-box">
+          <div class="erp-box-head"><span>자투리 상품 등록</span></div>
+          <div class="erp-box-body">
+            <form onsubmit="handleSellerRegister(event)">
+              <div class="form-row"><label>카테고리</label><input type="text" class="erp-input" id="reg-cat" value="알루미늄" required /></div>
+              <div class="form-row"><label>상품명</label><input type="text" class="erp-input" id="reg-name" value="AL6061 자투리 판재" required /></div>
+              <div class="form-row"><label>가로 / 세로 / 두께 (mm)</label><input type="text" class="erp-input" id="reg-w" value="500" required /></div>
+              <div class="form-row"><label>가격 (원)</label><input type="number" class="erp-input" id="reg-price" value="30000" required /></div>
+              <button type="submit" class="btn-mall btn-mall-brand" style="width:100%;">자재 등록하기</button>
+            </form>
+          </div>
+        </div>
+        <div class="erp-box">
+          <div class="erp-box-head"><span>접수 발주서 대장</span></div>
+          <div class="erp-box-body" id="seller-order-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: ADMIN CONSOLE -->
+    <section id="view-admin" class="view-section">
+      <div class="erp-header-box">
+        <div><h2 style="font-size:18px; font-weight:800;">통합 어드민</h2></div>
+      </div>
+      <div class="erp-box">
+        <div class="erp-box-head"><span>플랫폼 통합 현황</span></div>
+        <div class="erp-box-body">
+          <div style="font-size:15px; font-weight:700;">총 거래액(GMV): <span id="admin-kpi-gmv" style="color:var(--brand);">0원</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: MY PAGE -->
+    <section id="view-mypage" class="view-section">
+      <div class="erp-header-box">
+        <div>
+          <h2 style="font-size:18px; font-weight:800;">마이페이지</h2>
+          <p style="font-size:12.5px; color:var(--text-secondary);" id="mypage-subtitle">회원 정보 및 주문 내역 관리</p>
+        </div>
+        <button class="btn-mall btn-mall-white" onclick="logoutUser()">로그아웃</button>
+      </div>
+
+      <div id="mypage-container-body"></div>
+    </section>
+  </main>
+
+  <!-- ================= MODALS ================= -->
+
+  <div class="modal-backdrop no-print" id="authModal">
+    <div class="modal-win">
+      <button class="modal-close-btn" onclick="closeModal('authModal')">×</button>
+      <h3 id="auth-modal-title" style="font-size:18px; font-weight:800; margin-bottom:12px;">회원가입</h3>
+      
+      <div style="background:var(--brand-light); border:1px solid var(--brand-border); padding:10px; margin-bottom:14px; display:flex; gap:8px;">
+        <button class="btn-mall btn-mall-brand" style="flex:1; font-size:11.5px; padding:7px;" onclick="loginAsTestUser('buyer')">개인 테스트 (김철수)</button>
+        <button class="btn-mall btn-mall-dark" style="flex:1; font-size:11.5px; padding:7px;" onclick="loginAsTestUser('seller')">기업 테스트 (시화정밀)</button>
+      </div>
+
+      <div class="auth-type-tabs" id="auth-role-tabs">
+        <button class="auth-tab active" id="auth-type-buyer" onclick="setAuthRole('BUYER')">개인 회원 (구매자)</button>
+        <button class="auth-tab" id="auth-type-seller" onclick="setAuthRole('SELLER')">기업 회원 (공장 파트너)</button>
+      </div>
+
+      <div class="form-row"><label>아이디 (이메일)</label><input type="email" class="erp-input" id="auth-id" placeholder="user@university.ac.kr" required /></div>
+      <div class="form-row"><label>비밀번호</label><input type="password" class="erp-input" id="auth-pw" placeholder="비밀번호 입력" required /></div>
+      
+      <div id="seller-extra-fields" style="display:none; background:var(--bg-gray); border:1px solid var(--border-color); padding:10px; margin-bottom:12px;">
+        <div class="form-row"><label>공장 상호명 (회사명)</label><input type="text" class="erp-input" id="auth-biz-name" placeholder="(주)시화정밀가공" /></div>
+        <div class="form-row"><label>사업자등록번호</label><input type="text" class="erp-input" id="auth-biz-no" placeholder="124-81-XXXXX" /></div>
+        <div class="form-row" style="margin-bottom:0;"><label>보유 설비 및 권역</label><input type="text" class="erp-input" id="auth-biz-equip" placeholder="시흥공단 / 레이저 절단기" /></div>
+      </div>
+
+      <button class="btn-mall btn-mall-brand" style="width:100%; padding:12px; font-size:14px;" id="auth-submit-btn" onclick="processAuthAction()">가입 완료 및 로그인</button>
+      
+      <div style="text-align:center; margin-top:12px; font-size:12px;">
+        <span id="auth-toggle-text">이미 계정이 있으신가요?</span>
+        <button class="util-btn" style="color:var(--brand); font-weight:700;" onclick="toggleAuthMode()">로그인하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 파트너 회사 상세 소개 팝업 모달 -->
+  <div class="modal-backdrop no-print" id="partnerModal">
+    <div class="modal-win" style="max-width:560px;">
+      <button class="modal-close-btn" onclick="closeModal('partnerModal')">×</button>
+      <div id="partner-modal-body"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="quoteModal">
+    <div class="modal-win">
+      <button class="modal-close-btn no-print" onclick="closeModal('quoteModal')">×</button>
+      <div class="quote-sheet" id="printable-doc-area"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop no-print" id="paymentModal">
+    <div class="modal-win" style="max-width:480px;">
+      <button class="modal-close-btn" onclick="closeModal('paymentModal')">×</button>
+      <h3 style="font-size:17px; font-weight:800; margin-bottom:12px;">PortOne 통합 결제 및 입금</h3>
+      <div id="payment-summary-box" style="background:var(--bg-gray); border:1px solid var(--border-color); padding:12px; margin-bottom:14px; font-size:12.5px;"></div>
+      
+      <div class="form-row">
+        <label>결제 수단 선택</label>
+        <select class="erp-input" id="pg-method-select" onchange="togglePaymentFields(this.value)">
+          <option value="card">법인카드 / 연구비 신용카드</option>
+          <option value="trans">실시간 계좌이체</option>
+          <option value="vbank">가상계좌 (무통장 입금)</option>
+        </select>
+      </div>
+
+      <div id="vbank-notice-box" style="display:none; background:#fff9db; border:1px solid #ffe066; padding:10px; font-size:12px; margin-bottom:12px;">
+        <strong>[가상계좌 발급 안내]</strong> 국민은행 앞으로 입금 시 자동 확인됩니다.
+      </div>
+
+      <button class="btn-mall btn-mall-brand" style="width:100%; padding:13px; font-size:14px;" onclick="confirmOrderPayment()">결제 승인 및 맞춤 재단 발주</button>
+    </div>
+  </div>
+
+  <div class="toast-wrap no-print" id="toast-container"></div>
+
+  <script>
+    let currentUser = null; 
+    let authMode = 'signup'; 
+    let selectedAuthRole = 'BUYER'; 
+
+    let partnerCompanies = [
+      { id: 'p1', name: '시화정밀가공 파트너', items: '알루미늄 합금 (AL6061/5052)', logo: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&auto=format&fit=crop&q=60', address: '경기도 시흥시 공단로 210 (시화공단)', phone: '031-432-8899', equip: 'CNC 밴드쏘, 레이저 절단기, 샤링기', intro: '정밀 금속 가공 20년 경력! 신속한 맞춤 재단과 직배송을 약속드립니다.' },
+      { id: 'p2', name: '남동 스틸테크', items: '스테인리스 스틸 (SUS304/316)', logo: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=100&auto=format&fit=crop&q=60', address: '인천광역시 남동구 남동공단로 115', phone: '032-811-3322', equip: '고속 파이프 절단기, 샤링기', intro: '스테인리스 평판 및 파이프 전문 가공 공장입니다.' },
+      { id: 'p3', name: '문래 메이커스 가공소', items: '아크릴 및 플라스틱', logo: 'https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?w=100&auto=format&fit=crop&q=60', address: '서울특별시 영등포구 문래로 80', phone: '02-2634-1100', equip: '레이저각인기, 아크릴 절곡기', intro: '실험실 챔버 및 투명 아크릴 커버 맞춤 제작 전문!' },
+      { id: 'p4', name: '사상 비철금속 센터', items: '무산소동(C1100) 버스바', logo: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=100&auto=format&fit=crop&q=60', address: '부산광역시 사상구 낙동대로 1420', phone: '051-311-9988', equip: '동판 프레스, 밴드쏘', intro: '전기·전자 부품용 동판 및 버스바 재단 전문.' }
+    ];
+
+    function renderPartnerBanner() {
+      const container = document.getElementById('partner-banner-container');
+      if (!container) return;
+      container.innerHTML = partnerCompanies.map(p => `
+        <div class="partner-card-banner" onclick="openPartnerModal('${p.id}')">
+          <img src="${p.logo}" alt="${p.name}" />
+          <div class="partner-card-info">
+            <div class="p-name">${p.name}</div>
+            <div class="p-items">주력: ${p.items}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openPartnerModal(id) {
+      const p = partnerCompanies.find(item => item.id === id);
+      if (!p) return;
+      const pMaterials = materials.filter(m => m.partner === p.name);
+
+      document.getElementById('partner-modal-body').innerHTML = `
+        <div style="display:flex; align-items:center; gap:16px; border-bottom:2px solid var(--border-dark); padding-bottom:14px; margin-bottom:14px;">
+          <img src="${p.logo}" alt="${p.name}" style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:2px solid var(--brand);" />
+          <div>
+            <h3 style="font-size:18px; font-weight:800; color:var(--text-primary);">${p.name}</h3>
+            <div style="font-size:12px; color:var(--brand); font-weight:700; margin-top:2px;">주력 품목: ${p.items}</div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; margin-bottom:14px;">
+          <div><strong>출고 주소:</strong> ${p.address || '등록된 주소 없음'}</div>
+          <div><strong>연락처:</strong> ${p.phone || '010-XXXX-XXXX'}</div>
+          <div><strong>보유 설비:</strong> ${p.equip || '일반 절단 설비'}</div>
+          <div style="background:var(--bg-gray); padding:10px; border:1px solid var(--border-color); margin-top:4px;">
+            <strong>[공장 소개]</strong><br/>
+            ${p.intro || '등록된 소개글이 없습니다.'}
+          </div>
+        </div>
+        <div style="font-weight:700; margin-bottom:6px; font-size:13.5px;">현재 등록된 판매 자재 (${pMaterials.length}건)</div>
+        <div style="display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto;">
+          ${pMaterials.length === 0 ? '<div style="font-size:12px; color:var(--text-muted);">현재 등록된 자재가 없습니다.</div>' : pMaterials.map(m => `
+            <div style="border:1px solid var(--border-color); padding:8px 10px; font-size:12px; display:flex; justify-content:space-between; align-items:center;">
+              <span><strong>${m.name}</strong> (${m.w}×${m.l}×${m.t}mm)</span>
+              <span style="color:var(--price-red); font-weight:700;">${m.price.toLocaleString()}원</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      document.getElementById('partnerModal').classList.add('open');
+    }
+
+    function openAuthModal(mode) {
+      authMode = mode;
+      document.getElementById('auth-modal-title').textContent = (mode === 'signup') ? '회원가입' : '로그인';
+      document.getElementById('auth-submit-btn').textContent = (mode === 'signup') ? '가입 완료 및 로그인' : '로그인하기';
+      document.getElementById('authModal').classList.add('open');
+    }
+
+    function setAuthRole(role) {
+      selectedAuthRole = role;
+      document.getElementById('auth-type-buyer').classList.toggle('active', role === 'BUYER');
+      document.getElementById('auth-type-seller').classList.toggle('active', role === 'SELLER');
+      document.getElementById('seller-extra-fields').style.display = (role === 'SELLER') ? 'block' : 'none';
+    }
+
+    function toggleAuthMode() {
+      authMode = (authMode === 'signup') ? 'login' : 'signup';
+      openAuthModal(authMode);
+    }
+
+    function loginAsTestUser(type) {
+      if (type === 'buyer') {
+        currentUser = { email: 'buyer@test.com', role: 'BUYER', name: '김철수 (개인 연구원)', phone: '010-1234-5678', address: '서울특별시 성동구 성수이로 88' };
+        showToast('개인 테스트 계정(김철수)으로 로그인되었습니다.');
+        switchRole('buyer');
+      } else {
+        currentUser = { email: 'seller@test.com', role: 'SELLER', name: '시화정밀가공 파트너', bizNo: '124-81-99201', address: '경기도 시흥시 공단로 210 (시화공단)', equip: 'CNC 밴드쏘, 레이저 절단기, 샤링기', intro: '정밀 금속 가공 20년 경력! 신속한 맞춤 재단과 직배송을 약속드립니다.', logo: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&auto=format&fit=crop&q=60' };
+        showToast('기업 테스트 계정(시화정밀가공)으로 로그인되었습니다.');
+        switchRole('seller');
+      }
+      saveStateToStorage();
+      updateAuthUI();
+      closeModal('authModal');
+    }
+
+    function processAuthAction() {
+      const email = document.getElementById('auth-id').value.trim();
+      if (!email) { showToast('아이디를 입력해주세요.'); return; }
+      currentUser = selectedAuthRole === 'SELLER' ? {
+        email, role: 'SELLER', name: document.getElementById('auth-biz-name').value || '시화정밀가공 파트너', bizNo: '107-86-XXXXX', address: '경기도 안산시', equip: '레이저 절단기', intro: '최고 품질 공급', logo: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&auto=format&fit=crop&q=60'
+      } : {
+        email, role: 'BUYER', name: email.split('@')[0], phone: '010-9999-8888', address: 'KAIST 연구실'
+      };
+      
+      if (currentUser.role === 'SELLER') {
+        const exist = partnerCompanies.find(p => p.name === currentUser.name);
+        if (!exist) {
+          partnerCompanies.push({ id: 'p' + Date.now(), name: currentUser.name, items: '맞춤형 산업 자재', logo: currentUser.logo || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=100&auto=format&fit=crop&q=60', address: currentUser.address, phone: '010-0000-0000', equip: currentUser.equip, intro: currentUser.intro });
+        }
+      }
+
+      saveStateToStorage();
+      closeModal('authModal');
+      updateAuthUI();
+      renderPartnerBanner();
+      showToast(`환영합니다! [${currentUser.name}]님.`);
+      switchRole(currentUser.role === 'SELLER' ? 'seller' : 'buyer');
+    }
+
+    function updateAuthUI() {
+      const badge = document.getElementById('logged-in-user-badge');
+      const topBtn = document.getElementById('top-auth-btn');
+      if (currentUser) {
+        badge.textContent = `[${currentUser.role === 'SELLER' ? '기업회원' : '개인회원'}] ${currentUser.name}`;
+        topBtn.textContent = '로그아웃';
+        topBtn.onclick = logoutUser;
+      } else {
+        badge.textContent = '비로그인 상태';
+        topBtn.textContent = '로그인';
+        topBtn.onclick = () => openAuthModal('login');
+      }
+    }
+
+    function logoutUser() {
+      currentUser = null;
+      saveStateToStorage();
+      updateAuthUI();
+      switchRole('buyer');
+      showToast('로그아웃되었습니다.');
+    }
+
+    let selectedMaterialId = 'MAT-101';
+    let orderMode = 'CUT';
+    let currentCalcResult = null;
+
+    const materials = [
+      { id: 'MAT-101', code: 'JM-101', category: '알루미늄', name: 'AL6061-T6 압연 알루미늄 평판 자투리', partner: '시화정밀가공 파트너', region: '경기 시흥', w: 600, l: 400, t: 10, stock: 4, marketPrice: 68000, price: 28000, cuttable: true, cutFeePerCut: 2000, dispatch: '당일발송' },
+      { id: 'MAT-102', code: 'JM-102', category: '스테인리스', name: 'SUS304 2B 스테인리스 평판 잔여재', partner: '남동 스틸테크', region: '인천 남동', w: 800, l: 500, t: 4, stock: 6, marketPrice: 85000, price: 36000, cuttable: true, cutFeePerCut: 2500, dispatch: '당일발송' }
+    ];
+
+    const orders = [
+      { id: 'ORD-01', date: '2026-10-14', buyer: '김철수 (개인 연구원)', partner: '시화정밀가공 파트너', materialName: 'AL6061-T6', cutSpec: '220×150mm (4EA)', totalAmount: 44000, status: 'RECEIVED', method: '법인카드', settled: false }
+    ];
+
+    function switchRole(role) {
+      if ((role === 'seller' || role === 'admin') && (!currentUser || currentUser.role !== 'SELLER')) {
+        showToast('기업 회원(공장 파트너) 전용 페이지입니다. 로그인 후 이용해주세요.');
+        openAuthModal('login');
+        return;
+      }
+      document.querySelectorAll('.role-switch-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+
+      if (role === 'buyer') document.getElementById('tab-buyer').classList.add('active');
+      if (role === 'seller') document.getElementById('tab-seller').classList.add('active');
+      if (role === 'admin') document.getElementById('tab-admin').classList.add('active');
+      if (role === 'mypage') document.getElementById('tab-mypage').classList.add('active');
+
+      document.getElementById(`view-${role}`).classList.add('active');
+
+      if (role === 'buyer') { renderCatalog(); updateCalculator(); }
+      if (role === 'seller') renderSellerDashboard();
+      if (role === 'admin') renderAdminDashboard();
+      if (role === 'mypage') renderMyPage();
+    }
+
+    function showToast(msg) {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = 'toast-msg';
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    function setFilterCategory(cat) { switchRole('buyer'); }
+
+    function renderCatalog() {
+      const grid = document.getElementById('material-grid');
+      grid.innerHTML = materials.map(m => `
+        <article class="prd-card ${m.id === selectedMaterialId ? 'selected' : ''}" onclick="selectMaterial('${m.id}')">
+          <div class="prd-thumb"><div style="font-weight:700; color:var(--brand);">${m.category}</div></div>
+          <div class="prd-info">
+            <h4 class="prd-name">${m.name}</h4>
+            <div class="sale-price">${m.price.toLocaleString()}원</div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function selectMaterial(id) {
+      selectedMaterialId = id;
+      renderCatalog();
+      updateCalculator();
+    }
+
+    function setOrderMode(mode) {
+      orderMode = mode;
+      document.getElementById('custom-cut-controls').style.display = (mode === 'CUT') ? 'block' : 'none';
+      updateCalculator();
+    }
+
+    function updateCalculator() {
+      const mat = materials.find(m => m.id === selectedMaterialId) || materials[0];
+      const baseCost = mat.price;
+      const shipCost = 4000;
+
+      let cutCost = 0;
+      let cutCount = 0;
+      let platesNeeded = 1;
+
+      if (orderMode === 'RAW') {
+        cutCost = 0;
+        renderBlueprintSVG(mat, mat.w, mat.l, 1, 1, 1, true);
+      } else {
+        let reqW = parseInt(document.getElementById('cut-w').value, 10) || 0;
+        let reqL = parseInt(document.getElementById('cut-l').value, 10) || 0;
+        let reqQty = parseInt(document.getElementById('cut-qty').value, 10) || 1;
+        const valBox = document.getElementById('validation-box');
+
+        const kerf = 3;
+        let rotated = false;
+        if (reqW > mat.w || reqL > mat.l) {
+          if (reqW <= mat.l && reqL <= mat.w) { rotated = true; } 
+          else {
+            valBox.className = 'status-msg-box err';
+            valBox.innerHTML = `<strong>[치수 초과]</strong> 요청 규격이 원판 크기보다 큽니다.`;
+            return;
+          }
+        }
+
+        const effW = rotated ? reqL : reqW;
+        const effL = rotated ? reqW : reqL;
+        const cols = Math.max(1, Math.floor((mat.w + kerf) / (effW + kerf)));
+        const rows = Math.max(1, Math.floor((mat.l + kerf) / (effL + kerf)));
+        const maxPerPlate = cols * rows;
+        platesNeeded = Math.ceil(reqQty / maxPerPlate);
+
+        if (platesNeeded > mat.stock) {
+          valBox.className = 'status-msg-box err';
+          valBox.innerHTML = `<strong>[재고 부족]</strong> 원판 ${platesNeeded}장 필요 (현재고 ${mat.stock}장)`;
+          return;
+        }
+
+        valBox.className = 'status-msg-box ok';
+        valBox.innerHTML = `<strong>[검증 통과]</strong> 원판 ${platesNeeded}장 소요 (절단 ${reqQty * 2}회)`;
+
+        cutCount = reqQty * 2;
+        cutCost = cutCount * (mat.cutFeePerCut || 2000);
+        
+        renderBlueprintSVG(mat, effW, effL, Math.min(reqQty, maxPerPlate), cols, rows, true);
+      }
+
+      const totalBase = baseCost * platesNeeded;
+      const vat = Math.round((totalBase + cutCost + shipCost) * 0.1);
+      const total = totalBase + cutCost + shipCost + vat;
+
+      document.getElementById('cost-base-label').textContent = `자투리 원판 공급가액 (${platesNeeded}장)`;
+      document.getElementById('cost-base-val').textContent = `${totalBase.toLocaleString()}원`;
+      document.getElementById('cost-cut-val').textContent = `${cutCost.toLocaleString()}원 (${cutCount}회)`;
+      document.getElementById('cost-vat-val').textContent = `${vat.toLocaleString()}원`;
+      document.getElementById('cost-total-val').textContent = `${total.toLocaleString()}원`;
+
+      currentCalcResult = { mat, mode: orderMode, platesNeeded, cutCount, total };
+    }
+
+    function renderBlueprintSVG(mat, pieceW, pieceL, piecesToShow, cols, rows, isValid) {
+      const wrap = document.getElementById('blueprint-svg-wrap');
+      const yieldEl = document.getElementById('blueprint-yield');
+      if (!isValid) { wrap.innerHTML = ''; yieldEl.textContent = '배치 불가'; return; }
+
+      const scale = Math.min(260 / mat.w, 110 / mat.l);
+      const drawW = Math.round(mat.w * scale);
+      const drawH = Math.round(mat.l * scale);
+      const startX = Math.round((320 - drawW) / 2);
+      const startY = 15;
+
+      const pw = Math.round(pieceW * scale);
+      const pl = Math.round(pieceL * scale);
+      const yieldPct = Math.min(100, ((pieceW * pieceL * piecesToShow) / (mat.w * mat.l)) * 100).toFixed(1);
+      yieldEl.textContent = `원판 활용률: ${yieldPct}%`;
+
+      let rects = '';
+      for (let i = 0; i < piecesToShow; i++) {
+        const c = i % cols;
+        const r = Math.floor(i / cols);
+        rects += `<rect x="${startX + c * (pw + 3)}" y="${startY + r * (pl + 3)}" width="${pw}" height="${pl}" fill="#d0ebff" stroke="#1971c2" stroke-width="1.2"/>`;
+      }
+
+      wrap.innerHTML = `
+        <svg width="320" height="140" viewBox="0 0 320 140">
+          <rect x="${startX}" y="${startY}" width="${drawW}" height="${drawH}" fill="#f8f9fa" stroke="#343a40" stroke-width="1.5" stroke-dasharray="4,4"/>
+          ${rects}
+          <text x="160" y="132" fill="#495057" font-size="10" font-family="monospace" text-anchor="middle">원판 기준규격: ${mat.w} × ${mat.l}mm</text>
+        </svg>
+      `;
+    }
+
+    function openQuoteModal() {
+      if (!currentCalcResult) return;
+      document.getElementById('printable-doc-area').innerHTML = `
+        <div class="quote-header-row"><div class="quote-title">견 적 서</div></div>
+        <div>품목: ${currentCalcResult.mat.name}</div>
+        <div>총 청구금액: ₩ ${currentCalcResult.total.toLocaleString()} 원 (VAT 포함)</div>
+      `;
+      document.getElementById('quoteModal').classList.add('open');
+    }
+
+    function openPaymentModal() {
+      if (!currentCalcResult) return;
+      document.getElementById('payment-summary-box').innerHTML = `
+        <div><b>상품명:</b> ${currentCalcResult.mat.name}</div>
+        <div style="color:var(--price-red); font-weight:800; margin-top:4px;">최종 결제금액: ${currentCalcResult.total.toLocaleString()}원</div>
+      `;
+      document.getElementById('paymentModal').classList.add('open');
+    }
+
+    function togglePaymentFields(val) {
+      document.getElementById('vbank-notice-box').style.display = (val === 'vbank') ? 'block' : 'none';
+    }
+
+    function confirmOrderPayment() {
+      const buyerOrg = document.getElementById('buyer-org').value || '구매자';
+      const methodVal = document.getElementById('pg-method-select').value;
+      const methodName = methodVal === 'card' ? '신용/법인카드' : (methodVal === 'trans' ? '실시간계좌이체' : '가상계좌(무통장)');
+      
+      const newOrder = {
+        id: `ORD-${Date.now().toString().slice(-6)}`,
+        date: '2026-10-14',
+        buyer: buyerOrg,
+        partner: currentCalcResult.mat.partner,
+        materialName: currentCalcResult.mat.name,
+        cutSpec: '맞춤 재단 주문',
+        totalAmount: currentCalcResult.total,
+        status: methodVal === 'vbank' ? '입금대기' : 'RECEIVED',
+        method: methodName,
+        settled: false
+      };
+
+      orders.unshift(newOrder);
+      saveStateToStorage();
+      closeModal('paymentModal');
+      showToast(`[결제 완료] 주문 [${newOrder.id}]이 접수되었습니다.`);
+    }
+
+    function handleSellerRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value;
+      const price = parseInt(document.getElementById('reg-price').value, 10);
+      materials.unshift({
+        id: `MAT-${Date.now()}`,
+        code: `JM-${Math.floor(Math.random()*90000+10000)}`,
+        category: document.getElementById('reg-cat').value,
+        name,
+        partner: currentUser ? currentUser.name : '시화정밀가공 파트너',
+        region: '경기 시흥',
+        w: 500, l: 300, t: 5, stock: 3,
+        marketPrice: price * 2, price,
+        cuttable: true, cutFeePerCut: 2000, dispatch: '당일발송'
+      });
+      saveStateToStorage();
+      renderCatalog();
+      showToast('자재가 성공적으로 등록되었습니다.');
+    }
+
+    function renderSellerDashboard() {
+      document.getElementById('seller-order-list').innerHTML = orders.map(o => `
+        <div style="border:1px solid var(--border-color); padding:10px; margin-bottom:8px;">
+          <strong>${o.id}</strong> | ${o.buyer} (${o.method}) | ${o.totalAmount.toLocaleString()}원
+          <div style="color:var(--brand); font-weight:700;">상태: ${o.status}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderAdminDashboard() {
+      const gmv = orders.reduce((acc, o) => acc + o.totalAmount, 0);
+      document.getElementById('admin-kpi-gmv').textContent = `${gmv.toLocaleString()}원`;
+    }
+
+    function renderMyPage() {
+      const container = document.getElementById('mypage-container-body');
+      if (!currentUser) {
+        document.getElementById('mypage-subtitle').textContent = '로그인이 필요한 서비스입니다.';
+        container.innerHTML = `<div style="text-align:center; padding:30px;"><button class="btn-mall btn-mall-brand" onclick="openAuthModal('login')">로그인하기</button></div>`;
+        return;
+      }
+      document.getElementById('mypage-subtitle').textContent = `접속 계정: ${currentUser.email} (${currentUser.role === 'SELLER' ? '기업회원' : '개인회원'})`;
+
+      if (currentUser.role === 'SELLER') {
+        container.innerHTML = `
+          <div class="seller-split">
+            <div class="erp-box">
+              <div class="erp-box-head"><span>기업 회원 정보 및 공장 프로필 수정</span></div>
+              <div class="erp-box-body">
+                <div class="form-row">
+                  <label>회사 로고 이미지 (JPG / PNG)</label>
+                  <input type="file" accept="image/jpeg, image/png" class="erp-input" id="mp-logo-file" onchange="previewLogo(event)" />
+                  <div style="margin-top:8px; text-align:center;">
+                    <img id="mp-logo-preview" src="${currentUser.logo || ''}" alt="로고 미리보기" style="max-height:80px; max-width:100%; border:1px solid var(--border-color); display:${currentUser.logo ? 'block' : 'none'}; margin:0 auto;" />
+                  </div>
+                </div>
+                <div class="form-row"><label>상호명</label><input type="text" class="erp-input" id="mp-biz-name" value="${currentUser.name || ''}" /></div>
+                <div class="form-row"><label>사업자번호</label><input type="text" class="erp-input" id="mp-biz-no" value="${currentUser.bizNo || ''}" /></div>
+                <div class="form-row"><label>출고 주소</label><input type="text" class="erp-input" id="mp-address" value="${currentUser.address || ''}" /></div>
+                <div class="form-row"><label>연락처</label><input type="text" class="erp-input" id="mp-phone" value="${currentUser.phone || '031-432-8899'}" /></div>
+                <div class="form-row"><label>보유 설비</label><input type="text" class="erp-input" id="mp-equip" value="${currentUser.equip || ''}" /></div>
+                <div class="form-row"><label>공장 소개글</label><textarea class="erp-input" id="mp-intro" rows="3">${currentUser.intro || ''}</textarea></div>
+                <button class="btn-mall btn-mall-brand" style="width:100%;" onclick="saveMyProfile()">정보 수정 저장</button>
+              </div>
+            </div>
+            <div class="erp-box">
+              <div class="erp-box-head"><span>수주 및 발주 내역</span></div>
+              <div class="erp-box-body">${orders.map(o => `<div>${o.id} -${o.totalAmount.toLocaleString()}원</div>`).join('')}</div>
+            </div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="seller-split">
+            <div class="erp-box">
+              <div class="erp-box-head"><span>개인 회원 배송지 정보</span></div>
+              <div class="erp-box-body">
+                <div class="form-row"><label>이름</label><input type="text" class="erp-input" id="mp-user-name" value="${currentUser.name || ''}" /></div>
+                <div class="form-row"><label>연락처</label><input type="text" class="erp-input" id="mp-user-phone" value="${currentUser.phone || ''}" /></div>
+                <div class="form-row"><label>배송지 주소</label><input type="text" class="erp-input" id="mp-user-address" value="${currentUser.address || ''}" /></div>
+                <button class="btn-mall btn-mall-brand" style="width:100%;" onclick="saveMyProfile()">배송지 저장</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    let tempLogoDataUrl = '';
+    function previewLogo(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        tempLogoDataUrl = evt.target.result;
+        const img = document.getElementById('mp-logo-preview');
+        img.src = tempLogoDataUrl;
+        img.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveMyProfile() {
+      if (!currentUser) return;
+      if (currentUser.role === 'SELLER') {
+        currentUser.name = document.getElementById('mp-biz-name').value;
+        currentUser.bizNo = document.getElementById('mp-biz-no').value;
+        currentUser.address = document.getElementById('mp-address').value;
+        currentUser.phone = document.getElementById('mp-phone').value;
+        currentUser.equip = document.getElementById('mp-equip').value;
+        currentUser.intro = document.getElementById('mp-intro').value;
+        if (tempLogoDataUrl) currentUser.logo = tempLogoDataUrl;
+
+        const p = partnerCompanies.find(item => item.name === currentUser.name || item.id === 'p1');
+        if (p) {
+          p.name = currentUser.name;
+          p.address = currentUser.address;
+          p.phone = currentUser.phone;
+          p.equip = currentUser.equip;
+          p.intro = currentUser.intro;
+          if (currentUser.logo) p.logo = currentUser.logo;
+        }
+      } else {
+        currentUser.name = document.getElementById('mp-user-name').value;
+        currentUser.phone = document.getElementById('mp-user-phone').value;
+        currentUser.address = document.getElementById('mp-user-address').value;
+      }
+      saveStateToStorage();
+      updateAuthUI();
+      renderPartnerBanner();
+      showToast('정보가 성공적으로 수정되었습니다.');
+    }
+
+    function openRfpModal() { document.getElementById('rfpModal').classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    function saveStateToStorage() {
+      try {
+        localStorage.setItem('jaturi_materials_v1', JSON.stringify(materials));
+        localStorage.setItem('jaturi_orders_v1', JSON.stringify(orders));
+        localStorage.setItem('jaturi_user_v1', JSON.stringify(currentUser));
+        localStorage.setItem('jaturi_partners_v1', JSON.stringify(partnerCompanies));
+      } catch (e) {}
+    }
+
+    function loadStateFromStorage() {
+      try {
+        const m = localStorage.getItem('jaturi_materials_v1');
+        const o = localStorage.getItem('jaturi_orders_v1');
+        const u = localStorage.getItem('jaturi_user_v1');
+        const p = localStorage.getItem('jaturi_partners_v1');
+        if (m) { materials.length = 0; JSON.parse(m).forEach(x => materials.push(x)); }
+        if (o) { orders.length = 0; JSON.parse(o).forEach(x => orders.push(x)); }
+        if (p) { partnerCompanies.length = 0; JSON.parse(p).forEach(x => partnerCompanies.push(x)); }
+        if (u) { currentUser = JSON.parse(u); updateAuthUI(); }
+      } catch (e) {}
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStateFromStorage();
+      renderPartnerBanner();
+      renderCatalog();
+      updateCalculator();
+    });
+  </script>
+</body>
+</html>
