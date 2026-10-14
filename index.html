@@ -1750,6 +1750,355 @@
       }
     }
 
+
+    /* ==========================================
+       GALAXY (360px) & IPHONE PERFECT MOBILE LAYOUT + PURE WHITE BG OVERRIDES
+       ========================================== */
+    html, body {
+      background-color: #ffffff !important;
+      width: 100% !important;
+      max-width: 100vw !important;
+      overflow-x: hidden !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    body.force-mobile-view {
+      background-color: #ffffff !important;
+    }
+    body.force-mobile-view .util-bar,
+    body.force-mobile-view .main-header,
+    body.force-mobile-view .partner-banner-section,
+    body.force-mobile-view .gnb-bar,
+    body.force-mobile-view .main-wrap,
+    body.force-mobile-view .mall-footer {
+      max-width: 100% !important;
+      width: 100% !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      background: #ffffff !important;
+      box-shadow: none !important;
+      overflow-x: hidden !important;
+    }
+    body.force-mobile-view .util-bar,
+    body.force-mobile-view .partner-banner-section,
+    body.force-mobile-view .mall-footer {
+      background: var(--bg-gray) !important;
+    }
+
+    /* Fix Galaxy 360px Search Bar & Container Overflow */
+    .container, .main-wrap, .header-grid, .search-area, .promo-grid, .shop-workspace, .seller-split {
+      max-width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+    }
+    .header-grid > *, .promo-grid > *, .shop-workspace > *, .seller-split > * {
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+    .search-form-box {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .search-scope {
+      max-width: 92px !important;
+      padding: 0 6px !important;
+      font-size: 12px !important;
+      flex-shrink: 0 !important;
+    }
+    .search-input-main {
+      flex: 1 1 0% !important;
+      width: 0 !important;
+      min-width: 0 !important;
+      padding: 0 10px !important;
+      font-size: 12.5px !important;
+    }
+
+    /* Fix Promo Banner Vertical Text Crushing (image_3.png issue) on ALL mobile/narrow widths & mobile mode */
+    .main-promo-banner {
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .promo-copy {
+      flex: 1 1 0% !important;
+      min-width: 0 !important;
+      word-break: keep-all !important;
+      overflow-wrap: break-word !important;
+    }
+    body.force-mobile-view .main-promo-banner {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      padding: 16px !important;
+      gap: 12px !important;
+    }
+    body.force-mobile-view .promo-copy {
+      width: 100% !important;
+      flex: none !important;
+    }
+    body.force-mobile-view .promo-metrics {
+      width: 100% !important;
+      border-left: none !important;
+      padding-left: 0 !important;
+      border-top: 1px solid var(--border-strong) !important;
+      padding-top: 12px !important;
+      display: grid !important;
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 6px !important;
+    }
+    body.force-mobile-view .spec-filter-table,
+    body.force-mobile-view .spec-filter-table tbody,
+    body.force-mobile-view .spec-filter-table tr,
+    body.force-mobile-view .spec-filter-table th,
+    body.force-mobile-view .spec-filter-table td {
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    body.force-mobile-view .spec-filter-table th {
+      border-right: none !important;
+      padding: 8px 12px !important;
+    }
+    body.force-mobile-view .spec-filter-table td {
+      padding: 10px 12px !important;
+    }
+
+    @media (max-width: 960px) {
+      .main-promo-banner {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 16px !important;
+        gap: 12px !important;
+      }
+      .promo-copy {
+        width: 100% !important;
+        flex: none !important;
+      }
+      .promo-metrics {
+        width: 100% !important;
+        border-left: none !important;
+        padding-left: 0 !important;
+        border-top: 1px solid var(--border-strong) !important;
+        padding-top: 12px !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+      }
+      .spec-filter-table,
+      .spec-filter-table tbody,
+      .spec-filter-table tr,
+      .spec-filter-table th,
+      .spec-filter-table td {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      .spec-filter-table th {
+        border-right: none !important;
+        padding: 8px 12px !important;
+      }
+      .spec-filter-table td {
+        padding: 10px 12px !important;
+      }
+      .util-inner {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 8px 12px !important;
+        gap: 8px !important;
+      }
+      .util-links {
+        justify-content: center !important;
+      }
+      .role-switch-group {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        width: 100% !important;
+      }
+      .role-switch-btn {
+        border-bottom: 1px solid var(--border-color) !important;
+        text-align: center !important;
+        justify-content: center !important;
+        padding: 6px 4px !important;
+        font-size: 11px !important;
+      }
+    }
+
+    /* ==========================================
+       Q&A BOARD & COUPANG-STYLE PRODUCT DETAIL (REVIEWS + SELLER Q&A) STYLES
+       ========================================== */
+    .qna-card {
+      border: 1px solid var(--border-color);
+      background: #fff;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      border-radius: 3px;
+    }
+    .qna-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--border-color);
+    }
+    .qna-question-box {
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.55;
+      margin-bottom: 10px;
+    }
+    .qna-answer-box {
+      background: var(--brand-light);
+      border: 1px solid var(--brand-border);
+      border-left: 3px solid var(--brand);
+      padding: 10px 14px;
+      font-size: 12.5px;
+      color: var(--text-primary);
+      margin-top: 8px;
+    }
+    .qna-reply-form {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .qna-reply-form input {
+      flex: 1 1 200px;
+      min-width: 0;
+    }
+    .coupang-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 2px solid var(--brand);
+      background: var(--bg-gray);
+      margin-bottom: 16px;
+    }
+    .coupang-tab-btn {
+      padding: 11px 8px;
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      background: var(--bg-gray);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-align: center;
+    }
+    .coupang-tab-btn.active {
+      background: var(--brand);
+      color: #fff;
+      border-color: var(--brand);
+    }
+    .review-item {
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 0;
+    }
+    .review-score-badge {
+      display: inline-block;
+      background: var(--brand);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 2px;
+      margin-right: 6px;
+    }
+
+
+    @media (max-width: 960px) {
+      .gnb-inner {
+        padding: 8px 12px !important;
+        overflow-x: hidden !important;
+        height: auto !important;
+      }
+      .gnb-left {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        height: auto !important;
+        gap: 6px !important;
+      }
+      .all-cat-btn {
+        width: 100% !important;
+        height: 36px !important;
+        justify-content: center !important;
+        margin-right: 0 !important;
+        border-radius: 3px !important;
+      }
+      .gnb-nav {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        width: 100% !important;
+        height: auto !important;
+        gap: 4px !important;
+      }
+      .gnb-nav li {
+        width: 100% !important;
+      }
+      .gnb-link {
+        width: 100% !important;
+        height: 34px !important;
+        justify-content: center !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 3px !important;
+        font-size: 12px !important;
+        padding: 0 6px !important;
+        background: var(--bg-gray) !important;
+      }
+      .gnb-link.active {
+        background: var(--brand-light) !important;
+        border-color: var(--brand) !important;
+        color: var(--brand-dark) !important;
+      }
+      #ctab-panel-qna form > div:first-child,
+      #ctab-panel-review form > div:first-child {
+        grid-template-columns: 1fr !important;
+      }
+    }
+    body.force-mobile-view .gnb-inner {
+      padding: 8px 12px !important;
+      overflow-x: hidden !important;
+      height: auto !important;
+    }
+    body.force-mobile-view .gnb-left {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+      width: 100% !important;
+      height: auto !important;
+      gap: 6px !important;
+    }
+    body.force-mobile-view .all-cat-btn {
+      width: 100% !important;
+      height: 36px !important;
+      justify-content: center !important;
+      margin-right: 0 !important;
+      border-radius: 3px !important;
+    }
+    body.force-mobile-view .gnb-nav {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      width: 100% !important;
+      height: auto !important;
+      gap: 4px !important;
+    }
+    body.force-mobile-view .gnb-nav li {
+      width: 100% !important;
+    }
+    body.force-mobile-view .gnb-link {
+      width: 100% !important;
+      height: 34px !important;
+      justify-content: center !important;
+      border: 1px solid var(--border-color) !important;
+      border-radius: 3px !important;
+      font-size: 12px !important;
+      padding: 0 6px !important;
+      background: var(--bg-gray) !important;
+    }
+
   </style>
 </head>
 <body>
@@ -1767,6 +2116,9 @@
         <div class="role-switch-group" role="tablist">
           <button class="role-switch-btn active" id="tab-buyer" onclick="switchRole('buyer')">
             구매자 쇼핑몰<span class="role-count" id="badge-catalog-count">(8)</span>
+          </button>
+          <button class="role-switch-btn" id="tab-qna" onclick="switchRole('qna')">
+            고객 Q&amp;A 게시판<span class="role-count" id="badge-qna-count">(3)</span>
           </button>
           <button class="role-switch-btn" id="tab-mypage" onclick="switchRole('mypage')">
             마이페이지<span class="role-count" id="badge-mypage-role">(미로그인)</span>
@@ -1884,6 +2236,7 @@
           <li><button class="gnb-link" data-cat="스테인리스" onclick="setFilterCategory('스테인리스')">스테인리스 (SUS304/316)</button></li>
           <li><button class="gnb-link" data-cat="아크릴·플라스틱" onclick="setFilterCategory('아크릴·플라스틱')">아크릴/엔지니어링 플라스틱</button></li>
           <li><button class="gnb-link" data-cat="구리·황동" onclick="setFilterCategory('구리·황동')">구리/황동/비철금속</button></li>
+          <li><button class="gnb-link" style="color:var(--brand-dark);" onclick="switchRole('qna')">고객 Q&amp;A 게시판</button></li>
         </ul>
       </div>
       <div class="gnb-right-meta">
@@ -1988,9 +2341,80 @@
         <div>
           <div class="section-bar">
             <h3>실시간 등록 자투리·잉여 자재 <span class="count-num" id="catalog-result-count">8</span>건</h3>
-            <span style="font-size:12px; color:var(--text-secondary);">품목 클릭 시 우측 <strong>[맞춤 재단 계산기]</strong>에 규격이 자동 입력됩니다.</span>
+            <span style="font-size:12px; color:var(--text-secondary);">품목 클릭 시 우측 계산기 및 하단 <strong>[상품 상세 · 구매후기 · 판매자 Q&amp;A]</strong>에 연동됩니다.</span>
           </div>
           <div class="product-grid" id="material-grid"></div>
+
+          <!-- 쿠팡 스타일 선택 상품 상세창 (상세스펙 + 구매후기 리뷰 + 구매자<->판매기업 상품 Q&A) -->
+          <div class="erp-box" id="product-detail-community-box" style="margin-top:24px; border-top:2px solid var(--border-dark);">
+            <div class="erp-box-head" style="background:#fff; border-bottom:1px solid var(--border-color); padding:14px 16px;">
+              <div>
+                <span style="font-size:11px; color:var(--brand); font-weight:700;" id="pdc-partner-label">판매기업: 동남정밀금속</span>
+                <h3 style="font-size:16px; font-weight:800; margin-top:2px;" id="pdc-title">[JM-100101] AL6061-T6 압연 알루미늄 평판 자투리</h3>
+              </div>
+              <span style="font-size:12px; color:var(--text-secondary);">선택된 상품의 리뷰와 판매자 문의를 확인하세요</span>
+            </div>
+
+            <div class="coupang-tabs">
+              <button type="button" class="coupang-tab-btn active" id="ctab-btn-qna" onclick="switchProductDetailTab('QNA')">
+                상품 Q&amp;A (판매기업 문의 <span id="pdc-qna-count">2</span>)
+              </button>
+              <button type="button" class="coupang-tab-btn" id="ctab-btn-review" onclick="switchProductDetailTab('REVIEW')">
+                구매후기 리뷰 (<span id="pdc-review-count">2</span>)
+              </button>
+              <button type="button" class="coupang-tab-btn" id="ctab-btn-spec" onclick="switchProductDetailTab('SPEC')">
+                상품 상세스펙 · 가공안내
+              </button>
+            </div>
+
+            <div class="erp-box-body" style="padding-top:4px;">
+              <!-- 탭 1: 구매자 <-> 판매자(기업) 상품 Q&A -->
+              <div id="ctab-panel-qna">
+                <div style="background:var(--bg-gray); border:1px solid var(--border-color); padding:12px 14px; margin-bottom:14px;">
+                  <div style="font-weight:800; font-size:13px; margin-bottom:6px;">이 상품을 판매하는 기업(<span id="pdc-ask-partner-name">동남정밀금속</span>)에게 문의하기</div>
+                  <form onsubmit="submitProductQna(event)">
+                    <div style="display:grid; grid-template-columns:140px 1fr; gap:8px; margin-bottom:8px;">
+                      <input type="text" class="erp-input" id="pqna-author" placeholder="작성자명 (예: 김연구)" required />
+                      <input type="text" class="erp-input" id="pqna-question" placeholder="재단 공차, 타공/절곡 추가 가공 가능 여부, 당일 발송 여부 등을 판매기업에 물어보세요." required />
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                      <span style="font-size:11.5px; color:var(--text-secondary);">* 등록된 질문에는 해당 판매기업(기업회원)이 직접 답변을 작성할 수 있습니다.</span>
+                      <button type="submit" class="btn-mall btn-mall-brand" style="padding:7px 16px; font-size:12px;">판매기업에 상품 문의 등록</button>
+                    </div>
+                  </form>
+                </div>
+                <div id="pdc-qna-list"></div>
+              </div>
+
+              <!-- 탭 2: 구매후기 (리뷰) -->
+              <div id="ctab-panel-review" style="display:none;">
+                <div style="background:var(--bg-gray); border:1px solid var(--border-color); padding:12px 14px; margin-bottom:14px;">
+                  <div style="font-weight:800; font-size:13px; margin-bottom:6px;">구매후기(리뷰) 작성하기</div>
+                  <form onsubmit="submitProductReview(event)">
+                    <div style="display:grid; grid-template-columns:120px 110px 1fr; gap:8px; margin-bottom:8px;">
+                      <input type="text" class="erp-input" id="prev-author" placeholder="작성자명" required />
+                      <select class="erp-input" id="prev-score">
+                        <option value="5.0">평점 5.0점</option>
+                        <option value="4.5">평점 4.5점</option>
+                        <option value="4.0">평점 4.0점</option>
+                      </select>
+                      <input type="text" class="erp-input" id="prev-spec" placeholder="주문 재단치수 (예: 250x180mm 2EA 맞춤재단)" required />
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                      <input type="text" class="erp-input" id="prev-content" placeholder="자재 표면 상태, 재단 치수 정밀도, 배송 속도에 대한 후기를 남겨주세요." style="flex:1;" required />
+                      <button type="submit" class="btn-mall btn-mall-brand" style="padding:7px 16px; font-size:12px;">리뷰 등록</button>
+                    </div>
+                  </form>
+                </div>
+                <div id="pdc-review-list"></div>
+              </div>
+
+              <!-- 탭 3: 상품 상세스펙 -->
+              <div id="ctab-panel-spec" style="display:none;">
+                <div id="pdc-spec-body"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Sticky Custom Cut Calculator & CAD Blueprint Sheet -->
@@ -2140,6 +2564,69 @@
       </div>
     </section>
 
+
+
+    <!-- ==========================================
+         VIEW 1-A: CUSTOMER <-> ADMIN Q&A BOARD (나(관리자)와 구매고객 소통 Q&A 게시판)
+         ========================================== -->
+    <section id="view-qna" class="view-section">
+      <div class="erp-header-box">
+        <div>
+          <h2 style="font-size:18px; font-weight:800;">고객 Q&amp;A 소통 게시판 (구매고객 <-> 자투리마켓 관리자)</h2>
+          <p style="font-size:12.5px; color:var(--text-secondary); margin-top:3px;">사이트 이용, 가상계좌 입금 확인, 연구비 거래명세서·견적서 발급, 입점 및 대량 재단 관련 문의를 남겨주시면 관리자가 직접 답변해 드립니다.</p>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span class="state-badge state-done">관리자 실시간 답변 운영중</span>
+        </div>
+      </div>
+
+      <div class="seller-split">
+        <!-- 좌측: 구매고객 질문 작성 폼 -->
+        <div class="erp-box">
+          <div class="erp-box-head">
+            <span>관리자에게 질문·문의 등록하기</span>
+            <span style="font-size:11px; color:var(--brand); font-weight:700;">누구나 작성 가능</span>
+          </div>
+          <div class="erp-box-body">
+            <form onsubmit="handleAdminQnaSubmit(event)">
+              <div class="form-row">
+                <label>문의 분류</label>
+                <select class="erp-input" id="aqna-category" required>
+                  <option value="가상계좌·결제·증빙">가상계좌 입금 / 연구비 증빙·견적서 문의</option>
+                  <option value="맞춤재단·규격문의">맞춤 재단 규격 / 시세 계산기 문의</option>
+                  <option value="배송·화물문의">공장 직배송 / 화물 택배 문의</option>
+                  <option value="파트너입점·기타">파트너 공장 입점 / 기타 운영자 문의</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label>작성자 성명 (소속)</label>
+                <input type="text" class="erp-input" id="aqna-author" placeholder="예: 김연구 (울산대 실험실)" required />
+              </div>
+              <div class="form-row">
+                <label>문의 제목</label>
+                <input type="text" class="erp-input" id="aqna-title" placeholder="문의 제목을 입력해 주세요" required />
+              </div>
+              <div class="form-row">
+                <label>문의 상세 내용</label>
+                <textarea class="erp-input" id="aqna-content" rows="4" placeholder="관리자에게 문의하실 내용을 자세히 적어주세요." required></textarea>
+              </div>
+              <button type="submit" class="btn-mall btn-mall-brand" style="width:100%;">Q&amp;A 게시판에 질문 등록하기</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- 우측: 전체 Q&A 게시글 목록 & 관리자(나) 답변 작성 영역 -->
+        <div>
+          <div class="erp-box">
+            <div class="erp-box-head">
+              <span>전체 Q&amp;A 게시글 및 관리자 답변 내역 (<span id="admin-qna-total-count">3</span>건)</span>
+              <span style="font-size:11.5px; color:var(--text-secondary);">관리자 답글 입력창에 답변을 적고 [관리자 답변 등록]을 누르면 즉시 반영됩니다.</span>
+            </div>
+            <div class="erp-box-body" id="admin-qna-list-container"></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- ==========================================
          VIEW 1-B: MYPAGE (개인/기업 맞춤 마이페이지 및 주문내역 확인)
@@ -3705,6 +4192,408 @@
     // =========================================================================
     // 6. 카탈로그 및 실시간 시세 반영 맞춤재단 계산기
     // =========================================================================
+
+    // =========================================================================
+    // 11. 관리자 <-> 구매고객 소통 Q&A 게시판 및 판매제품창(쿠팡형 리뷰 · 판매기업 Q&A)
+    // =========================================================================
+    let activeProductDetailTab = 'QNA';
+
+    const adminQnaPosts = [
+      {
+        id: 'AQNA-03',
+        category: '가상계좌·결제·증빙',
+        title: '대학교 산학협력단 연구비 카드로 결제 시 거래명세서와 견적서 발급이 바로 되나요?',
+        author: '김연구 (울산모빌리티연구실)',
+        date: '2026-10-14 16:40',
+        content: '실험실 시제품 브라켓 제작용으로 AL6061 10T 맞춤 재단을 주문하려고 합니다. 행정실 제출용 견적서와 거래명세서를 바로 출력할 수 있는지 궁금합니다.',
+        answer: '안녕하세요, 자투리마켓 관리자입니다. 우측 맞춤 재단 계산기 하단의 [견적서 / 거래명세서] 버튼을 누르시면 수신처명이 기입된 표준 양식을 PDF 인쇄 또는 PNG 이미지로 즉시 발급받으실 수 있습니다.',
+        answeredAt: '2026-10-14 16:55'
+      },
+      {
+        id: 'AQNA-02',
+        category: '맞춤재단·규격문의',
+        title: '원판에서 필요한 치수만큼만 재단할 때 가격 계산은 어떻게 되나요?',
+        author: '박메이커 (개인회원)',
+        date: '2026-10-14 14:15',
+        content: '600x400mm 원판 전체가 다 필요하지 않고 200x150mm 2장만 필요한데, 잔여 자투리를 공장에서 자체 폐기하는 조건으로 주문하면 재단 면적만큼만 계산되나요?',
+        answer: '네 맞습니다. 계산기 옵션에서 [재단 면적만큼만 최저시세 결제 (잔여분 폐기)]를 선택하시면 요청하신 가로x세로 치수와 수량의 실제 중량(kg)에 비례하여 자투리 최저 시세로 자동 감액 계산됩니다.',
+        answeredAt: '2026-10-14 14:30'
+      },
+      {
+        id: 'AQNA-01',
+        category: '파트너입점·기타',
+        title: '금속 가공 공장인데 자투리 자재 판매 파트너로 입점하려면 어떻게 하나요?',
+        author: '이대표 (정밀가공업)',
+        date: '2026-10-14 11:10',
+        content: '레이저 절단 후 남는 A급 SUS304 및 알루미늄 잔여 판재가 매주 발생합니다. 기업 회원으로 가입하면 바로 물품을 올릴 수 있나요?',
+        answer: '상단 [회원가입]에서 [기업 파트너 회원 가입] 탭을 선택해 가입하시면, 마이페이지에서 회사 로고·주소·보유 장비를 설정하고 자투리 판매 물품을 즉시 업로드하실 수 있습니다.',
+        answeredAt: '2026-10-14 11:25'
+      }
+    ];
+
+    const productQnaPosts = [
+      {
+        id: 'PQNA-101',
+        materialId: 'MAT-101',
+        author: '김연구 (울산대 실험실)',
+        date: '2026-10-14 15:20',
+        question: '250x180mm 2장 맞춤 재단 주문 시 절단면 날카로운 버(Burr) 제거도 기본으로 해주시나요?',
+        sellerName: '동남정밀금속',
+        answer: '안녕하세요, 동남정밀금속입니다. 저희 공장에서 출고되는 모든 알루미늄 맞춤 재단품은 기본 면취(버 제거) 후 양면 보호필름이 부착된 상태로 안전 포장하여 발송해 드립니다.',
+        answeredAt: '2026-10-14 15:35'
+      },
+      {
+        id: 'PQNA-102',
+        materialId: 'MAT-101',
+        author: '최엔지니어',
+        date: '2026-10-14 13:10',
+        question: '지금 가상계좌로 입금 완료하면 오늘 바로 재단해서 경동택배로 발송 가능한가요?',
+        sellerName: '동남정밀금속',
+        answer: '네, 평일 오후 3시 이전 입금 확인 건은 당일 파이버 레이저/샤링 재단 후 바로 출고됩니다.',
+        answeredAt: '2026-10-14 13:22'
+      },
+      {
+        id: 'PQNA-103',
+        materialId: 'MAT-102',
+        author: '박연구원',
+        date: '2026-10-14 12:00',
+        question: 'SUS304 4T 판재 표면에 스크래치 방지 보호필름이 붙어 있나요?',
+        sellerName: '남동스텐앤비철',
+        answer: '안녕하세요, 남동스텐앤비철입니다. 단면 백색 레이저 보호필름이 부착된 A급 잔여 원판으로 스크래치 없이 깨끗합니다.',
+        answeredAt: '2026-10-14 12:40'
+      },
+      {
+        id: 'PQNA-104',
+        materialId: 'MAT-103',
+        author: '정메이커',
+        date: '2026-10-14 10:30',
+        question: '투명 아크릴 레이저 재단 시 절단면이 투명하게 나오나요?',
+        sellerName: '문래아크릴앤플라스틱',
+        answer: '네, CO2 레이저 정밀 절단기로 가공하여 절단면이 별도 불광 작업 없이도 매끄럽고 투명하게 마감됩니다.',
+        answeredAt: '2026-10-14 10:50'
+      }
+    ];
+
+    const productReviews = [
+      {
+        id: 'REV-101',
+        materialId: 'MAT-101',
+        author: '김연구',
+        score: '5.0',
+        date: '2026-10-14',
+        cutSpec: '맞춤재단: 220x150x10mm (4EA)',
+        content: '시중 정품 원판 사는 것보다 절반 이상 저렴한데다 치수 공차도 0.1mm 이내로 정확하게 재단되어 와서 로봇 베이스 플레이트로 바로 조립했습니다.'
+      },
+      {
+        id: 'REV-102',
+        materialId: 'MAT-101',
+        author: '한설계',
+        score: '4.9',
+        date: '2026-10-13',
+        cutSpec: '맞춤재단: 300x200x10mm (2EA)',
+        content: '양면 보호필름이 그대로 살아있는 A급 자투리라 표면 기스가 전혀 없네요. 거래명세서 출력도 편해서 연구비 정산하기 좋습니다.'
+      },
+      {
+        id: 'REV-103',
+        materialId: 'MAT-102',
+        author: '이테크',
+        score: '4.8',
+        date: '2026-10-13',
+        cutSpec: '맞춤재단: 400x250x4mm (2EA)',
+        content: 'SUS304 4T 레이저 절단면이 아주 깔끔합니다. 필요한 치수만 사니까 남는 자재 버릴 일도 없고 가격도 최저시세라 만족합니다.'
+      },
+      {
+        id: 'REV-104',
+        materialId: 'MAT-103',
+        author: '최실험',
+        score: '5.0',
+        date: '2026-10-12',
+        cutSpec: '맞춤재단: 450x300x8mm (3EA)',
+        content: '챔버 관찰창으로 쓰려고 주문했는데 투명도 최고이고 치수도 칼같이 맞습니다.'
+      }
+    ];
+
+    function renderAdminQnaBoard() {
+      const container = document.getElementById('admin-qna-list-container');
+      const totalEl = document.getElementById('admin-qna-total-count');
+      const badgeEl = document.getElementById('badge-qna-count');
+      if (totalEl) totalEl.textContent = adminQnaPosts.length;
+      if (badgeEl) badgeEl.textContent = `(${adminQnaPosts.length})`;
+      if (!container) return;
+
+      if (currentUser && document.getElementById('aqna-author') && !document.getElementById('aqna-author').value) {
+        document.getElementById('aqna-author').value = `${currentUser.name} (${currentUser.type === 'CORPORATE' ? '기업회원' : '개인회원'})`;
+      }
+
+      container.innerHTML = adminQnaPosts.map(post => {
+        const hasAnswer = Boolean(post.answer && post.answer.trim());
+        return `
+          <div class="qna-card">
+            <div class="qna-card-header">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span class="state-badge ${hasAnswer ? 'state-done' : 'state-wait'}">${hasAnswer ? '관리자 답변완료' : '답변대기'}</span>
+                <span class="tag-square tag-raw">[${post.category}]</span>
+                <strong style="font-size:13.5px;">${post.title}</strong>
+              </div>
+              <span style="font-size:11.5px; color:var(--text-muted); font-family:var(--font-mono);">${post.author} | ${post.date}</span>
+            </div>
+            <div class="qna-question-box">${post.content}</div>
+            ${hasAnswer ? `
+              <div class="qna-answer-box">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11.5px; color:var(--brand-dark); font-weight:800;">
+                  <span>[자투리마켓 관리자 공식 답변]</span>
+                  <span style="font-family:var(--font-mono); font-weight:500;">${post.answeredAt || ''}</span>
+                </div>
+                <div>${post.answer}</div>
+              </div>
+            ` : ''}
+            <div class="qna-reply-form">
+              <input type="text" class="erp-input" id="admin-reply-input-${post.id}" placeholder="관리자(나) 답변 내용을 입력하거나 수정하세요..." value="${post.answer || ''}" />
+              <button type="button" class="btn-mall btn-mall-dark" style="padding:7px 12px; font-size:12px;" onclick="submitAdminQnaReply('${post.id}')">
+                ${hasAnswer ? '관리자 답변 수정' : '관리자 답변 등록'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleAdminQnaSubmit(e) {
+      e.preventDefault();
+      const category = document.getElementById('aqna-category').value;
+      const author = document.getElementById('aqna-author').value.trim();
+      const title = document.getElementById('aqna-title').value.trim();
+      const content = document.getElementById('aqna-content').value.trim();
+
+      const newPost = {
+        id: `AQNA-0${adminQnaPosts.length + 1}`,
+        category,
+        title,
+        author,
+        date: '2026-10-14 21:30',
+        content,
+        answer: '',
+        answeredAt: ''
+      };
+
+      adminQnaPosts.unshift(newPost);
+      document.getElementById('aqna-title').value = '';
+      document.getElementById('aqna-content').value = '';
+      saveStateToStorage();
+      renderAdminQnaBoard();
+      showToast('고객 Q&A 게시판에 질문이 등록되었습니다. 관리자가 바로 답변을 작성할 수 있습니다.');
+    }
+
+    function submitAdminQnaReply(postId) {
+      const post = adminQnaPosts.find(p => p.id === postId);
+      if (!post) return;
+      const inputEl = document.getElementById(`admin-reply-input-${postId}`);
+      if (!inputEl || !inputEl.value.trim()) {
+        showToast('답변 내용을 입력해 주세요.');
+        return;
+      }
+      post.answer = inputEl.value.trim();
+      post.answeredAt = '2026-10-14 21:32';
+      saveStateToStorage();
+      renderAdminQnaBoard();
+      showToast('관리자 공식 답변이 등록되었습니다.');
+    }
+
+    // =========================================================================
+    // 쿠팡 스타일 판매제품 상세창 (상품 Q&A + 구매후기 리뷰 + 상세스펙)
+    // =========================================================================
+    function openProductCommunity(matId) {
+      selectMaterial(matId);
+      const box = document.getElementById('product-detail-community-box');
+      if (box) {
+        box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function switchProductDetailTab(tabName) {
+      activeProductDetailTab = tabName;
+      document.getElementById('ctab-btn-qna').classList.toggle('active', tabName === 'QNA');
+      document.getElementById('ctab-btn-review').classList.toggle('active', tabName === 'REVIEW');
+      document.getElementById('ctab-btn-spec').classList.toggle('active', tabName === 'SPEC');
+
+      document.getElementById('ctab-panel-qna').style.display = (tabName === 'QNA') ? 'block' : 'none';
+      document.getElementById('ctab-panel-review').style.display = (tabName === 'REVIEW') ? 'block' : 'none';
+      document.getElementById('ctab-panel-spec').style.display = (tabName === 'SPEC') ? 'block' : 'none';
+    }
+
+    function renderProductDetailCommunity() {
+      const mat = materials.find(m => m.id === selectedMaterialId);
+      if (!mat) return;
+
+      const rateSpec = getRateSpec(mat);
+      document.getElementById('pdc-partner-label').textContent = `판매기업: ${mat.partner} (${mat.region})`;
+      document.getElementById('pdc-title').textContent = `[${mat.code}] ${mat.name}`;
+      document.getElementById('pdc-ask-partner-name').textContent = mat.partner;
+
+      if (currentUser) {
+        const pqAuthor = document.getElementById('pqna-author');
+        const prAuthor = document.getElementById('prev-author');
+        if (pqAuthor && !pqAuthor.value) pqAuthor.value = currentUser.name;
+        if (prAuthor && !prAuthor.value) prAuthor.value = currentUser.name;
+      }
+
+      // 1) 해당 상품의 구매자 <-> 판매기업 Q&A 목록
+      const qnas = productQnaPosts.filter(q => q.materialId === mat.id);
+      document.getElementById('pdc-qna-count').textContent = qnas.length;
+
+      const qnaListEl = document.getElementById('pdc-qna-list');
+      if (qnas.length === 0) {
+        qnaListEl.innerHTML = `<div style="padding:24px; text-align:center; color:var(--text-secondary); border:1px dashed var(--border-color);">아직 등록된 상품 문의가 없습니다. 위 입력창에서 판매기업(${mat.partner})에게 첫 질문을 남겨보세요.</div>`;
+      } else {
+        qnaListEl.innerHTML = qnas.map(q => {
+          const hasAns = Boolean(q.answer && q.answer.trim());
+          return `
+            <div class="qna-card">
+              <div class="qna-card-header">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span class="state-badge ${hasAns ? 'state-done' : 'state-wait'}">${hasAns ? '판매기업 답변완료' : '판매자 확인중'}</span>
+                  <strong style="font-size:12.5px;">질문자: ${q.author}</strong>
+                </div>
+                <span style="font-size:11.5px; color:var(--text-muted); font-family:var(--font-mono);">${q.date}</span>
+              </div>
+              <div class="qna-question-box"><strong>Q.</strong> ${q.question}</div>
+              ${hasAns ? `
+                <div class="qna-answer-box">
+                  <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:11.5px; color:var(--brand-dark); font-weight:800;">
+                    <span>[판매기업 공식 답변: ${q.sellerName || mat.partner}]</span>
+                    <span style="font-family:var(--font-mono); font-weight:500;">${q.answeredAt || ''}</span>
+                  </div>
+                  <div><strong>A.</strong> ${q.answer}</div>
+                </div>
+              ` : ''}
+              <div class="qna-reply-form">
+                <input type="text" class="erp-input" id="seller-reply-input-${q.id}" placeholder="판매기업(${mat.partner}) 답변 내용을 입력하거나 수정하세요..." value="${q.answer || ''}" />
+                <button type="button" class="btn-mall btn-mall-white" style="padding:6px 12px; font-size:11.5px; border-color:var(--brand); color:var(--brand-dark);" onclick="submitSellerProductReply('${q.id}', '${mat.partner}')">
+                  ${hasAns ? '판매자 답변 수정' : '판매자 답변 등록'}
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2) 해당 상품의 구매후기(리뷰) 목록
+      const revs = productReviews.filter(r => r.materialId === mat.id);
+      document.getElementById('pdc-review-count').textContent = revs.length;
+      const revListEl = document.getElementById('pdc-review-list');
+      if (revs.length === 0) {
+        revListEl.innerHTML = `<div style="padding:24px; text-align:center; color:var(--text-secondary); border:1px dashed var(--border-color);">첫 구매후기(리뷰)를 작성해 보세요.</div>`;
+      } else {
+        revListEl.innerHTML = revs.map(r => `
+          <div class="review-item">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+              <div>
+                <span class="review-score-badge">평점 ${r.score}</span>
+                <strong>${r.author}</strong>
+                <span style="font-size:11.5px; color:var(--brand-dark); font-family:var(--font-mono); margin-left:8px;">[${r.cutSpec}]</span>
+              </div>
+              <span style="font-size:11.5px; color:var(--text-muted); font-family:var(--font-mono);">${r.date}</span>
+            </div>
+            <div style="font-size:13px; color:var(--text-primary); line-height:1.5;">${r.content}</div>
+          </div>
+        `).join('');
+      }
+
+      // 3) 상품 상세스펙 테이블
+      const pInfo = partners.find(p => p.name === mat.partner) || { addr: mat.region, equip: '레이저·샤링·톱절단 설비' };
+      document.getElementById('pdc-spec-body').innerHTML = `
+        <table class="erp-table">
+          <tbody>
+            <tr>
+              <th style="width:140px;">품목코드 / 재질</th>
+              <td>[${mat.code}] ${mat.category} (${mat.grade})</td>
+              <th style="width:140px;">비중 / 적용시세</th>
+              <td>비중 ${rateSpec.density} g/cm3 / 자투리 최저시세 ${rateSpec.scrapPerKg.toLocaleString()}원/kg</td>
+            </tr>
+            <tr>
+              <th>보유 원판 규격</th>
+              <td style="font-family:var(--font-mono); font-weight:700;">가로 ${mat.w} x 세로 ${mat.l} x 두께 ${mat.t}mm (재고 ${mat.stock}장)</td>
+              <th>맞춤 재단 공차</th>
+              <td>레이저·샤링·톱절단 ±0.2mm ~ ±0.5mm (Kerf 3.0mm)</td>
+            </tr>
+            <tr>
+              <th>공급 파트너 기업</th>
+              <td style="font-weight:700;">${mat.partner} (${pInfo.addr})</td>
+              <th>보유 가공 설비</th>
+              <td>${pInfo.equip}</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+    }
+
+    function submitProductQna(e) {
+      e.preventDefault();
+      const mat = materials.find(m => m.id === selectedMaterialId);
+      if (!mat) return;
+      const author = document.getElementById('pqna-author').value.trim();
+      const question = document.getElementById('pqna-question').value.trim();
+
+      productQnaPosts.unshift({
+        id: `PQNA-${Date.now()}`,
+        materialId: mat.id,
+        author,
+        date: '2026-10-14 21:30',
+        question,
+        sellerName: mat.partner,
+        answer: '',
+        answeredAt: ''
+      });
+
+      document.getElementById('pqna-question').value = '';
+      saveStateToStorage();
+      renderProductDetailCommunity();
+      showToast(`[${mat.partner}] 판매기업 앞으로 상품 문의가 등록되었습니다.`);
+    }
+
+    function submitSellerProductReply(qnaId, sellerName) {
+      const q = productQnaPosts.find(item => item.id === qnaId);
+      if (!q) return;
+      const inputEl = document.getElementById(`seller-reply-input-${qnaId}`);
+      if (!inputEl || !inputEl.value.trim()) {
+        showToast('판매자 답변 내용을 입력해 주세요.');
+        return;
+      }
+      q.answer = inputEl.value.trim();
+      q.sellerName = (currentUser && currentUser.type === 'CORPORATE') ? currentUser.name : sellerName;
+      q.answeredAt = '2026-10-14 21:32';
+      saveStateToStorage();
+      renderProductDetailCommunity();
+      showToast('판매기업 답변이 등록되었습니다.');
+    }
+
+    function submitProductReview(e) {
+      e.preventDefault();
+      const mat = materials.find(m => m.id === selectedMaterialId);
+      if (!mat) return;
+      const author = document.getElementById('prev-author').value.trim();
+      const score = document.getElementById('prev-score').value;
+      const cutSpec = document.getElementById('prev-spec').value.trim();
+      const content = document.getElementById('prev-content').value.trim();
+
+      productReviews.unshift({
+        id: `REV-${Date.now()}`,
+        materialId: mat.id,
+        author,
+        score,
+        date: '2026-10-14',
+        cutSpec,
+        content
+      });
+
+      mat.reviews = (mat.reviews || 0) + 1;
+      document.getElementById('prev-content').value = '';
+      saveStateToStorage();
+      renderCatalog();
+      renderProductDetailCommunity();
+      showToast('구매후기(리뷰)가 등록되었습니다.');
+    }
+
     function switchRole(role) {
       document.querySelectorAll('.role-switch-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
@@ -3717,6 +4606,8 @@
       if (role === 'buyer') {
         renderCatalog();
         updateCalculator();
+      } else if (role === 'qna') {
+        renderAdminQnaBoard();
       } else if (role === 'mypage') {
         renderMypage();
       } else if (role === 'seller') {
@@ -3868,7 +4759,10 @@
                       <span class="vat-note">(원판기준)</span>
                     </div>
                   </div>
-                  <button class="btn-order-mini">${isSelected ? '선택됨' : '재단·주문'}</button>
+                  <div style="display:flex; gap:4px;">
+                    <button type="button" class="btn-order-mini" style="background:#f8f9fa; border-color:var(--border-strong); color:var(--text-secondary);" onclick="event.stopPropagation(); openProductCommunity('${m.id}')">리뷰·Q&amp;A</button>
+                    <button type="button" class="btn-order-mini">${isSelected ? '선택됨' : '재단·주문'}</button>
+                  </div>
                 </div>
                 <div class="prd-meta-bottom">
                   <span>자투리시세 ${rateSpec.scrapPerKg.toLocaleString()}원/kg</span>
@@ -3898,6 +4792,7 @@
 
       renderCatalog();
       updateCalculator();
+      renderProductDetailCommunity();
     }
 
     function setOrderMode(mode) {
@@ -4929,6 +5824,9 @@
         localStorage.setItem('jaturi_users_v3', JSON.stringify(users));
         localStorage.setItem('jaturi_current_user_v3', JSON.stringify(currentUser));
         localStorage.setItem('jaturi_fee_v3', String(commissionRate));
+        localStorage.setItem('jaturi_admin_qna_v4', JSON.stringify(adminQnaPosts));
+        localStorage.setItem('jaturi_prod_qna_v4', JSON.stringify(productQnaPosts));
+        localStorage.setItem('jaturi_prod_rev_v4', JSON.stringify(productReviews));
       } catch (err) {
         console.warn('Storage save skipped:', err);
       }
@@ -4968,6 +5866,24 @@
           currentUser = JSON.parse(cuStr);
         }
         if (fStr) commissionRate = parseFloat(fStr) || 10;
+        const aqStr = localStorage.getItem('jaturi_admin_qna_v4');
+        const pqStr = localStorage.getItem('jaturi_prod_qna_v4');
+        const prStr = localStorage.getItem('jaturi_prod_rev_v4');
+        if (aqStr) {
+          const parsed = JSON.parse(aqStr);
+          adminQnaPosts.length = 0;
+          parsed.forEach(x => adminQnaPosts.push(x));
+        }
+        if (pqStr) {
+          const parsed = JSON.parse(pqStr);
+          productQnaPosts.length = 0;
+          parsed.forEach(x => productQnaPosts.push(x));
+        }
+        if (prStr) {
+          const parsed = JSON.parse(prStr);
+          productReviews.length = 0;
+          parsed.forEach(x => productReviews.push(x));
+        }
 
         const cfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v1') || '{}');
         if (cfg.sbUrl) document.getElementById('cfg-sb-url').value = cfg.sbUrl;
@@ -5039,6 +5955,8 @@
       renderPartnerBanners();
       renderCatalog();
       updateCalculator();
+      renderProductDetailCommunity();
+      renderAdminQnaBoard();
       updateBadges();
     });
 
