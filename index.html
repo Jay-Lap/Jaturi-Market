@@ -2363,89 +2363,98 @@
         <div>
           <div class="section-bar">
             <h3>실시간 등록 자투리·잉여 자재 <span class="count-num" id="catalog-result-count">10</span>건</h3>
-            <span style="font-size:12px; color:var(--text-secondary);">품목 클릭 시 우측 맞춤 재단 치수 계산 및 주문서에 즉시 연동됩니다.</span>
+            <span style="font-size:12px; color:var(--text-secondary);">상품 클릭 시 우측 <strong>[맞춤 재단 주문서 및 구매후기(리뷰) 작성창]</strong>과 하단 상세탭에 즉시 연동됩니다.</span>
           </div>
           <div class="product-grid" id="material-grid"></div>
 
-          <!-- 판매 제품 목록 하단으로 이동 배치된 입점·제휴 파트너 기업 배너 영역 (회사 로고 -> 회사 이름 -> 회사 품목 순) -->
-          <div class="erp-box" style="margin-top:22px; background:var(--bg-gray);">
+          <!-- 1) 상품 목록 바로 아래: 선택 상품 리뷰창 (구매후기 리뷰 + 구매자<->판매기업 상품 Q&A + 상세스펙) -->
+          <div class="erp-box" id="product-detail-community-box" style="margin-top:22px; border-top:2px solid var(--border-dark);">
+            <!-- 상품 클릭 전 미선택 안내 상태 -->
+            <div id="pdc-empty-guide" style="padding:28px 16px; text-align:center; background:#fff;">
+              <strong style="font-size:14.5px; color:var(--text-primary); display:block; margin-bottom:4px;">선택된 상품이 없습니다 — 위 목록에서 상품을 클릭해 주세요</strong>
+              <p style="font-size:12.5px; color:var(--text-secondary);">상품을 클릭하면 해당 자재의 평점, 실제 구매후기(리뷰) 목록 열람·작성 및 판매기업 Q&amp;A가 이곳에 표시됩니다.</p>
+            </div>
+
+            <!-- 상품 클릭 시 활성화되는 리뷰/Q&A/상세스펙 영역 -->
+            <div id="pdc-active-content" style="display:none;">
+              <div class="erp-box-head" style="background:#fff; border-bottom:1px solid var(--border-color); padding:14px 16px;">
+                <div>
+                  <span style="font-size:11px; color:var(--brand); font-weight:700;" id="pdc-partner-label">판매기업: -</span>
+                  <h3 style="font-size:16px; font-weight:800; margin-top:2px;" id="pdc-title">상품을 선택해 주세요</h3>
+                </div>
+                <span style="font-size:12px; color:var(--brand-dark); font-weight:700;" id="pdc-rating-summary">평균 평점 -점 · 구매후기 0건</span>
+              </div>
+
+              <div class="coupang-tabs">
+                <button type="button" class="coupang-tab-btn active" id="ctab-btn-review" onclick="switchProductDetailTab('REVIEW')">
+                  구매후기 리뷰 (<span id="pdc-review-count">0</span>)
+                </button>
+                <button type="button" class="coupang-tab-btn" id="ctab-btn-qna" onclick="switchProductDetailTab('QNA')">
+                  상품 Q&amp;A (판매기업 문의 <span id="pdc-qna-count">0</span>)
+                </button>
+                <button type="button" class="coupang-tab-btn" id="ctab-btn-spec" onclick="switchProductDetailTab('SPEC')">
+                  상품 상세스펙 · 가공안내
+                </button>
+              </div>
+
+              <div class="erp-box-body" style="padding-top:4px;">
+                <!-- 탭 1: 구매자 <-> 판매자(기업) 상품 Q&A -->
+                <div id="ctab-panel-qna" style="display:none;">
+                  <div style="background:var(--bg-gray); border:1px solid var(--border-color); padding:12px 14px; margin-bottom:14px;">
+                    <div style="font-weight:800; font-size:13px; margin-bottom:6px;">이 상품을 판매하는 기업(<span id="pdc-ask-partner-name">-</span>)에게 문의하기</div>
+                    <form onsubmit="submitProductQna(event)">
+                      <div style="display:grid; grid-template-columns:140px 1fr; gap:8px; margin-bottom:8px;">
+                        <input type="text" class="erp-input" id="pqna-author" placeholder="작성자명 (예: 김연구)" required />
+                        <input type="text" class="erp-input" id="pqna-question" placeholder="재단 공차, 타공/절곡 추가 가공 가능 여부, 당일 발송 여부 등을 판매기업에 물어보세요." required />
+                      </div>
+                      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                        <span style="font-size:11.5px; color:var(--text-secondary);">* 등록된 질문에는 해당 판매기업(기업회원)이 직접 답변을 작성할 수 있습니다.</span>
+                        <button type="submit" class="btn-mall btn-mall-brand" style="padding:7px 16px; font-size:12px;">판매기업에 상품 문의 등록</button>
+                      </div>
+                    </form>
+                  </div>
+                  <div id="pdc-qna-list"></div>
+                </div>
+
+                <!-- 탭 2: 구매후기 (리뷰) -->
+                <div id="ctab-panel-review" style="display:block;">
+                  <div style="background:var(--bg-gray); border:1px solid var(--border-color); padding:12px 14px; margin-bottom:14px;">
+                    <div style="font-weight:800; font-size:13px; margin-bottom:6px;">구매후기(리뷰) 작성하기</div>
+                    <form onsubmit="submitProductReview(event)">
+                      <div style="display:grid; grid-template-columns:120px 110px 1fr; gap:8px; margin-bottom:8px;">
+                        <input type="text" class="erp-input" id="prev-author" placeholder="작성자명" required />
+                        <select class="erp-input" id="prev-score">
+                          <option value="5.0">평점 5.0점</option>
+                          <option value="4.5">평점 4.5점</option>
+                          <option value="4.0">평점 4.0점</option>
+                        </select>
+                        <input type="text" class="erp-input" id="prev-spec" placeholder="주문 재단치수 (예: 250x180mm 2EA 맞춤재단)" required />
+                      </div>
+                      <div style="display:flex; gap:8px;">
+                        <input type="text" class="erp-input" id="prev-content" placeholder="자재 표면 상태, 재단 치수 정밀도, 배송 속도에 대한 후기를 남겨주세요." style="flex:1;" required />
+                        <button type="submit" class="btn-mall btn-mall-brand" style="padding:7px 16px; font-size:12px;">리뷰 등록</button>
+                      </div>
+                    </form>
+                  </div>
+                  <div id="pdc-review-list"></div>
+                </div>
+
+                <!-- 탭 3: 상품 상세스펙 -->
+                <div id="ctab-panel-spec" style="display:none;">
+                  <div id="pdc-spec-body"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2) 리뷰창 하단으로 이동 배치된 입점·제휴 파트너 기업 배너 영역 (회사 로고 -> 회사 이름 -> 회사 품목 순) -->
+          <div class="erp-box" id="partner-banner-section-box" style="margin-top:22px; background:var(--bg-gray);">
             <div class="erp-box-head" style="background:#fff;">
               <span>입점·제휴 파트너 기업 안내</span>
               <span style="font-size:11.5px; font-weight:500; color:var(--text-secondary);">배너 클릭 시 회사명, 주소, 판매품목, 보유 재단 장비 상세 정보가 표시됩니다.</span>
             </div>
             <div class="erp-box-body" style="padding:12px;">
               <div class="partner-banner-grid" id="partner-banner-grid"></div>
-            </div>
-          </div>
-
-          <!-- 쿠팡 스타일 선택 상품 상세창 (상세스펙 + 구매후기 리뷰 + 구매자<->판매기업 상품 Q&A) -->
-          <div class="erp-box" id="product-detail-community-box" style="display:none !important;">
-            <div class="erp-box-head" style="background:#fff; border-bottom:1px solid var(--border-color); padding:14px 16px;">
-              <div>
-                <span style="font-size:11px; color:var(--brand); font-weight:700;" id="pdc-partner-label">판매기업: 동남정밀금속</span>
-                <h3 style="font-size:16px; font-weight:800; margin-top:2px;" id="pdc-title">[JM-100101] AL6061-T6 압연 알루미늄 평판 자투리</h3>
-              </div>
-              <span style="font-size:12px; color:var(--text-secondary);">선택된 상품의 리뷰와 판매자 문의를 확인하세요</span>
-            </div>
-
-            <div class="coupang-tabs">
-              <button type="button" class="coupang-tab-btn active" id="ctab-btn-qna" onclick="switchProductDetailTab('QNA')">
-                상품 Q&amp;A (판매기업 문의 <span id="pdc-qna-count">2</span>)
-              </button>
-              <button type="button" class="coupang-tab-btn" id="ctab-btn-review" onclick="switchProductDetailTab('REVIEW')">
-                구매후기 리뷰 (<span id="pdc-review-count">2</span>)
-              </button>
-              <button type="button" class="coupang-tab-btn" id="ctab-btn-spec" onclick="switchProductDetailTab('SPEC')">
-                상품 상세스펙 · 가공안내
-              </button>
-            </div>
-
-            <div class="erp-box-body" style="padding-top:4px;">
-              <!-- 탭 1: 구매자 <-> 판매자(기업) 상품 Q&A -->
-              <div id="ctab-panel-qna">
-                <div style="background:var(--bg-gray); border:1px solid var(--border-color); padding:12px 14px; margin-bottom:14px;">
-                  <div style="font-weight:800; font-size:13px; margin-bottom:6px;">이 상품을 판매하는 기업(<span id="pdc-ask-partner-name">동남정밀금속</span>)에게 문의하기</div>
-                  <form onsubmit="submitProductQna(event)">
-                    <div style="display:grid; grid-template-columns:140px 1fr; gap:8px; margin-bottom:8px;">
-                      <input type="text" class="erp-input" id="pqna-author" placeholder="작성자명 (예: 김연구)" required />
-                      <input type="text" class="erp-input" id="pqna-question" placeholder="재단 공차, 타공/절곡 추가 가공 가능 여부, 당일 발송 여부 등을 판매기업에 물어보세요." required />
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                      <span style="font-size:11.5px; color:var(--text-secondary);">* 등록된 질문에는 해당 판매기업(기업회원)이 직접 답변을 작성할 수 있습니다.</span>
-                      <button type="submit" class="btn-mall btn-mall-brand" style="padding:7px 16px; font-size:12px;">판매기업에 상품 문의 등록</button>
-                    </div>
-                  </form>
-                </div>
-                <div id="pdc-qna-list"></div>
-              </div>
-
-              <!-- 탭 2: 구매후기 (리뷰) -->
-              <div id="ctab-panel-review" style="display:none;">
-                <div style="background:var(--bg-gray); border:1px solid var(--border-color); padding:12px 14px; margin-bottom:14px;">
-                  <div style="font-weight:800; font-size:13px; margin-bottom:6px;">구매후기(리뷰) 작성하기</div>
-                  <form onsubmit="submitProductReview(event)">
-                    <div style="display:grid; grid-template-columns:120px 110px 1fr; gap:8px; margin-bottom:8px;">
-                      <input type="text" class="erp-input" id="prev-author" placeholder="작성자명" required />
-                      <select class="erp-input" id="prev-score">
-                        <option value="5.0">평점 5.0점</option>
-                        <option value="4.5">평점 4.5점</option>
-                        <option value="4.0">평점 4.0점</option>
-                      </select>
-                      <input type="text" class="erp-input" id="prev-spec" placeholder="주문 재단치수 (예: 250x180mm 2EA 맞춤재단)" required />
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                      <input type="text" class="erp-input" id="prev-content" placeholder="자재 표면 상태, 재단 치수 정밀도, 배송 속도에 대한 후기를 남겨주세요." style="flex:1;" required />
-                      <button type="submit" class="btn-mall btn-mall-brand" style="padding:7px 16px; font-size:12px;">리뷰 등록</button>
-                    </div>
-                  </form>
-                </div>
-                <div id="pdc-review-list"></div>
-              </div>
-
-              <!-- 탭 3: 상품 상세스펙 -->
-              <div id="ctab-panel-spec" style="display:none;">
-                <div id="pdc-spec-body"></div>
-              </div>
             </div>
           </div>
         </div>
@@ -2457,6 +2466,13 @@
             <span>자투리 최저시세 실시간 연동</span>
           </div>
           <div class="calc-sheet-body">
+            <!-- 상품 클릭 전 미선택 안내 상태 -->
+            <div id="calc-empty-guide" style="padding:36px 14px; text-align:center; background:var(--bg-gray); border:1px dashed var(--border-strong);">
+              <div style="font-size:14px; font-weight:800; color:var(--text-primary); margin-bottom:6px;">선택된 자재 상품이 없습니다</div>
+              <p style="font-size:12px; color:var(--text-secondary); line-height:1.55;">좌측 목록에서 원하시는 자재 상품을 클릭하시면 맞춤 재단 치수 계산기, 실시간 최저시세 견적 및 구매후기(리뷰)가 활성화됩니다.</p>
+            </div>
+
+            <div id="calc-active-content" style="display:none;">
             <div class="selected-item-box">
               <div class="item-code-row">
                 <span id="calc-mat-cat">알루미늄 · AL6061-T6</span>
@@ -2591,6 +2607,38 @@
               <button class="btn-mall btn-mall-brand" id="btn-open-pay" onclick="openOrderStep1Modal()">
                 주문하기 (배송지 입력)
               </button>
+            </div>
+
+            <!-- 상품 클릭 시 즉시 보이는 선택 상품 구매후기(리뷰) 목록 및 구매자 리뷰 작성 영역 -->
+            <div id="calc-inline-review-box" style="margin-top:16px; padding-top:14px; border-top:2px solid var(--border-dark);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="font-size:13.5px; font-weight:800; color:var(--text-primary);">
+                  선택 상품 구매후기 (<span id="calc-rev-count" style="color:var(--brand); font-family:var(--font-mono);">2</span>건)
+                </div>
+                <span class="review-score-badge" id="calc-rev-avg-badge" style="margin-right:0;">평점 4.9점</span>
+              </div>
+
+              <!-- 구매자 리뷰 즉시 작성 폼 -->
+              <form onsubmit="submitInlineProductReview(event)" style="background:var(--bg-gray); border:1px solid var(--border-color); padding:10px; margin-bottom:10px; border-radius:2px;">
+                <div style="font-size:11.5px; font-weight:800; color:var(--brand-dark); margin-bottom:6px;">구매자 리뷰 작성하기</div>
+                <div style="display:grid; grid-template-columns:1fr 110px; gap:6px; margin-bottom:6px;">
+                  <input type="text" class="erp-input" id="inline-rev-author" placeholder="작성자명 (예: 김연구)" style="padding:6px 8px; font-size:12px;" required />
+                  <select class="erp-input" id="inline-rev-score" style="padding:6px 8px; font-size:12px; font-weight:700;">
+                    <option value="5.0">평점 5.0점</option>
+                    <option value="4.5">평점 4.5점</option>
+                    <option value="4.0">평점 4.0점</option>
+                    <option value="3.5">평점 3.5점</option>
+                  </select>
+                </div>
+                <div style="display:flex; gap:6px;">
+                  <input type="text" class="erp-input" id="inline-rev-content" placeholder="자재 표면 상태, 재단 치수 정밀도, 배송 후기를 작성해 주세요." style="flex:1; padding:6px 8px; font-size:12px;" required />
+                  <button type="submit" class="btn-mall btn-mall-brand" style="padding:6px 12px; font-size:12px;">리뷰 등록</button>
+                </div>
+              </form>
+
+              <!-- 선택 상품 리뷰 리스트 -->
+              <div id="calc-inline-review-list" style="max-height:240px; overflow-y:auto; border:1px solid var(--border-color); background:#fff; padding:4px 10px;"></div>
+            </div>
             </div>
           </div>
         </aside>
@@ -3731,7 +3779,7 @@
     let commissionRate = 10;
     let activeCategory = 'ALL';
     let activePartnerFilter = 'ALL';
-    let selectedMaterialId = 'MAT-101';
+    let selectedMaterialId = '';
     let orderMode = 'CUT';
     let docType = '거 래 명 세 서';
     let currentCalcResult = null;
@@ -4756,7 +4804,7 @@
     // =========================================================================
     // 11. 관리자 <-> 구매고객 소통 Q&A 게시판 및 판매제품창(쿠팡형 리뷰 · 판매기업 Q&A)
     // =========================================================================
-    let activeProductDetailTab = 'QNA';
+    let activeProductDetailTab = 'REVIEW';
 
     const adminQnaPosts = [
       {
@@ -4870,6 +4918,69 @@
         date: '2026-10-12',
         cutSpec: '맞춤재단: 450x300x8mm (3EA)',
         content: '챔버 관찰창으로 쓰려고 주문했는데 투명도 최고이고 치수도 칼같이 맞습니다.'
+      },
+      {
+        id: 'REV-105',
+        materialId: 'MAT-104',
+        author: '정절곡',
+        score: '4.9',
+        date: '2026-10-12',
+        cutSpec: '맞춤재단: 450x240x3mm (2EA)',
+        content: 'AL5052 3T 박판이라 케이스 절곡 가공용으로 딱입니다. 모서리 찍힘 없이 포장도 꼼꼼하게 도착했습니다.'
+      },
+      {
+        id: 'REV-106',
+        materialId: 'MAT-105',
+        author: '박전력연구',
+        score: '5.0',
+        date: '2026-10-11',
+        cutSpec: '맞춤재단: 200x80x6mm (2EA)',
+        content: '배터리 팩 버스바 제작용으로 소량 필요했는데 자투리 최저시세로 저렴하게 구했습니다. 전도율과 표면 상태 모두 우수합니다.'
+      },
+      {
+        id: 'REV-107',
+        materialId: 'MAT-106',
+        author: '윤안전',
+        score: '4.8',
+        date: '2026-10-11',
+        cutSpec: '맞춤재단: 350x250x5mm (2EA)',
+        content: '장비 안전 커버용 폴리카보네이트(PC)인데 강도도 확실하고 재단 치수도 정확합니다.'
+      },
+      {
+        id: 'REV-108',
+        materialId: 'MAT-107',
+        author: '강가공',
+        score: '4.7',
+        date: '2026-10-10',
+        cutSpec: '원판구매: 320x240x25mm (1장)',
+        content: '25T 후판 블록이라 밀링 지그 가공용으로 샀습니다. 가격이 시중 대비 정말 저렴합니다.'
+      },
+      {
+        id: 'REV-109',
+        materialId: 'MAT-108',
+        author: '조화학랩',
+        score: '5.0',
+        date: '2026-10-10',
+        cutSpec: '맞춤재단: 200x150x12mm (2EA)',
+        content: '내산성 필요한 챔버 브라켓이라 SUS316L로 주문했는데 워터젯 절단면 품질이 훌륭합니다.'
+      },
+      {
+        id: 'REV-110',
+        materialId: 'MAT-109',
+        author: '송프레임',
+        score: '4.9',
+        date: '2026-10-14',
+        cutSpec: '맞춤재단: 500x49x3mm (4EA)',
+        content: '구조용 원형 쇠파이프 원하는 길이대로 밴드쏘 절단되어 와서 현장에서 바로 용접 조립했습니다.'
+      },
+      {
+        id: 'REV-111',
+        materialId: 'MAT-110',
+        author: '임메이커',
+        score: '5.0',
+        date: '2026-10-14',
+        cutSpec: '맞춤재단: 600x50x2mm (4EA)',
+        content: '아연도금 사각 파이프라 녹 걱정도 없고 작업대 프레임 만들기에 가성비 최고입니다.'
       }
     ];
 
@@ -4986,7 +5097,15 @@
 
     function renderProductDetailCommunity() {
       const mat = materials.find(m => m.id === selectedMaterialId);
-      if (!mat) return;
+      const emptyGuide = document.getElementById('pdc-empty-guide');
+      const activeContent = document.getElementById('pdc-active-content');
+      if (!mat) {
+        if (emptyGuide) emptyGuide.style.display = 'block';
+        if (activeContent) activeContent.style.display = 'none';
+        return;
+      }
+      if (emptyGuide) emptyGuide.style.display = 'none';
+      if (activeContent) activeContent.style.display = 'block';
 
       const rateSpec = getRateSpec(mat);
       document.getElementById('pdc-partner-label').textContent = `판매기업: ${mat.partner} (${mat.region})`;
@@ -5040,27 +5159,48 @@
         }).join('');
       }
 
-      // 2) 해당 상품의 구매후기(리뷰) 목록
+      // 2) 해당 상품의 구매후기(리뷰) 목록 (하단 상세탭 + 우측 선택 상품 패널 동시 렌더링)
       const revs = productReviews.filter(r => r.materialId === mat.id);
-      document.getElementById('pdc-review-count').textContent = revs.length;
-      const revListEl = document.getElementById('pdc-review-list');
-      if (revs.length === 0) {
-        revListEl.innerHTML = `<div style="padding:24px; text-align:center; color:var(--text-secondary); border:1px dashed var(--border-color);">첫 구매후기(리뷰)를 작성해 보세요.</div>`;
-      } else {
-        revListEl.innerHTML = revs.map(r => `
+      const avgScore = revs.length > 0
+        ? (revs.reduce((acc, r) => acc + parseFloat(r.score || 5), 0) / revs.length).toFixed(1)
+        : (mat.rating || '5.0');
+      mat.rating = avgScore;
+
+      const pdcRevCnt = document.getElementById('pdc-review-count');
+      if (pdcRevCnt) pdcRevCnt.textContent = revs.length;
+      const pdcSummary = document.getElementById('pdc-rating-summary');
+      if (pdcSummary) pdcSummary.textContent = `평균 평점 ${avgScore}점 · 구매후기 ${revs.length}건`;
+
+      const calcRevCnt = document.getElementById('calc-rev-count');
+      if (calcRevCnt) calcRevCnt.textContent = revs.length;
+      const calcRevAvg = document.getElementById('calc-rev-avg-badge');
+      if (calcRevAvg) calcRevAvg.textContent = `평점 ${avgScore}점`;
+
+      const inlineAuthor = document.getElementById('inline-rev-author');
+      if (currentUser && inlineAuthor && !inlineAuthor.value) {
+        inlineAuthor.value = currentUser.name;
+      }
+
+      const revHtml = revs.length === 0
+        ? `<div style="padding:18px; text-align:center; color:var(--text-secondary); font-size:12px;">아직 등록된 리뷰가 없습니다. 첫 구매후기를 남겨보세요.</div>`
+        : revs.map(r => `
           <div class="review-item">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; flex-wrap:wrap; gap:6px;">
               <div>
                 <span class="review-score-badge">평점 ${r.score}</span>
-                <strong>${r.author}</strong>
-                <span style="font-size:11.5px; color:var(--brand-dark); font-family:var(--font-mono); margin-left:8px;">[${r.cutSpec}]</span>
+                <strong style="font-size:12.5px;">${r.author}</strong>
+                <span style="font-size:11px; color:var(--brand-dark); font-family:var(--font-mono); margin-left:6px;">[${r.cutSpec}]</span>
               </div>
-              <span style="font-size:11.5px; color:var(--text-muted); font-family:var(--font-mono);">${r.date}</span>
+              <span style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">${r.date}</span>
             </div>
-            <div style="font-size:13px; color:var(--text-primary); line-height:1.5;">${r.content}</div>
+            <div style="font-size:12.5px; color:var(--text-primary); line-height:1.5;">${r.content}</div>
           </div>
         `).join('');
-      }
+
+      const revListEl = document.getElementById('pdc-review-list');
+      if (revListEl) revListEl.innerHTML = revHtml;
+      const calcRevListEl = document.getElementById('calc-inline-review-list');
+      if (calcRevListEl) calcRevListEl.innerHTML = revHtml;
 
       // 3) 상품 상세스펙 테이블
       const pInfo = partners.find(p => p.name === mat.partner) || { addr: mat.region, equip: '레이저·샤링·톱절단 설비' };
@@ -5144,7 +5284,7 @@
         materialId: mat.id,
         author,
         score,
-        date: '2026-10-14',
+        date: '2026-10-15',
         cutSpec,
         content
       });
@@ -5152,9 +5292,39 @@
       mat.reviews = (mat.reviews || 0) + 1;
       document.getElementById('prev-content').value = '';
       saveStateToStorage();
-      renderCatalog();
       renderProductDetailCommunity();
-      showToast('구매후기(리뷰)가 등록되었습니다.');
+      renderCatalog();
+      showToast(`[${mat.code}] 구매후기(리뷰)가 등록되었습니다.`);
+    }
+
+    function submitInlineProductReview(e) {
+      e.preventDefault();
+      const mat = materials.find(m => m.id === selectedMaterialId);
+      if (!mat) return;
+      const author = document.getElementById('inline-rev-author').value.trim();
+      const score = document.getElementById('inline-rev-score').value;
+      const content = document.getElementById('inline-rev-content').value.trim();
+      const c = currentCalcResult;
+      const cutSpec = (c && c.mode === 'CUT')
+        ? `맞춤재단: ${c.reqW}x${c.reqL}x${mat.t}mm (${c.reqQty}EA)`
+        : `원판구매: ${mat.w}x${mat.l}x${mat.t}mm`;
+
+      productReviews.unshift({
+        id: `REV-${Date.now()}`,
+        materialId: mat.id,
+        author,
+        score,
+        date: '2026-10-15',
+        cutSpec,
+        content
+      });
+
+      mat.reviews = (mat.reviews || 0) + 1;
+      document.getElementById('inline-rev-content').value = '';
+      saveStateToStorage();
+      renderProductDetailCommunity();
+      renderCatalog();
+      showToast(`[${mat.code}] 구매후기(리뷰)가 등록되었습니다.`);
     }
 
     let activeOrderPageFilter = 'ALL';
@@ -5741,7 +5911,16 @@
     // 실시간 시세 연동 계산기 (치수·수량 변경 시 자투리 최저 시세로 즉시 가격 상승/하락)
     function updateCalculator() {
       const mat = materials.find(m => m.id === selectedMaterialId);
-      if (!mat) return;
+      const emptyGuide = document.getElementById('calc-empty-guide');
+      const activeContent = document.getElementById('calc-active-content');
+      if (!mat) {
+        currentCalcResult = null;
+        if (emptyGuide) emptyGuide.style.display = 'block';
+        if (activeContent) activeContent.style.display = 'none';
+        return;
+      }
+      if (emptyGuide) emptyGuide.style.display = 'none';
+      if (activeContent) activeContent.style.display = 'block';
 
       const rateSpec = getRateSpec(mat);
       document.getElementById('calc-mat-cat').textContent = `[${mat.code}] ${mat.category} · ${mat.grade}`;
@@ -5967,7 +6146,10 @@
     // 7. 주문 1단계(이름/주소 입력창) -> 2단계(결제창 & 가상계좌 발급)
     // =========================================================================
     function openOrderStep1Modal() {
-      if (!currentCalcResult) return;
+      if (!currentCalcResult) {
+        showToast('먼저 상품 목록에서 원하시는 자재를 클릭해 선택해 주세요.');
+        return;
+      }
       const c = currentCalcResult;
 
       if (currentUser) {
@@ -6329,7 +6511,10 @@
     }
 
     function openQuoteModal() {
-      if (!currentCalcResult) return;
+      if (!currentCalcResult) {
+        showToast('먼저 상품 목록에서 원하시는 자재를 클릭해 선택해 주세요.');
+        return;
+      }
       renderPrintableDocument();
       document.getElementById('quoteModal').classList.add('open');
     }
@@ -6906,16 +7091,16 @@
 
     function saveStateToStorage() {
       try {
-        localStorage.setItem('jaturi_materials_v8', JSON.stringify(materials));
-        localStorage.setItem('jaturi_orders_v8', JSON.stringify(orders));
-        localStorage.setItem('jaturi_partners_v8', JSON.stringify(partners));
-        localStorage.setItem('jaturi_users_v8', JSON.stringify(users));
-        localStorage.setItem('jaturi_current_user_v8', JSON.stringify(currentUser));
-        localStorage.setItem('jaturi_fee_v8', String(commissionRate));
-        localStorage.setItem('jaturi_admin_qna_v8', JSON.stringify(adminQnaPosts));
-        localStorage.setItem('jaturi_notices_v8', JSON.stringify(noticePosts));
-        localStorage.setItem('jaturi_prod_qna_v8', JSON.stringify(productQnaPosts));
-        localStorage.setItem('jaturi_prod_rev_v8', JSON.stringify(productReviews));
+        localStorage.setItem('jaturi_materials_v9', JSON.stringify(materials));
+        localStorage.setItem('jaturi_orders_v9', JSON.stringify(orders));
+        localStorage.setItem('jaturi_partners_v9', JSON.stringify(partners));
+        localStorage.setItem('jaturi_users_v9', JSON.stringify(users));
+        localStorage.setItem('jaturi_current_user_v9', JSON.stringify(currentUser));
+        localStorage.setItem('jaturi_fee_v9', String(commissionRate));
+        localStorage.setItem('jaturi_admin_qna_v9', JSON.stringify(adminQnaPosts));
+        localStorage.setItem('jaturi_notices_v9', JSON.stringify(noticePosts));
+        localStorage.setItem('jaturi_prod_qna_v9', JSON.stringify(productQnaPosts));
+        localStorage.setItem('jaturi_prod_rev_v9', JSON.stringify(productReviews));
       } catch (err) {
         console.warn('Storage save skipped:', err);
       }
@@ -6923,18 +7108,18 @@
 
     function loadStateFromStorage() {
       try {
-        const mStr = localStorage.getItem('jaturi_materials_v8');
-        const oStr = localStorage.getItem('jaturi_orders_v8');
-        const pStr = localStorage.getItem('jaturi_partners_v8');
-        const uStr = localStorage.getItem('jaturi_users_v8');
-        const cuStr = localStorage.getItem('jaturi_current_user_v8');
-        const fStr = localStorage.getItem('jaturi_fee_v8');
+        const mStr = localStorage.getItem('jaturi_materials_v9');
+        const oStr = localStorage.getItem('jaturi_orders_v9');
+        const pStr = localStorage.getItem('jaturi_partners_v9');
+        const uStr = localStorage.getItem('jaturi_users_v9');
+        const cuStr = localStorage.getItem('jaturi_current_user_v9');
+        const fStr = localStorage.getItem('jaturi_fee_v9');
 
         if (mStr) {
           const parsedM = JSON.parse(mStr);
           materials.length = 0;
           parsedM.forEach(x => materials.push(x));
-          if (materials.length > 0) selectedMaterialId = materials[0].id;
+          selectedMaterialId = '';
         }
         if (oStr) {
           const parsedO = JSON.parse(oStr);
@@ -6955,15 +7140,15 @@
           currentUser = JSON.parse(cuStr);
         }
         if (fStr) commissionRate = parseFloat(fStr) || 10;
-        const ntcStr = localStorage.getItem('jaturi_notices_v8');
+        const ntcStr = localStorage.getItem('jaturi_notices_v9');
         if (ntcStr) {
           const parsedN = JSON.parse(ntcStr);
           noticePosts.length = 0;
           parsedN.forEach(x => noticePosts.push(x));
         }
-        const aqStr = localStorage.getItem('jaturi_admin_qna_v8');
-        const pqStr = localStorage.getItem('jaturi_prod_qna_v8');
-        const prStr = localStorage.getItem('jaturi_prod_rev_v8');
+        const aqStr = localStorage.getItem('jaturi_admin_qna_v9');
+        const pqStr = localStorage.getItem('jaturi_prod_qna_v9');
+        const prStr = localStorage.getItem('jaturi_prod_rev_v9');
         if (aqStr) {
           const parsed = JSON.parse(aqStr);
           adminQnaPosts.length = 0;
@@ -7008,11 +7193,11 @@
     }
 
     function resetToDefaultSampleData() {
-      localStorage.removeItem('jaturi_materials_v8');
-      localStorage.removeItem('jaturi_orders_v8');
-      localStorage.removeItem('jaturi_partners_v8');
-      localStorage.removeItem('jaturi_users_v8');
-      localStorage.removeItem('jaturi_current_user_v8');
+      localStorage.removeItem('jaturi_materials_v9');
+      localStorage.removeItem('jaturi_orders_v9');
+      localStorage.removeItem('jaturi_partners_v9');
+      localStorage.removeItem('jaturi_users_v9');
+      localStorage.removeItem('jaturi_current_user_v9');
       location.reload();
     }
 
