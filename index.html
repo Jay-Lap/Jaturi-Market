@@ -1316,6 +1316,7 @@
       #signupModal,
       #companyDetailModal,
       #rfpModal,
+      #cartModal,
       .no-print {
         display: none !important;
       }
@@ -2144,7 +2145,7 @@
     <div class="util-inner">
       <ul class="util-links">
         <li><button class="device-mode-badge" id="device-mode-btn" onclick="toggleViewportMode()">화면: PC모드 (모바일전환)</button></li>
-        <li><button class="util-btn" onclick="openRfpModal()" style="color:var(--brand); font-weight:700;">DB·PG 연동 및 초기화</button></li>
+        <li id="util-rfp-li" style="display:none;"><button class="util-btn" id="btn-util-rfp" onclick="openRfpModal()" style="color:var(--brand); font-weight:700;">DB·PG 연동 및 초기화 (관리자전용)</button></li>
       </ul>
 
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
@@ -2222,18 +2223,23 @@
       </div>
 
       <div class="header-quick-icons">
-        <button class="quick-icon-btn" id="quick-btn-mypage" onclick="switchRole('mypage')">
+        <button class="quick-icon-btn" id="quick-btn-mypage" style="display:none;" onclick="switchRole('mypage')">
           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="17" y2="13"/><line x1="7" y1="17" x2="13" y2="17"/></svg>
           <span>마이페이지</span>
         </button>
-        <button class="quick-icon-btn" onclick="openQuoteModal()">
+        <button class="quick-icon-btn" id="quick-btn-cart" onclick="openCartModal()">
+          <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          <span>장바구니</span>
+          <span class="cart-count-badge" id="header-cart-count" style="display:none; background:var(--price-red);">0</span>
+        </button>
+        <button class="quick-icon-btn" id="quick-btn-quote" style="display:none;" onclick="openQuoteModal()">
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span>견적/명세서</span>
         </button>
-        <button class="quick-icon-btn" id="quick-btn-orders" onclick="switchRole('orders')">
+        <button class="quick-icon-btn" id="quick-btn-orders" style="display:none;" onclick="switchRole('orders')">
           <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           <span>주문내역</span>
-          <span class="cart-count-badge" id="header-order-count">3</span>
+          <span class="cart-count-badge" id="header-order-count">2</span>
         </button>
       </div>
     </div>
@@ -2466,17 +2472,40 @@
             <span>자투리 최저시세 실시간 연동</span>
           </div>
           <div class="calc-sheet-body">
+            <!-- 다품목 묶음 장바구니 실시간 현황 박스 (예: 알루미늄 1 · 파이프 1) -->
+            <div id="calc-cart-box" style="background:var(--brand-light); border:1px solid var(--brand-border); padding:10px 12px; margin-bottom:12px; border-radius:2px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+                <div style="font-size:12.5px; font-weight:800; color:var(--brand-dark);">
+                  장바구니 (<span id="calc-cart-total-count" style="font-family:var(--font-mono);">0</span>건)
+                </div>
+                <div id="calc-cart-cat-summary" style="font-size:11.5px; font-weight:800; color:var(--brand); font-family:var(--font-sans);">
+                  비어 있음 (상품 선택 후 담아보세요)
+                </div>
+              </div>
+              <div id="calc-cart-items-mini" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed var(--brand-border); max-height:150px; overflow-y:auto; font-size:11.5px;"></div>
+              <div id="calc-cart-actions" style="display:none; margin-top:8px; padding-top:8px; border-top:1px solid var(--brand-border); justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span style="font-size:12px; font-weight:800; color:var(--text-primary);">합계: <strong id="calc-cart-total-price" style="color:var(--price-red); font-family:var(--font-mono);">0원</strong></span>
+                <div style="display:flex; gap:5px;">
+                  <button type="button" class="btn-mall btn-mall-white" style="padding:5px 9px; font-size:11px;" onclick="openCartModal()">장바구니 상세</button>
+                  <button type="button" class="btn-mall btn-mall-brand" style="padding:5px 10px; font-size:11px;" onclick="openCartOrderModal()">장바구니 일괄주문</button>
+                </div>
+              </div>
+            </div>
+
             <!-- 상품 클릭 전 미선택 안내 상태 -->
-            <div id="calc-empty-guide" style="padding:36px 14px; text-align:center; background:var(--bg-gray); border:1px dashed var(--border-strong);">
+            <div id="calc-empty-guide" style="padding:32px 14px; text-align:center; background:var(--bg-gray); border:1px dashed var(--border-strong);">
               <div style="font-size:14px; font-weight:800; color:var(--text-primary); margin-bottom:6px;">선택된 자재 상품이 없습니다</div>
-              <p style="font-size:12px; color:var(--text-secondary); line-height:1.55;">좌측 목록에서 원하시는 자재 상품을 클릭하시면 맞춤 재단 치수 계산기, 실시간 최저시세 견적 및 구매후기(리뷰)가 활성화됩니다.</p>
+              <p style="font-size:12px; color:var(--text-secondary); line-height:1.55;">좌측 목록에서 상품을 클릭하면 선택되며, <strong>이미 선택된 상품을 다시 클릭하면 선택이 해제</strong>됩니다.<br/>여러 자재(예: 알루미늄 1, 파이프 1)를 각각 계산해 <strong>장바구니에 담아 한 번에 주문</strong>할 수 있습니다.</p>
             </div>
 
             <div id="calc-active-content" style="display:none;">
             <div class="selected-item-box">
-              <div class="item-code-row">
+              <div class="item-code-row" style="align-items:center;">
                 <span id="calc-mat-cat">알루미늄 · AL6061-T6</span>
-                <span id="calc-mat-partner">공급사: 파트너 공장</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span id="calc-mat-partner">공급사: 파트너 공장</span>
+                  <button type="button" class="btn-mall btn-mall-white" style="padding:2px 7px; font-size:10.5px; color:var(--price-red); border-color:var(--border-strong);" onclick="selectMaterial(selectedMaterialId)">선택 해제 X</button>
+                </div>
               </div>
               <h4 id="calc-mat-name">AL6061-T6 정밀 가공용 평판 자투리 (양면 보호필름)</h4>
               <div class="orig-dim" id="calc-mat-spec">원판 규격: 가로 600 x 세로 400 x 두께 10mm (보유재고 4장)</div>
@@ -2600,12 +2629,17 @@
               <span class="amt" id="cost-total-val">20,295원</span>
             </div>
 
-            <div class="calc-btn-row">
-              <button class="btn-mall btn-mall-white" id="btn-open-quote" onclick="openQuoteModal()">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+              <button type="button" class="btn-mall btn-mall-white" id="btn-open-quote" onclick="openQuoteModal()">
                 견적서 / 거래명세서
               </button>
-              <button class="btn-mall btn-mall-brand" id="btn-open-pay" onclick="openOrderStep1Modal()">
-                주문하기 (배송지 입력)
+              <button type="button" class="btn-mall btn-mall-dark" id="btn-add-cart" onclick="addToCart()">
+                + 장바구니 담기
+              </button>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr; gap:8px;">
+              <button type="button" class="btn-mall btn-mall-brand" id="btn-open-pay" onclick="openOrderStep1Modal()">
+                현재 품목 바로 주문하기 (배송지 입력)
               </button>
             </div>
 
@@ -2800,7 +2834,7 @@
           <span class="state-badge state-done">관리자</span>
         </div>
         <div class="erp-box-body" style="padding:14px 16px;">
-          <strong style="font-size:14px; color:var(--text-primary); display:block;">관리자 계정(jaturimarket)으로 로그인되어 있습니다.</strong>
+          <strong style="font-size:14px; color:var(--text-primary); display:block;">관리자 계정으로 로그인되어 있습니다.</strong>
           <p style="font-size:12.5px; color:var(--text-secondary); margin-top:4px; line-height:1.5;">전체 주문 상태 제어 및 파트너 정산, 전체 회원 등급(Role) 관리, 상품 재고/삭제 관리, 공지사항 작성 및 Q&amp;A 공식 답변 권한이 모두 활성화되어 있습니다.</p>
         </div>
       </div>
@@ -2808,11 +2842,11 @@
       <div class="erp-box" id="mypage-guest-notice" style="display:none;">
         <div class="erp-box-body" style="text-align:center; padding:32px 16px;">
           <h3 style="font-size:16px; font-weight:800; margin-bottom:6px;">로그인이 필요한 회원 정보·계정 설정 페이지입니다</h3>
-          <p style="color:var(--text-secondary); margin-bottom:16px;">개인 회원(<strong>user01 / 1234</strong>) 로그인 시 나의 주소록·계정 설정이 가능하며, 기업 회원(<strong>corp01 / 1234</strong>) 로그인 시 회사 로고·장비 설정 및 자재 업로드가 활성화됩니다.</p>
+          <p style="color:var(--text-secondary); margin-bottom:16px;">개인 회원 로그인 시 나의 주소록·계정 설정이 가능하며, 기업 회원 로그인 시 회사 로고·장비 설정 및 자재 업로드가 활성화됩니다.</p>
           <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
-            <button class="btn-mall btn-mall-brand" onclick="quickLogin('user01', '1234')">개인 회원(user01) 로그인</button>
-            <button class="btn-mall btn-mall-dark" onclick="quickLogin('corp01', '1234')">기업 회원(corp01) 로그인</button>
-            <button class="btn-mall btn-mall-white" onclick="switchRole('orders')">비회원 주문/배송 조회 바로가기</button>
+            <button class="btn-mall btn-mall-brand" onclick="openLoginModal()">로그인하기</button>
+            <button class="btn-mall btn-mall-dark" onclick="openSignupModal('PERSONAL')">신규 회원가입</button>
+            <button class="btn-mall btn-mall-white" onclick="switchRole('orders')">주문/배송 조회 바로가기</button>
           </div>
         </div>
       </div>
@@ -3222,10 +3256,13 @@
           <h2 style="font-size:18px; font-weight:800;">자투리마켓 통합 어드민 관리 콘솔</h2>
           <p style="font-size:12.5px; color:var(--text-secondary); margin-top:3px;">입점 공급 기업(공장) 심사 승인, 플랫폼 중개 수수료율 정책 설정 및 구매 확정 건 파트너 정산을 관리합니다.</p>
         </div>
-        <div style="display:flex; align-items:center; gap:8px; background:var(--bg-gray); padding:8px 12px; border:1px solid var(--border-color);">
-          <label for="admin-fee-input" style="font-size:12.5px; font-weight:700;">플랫폼 중개 수수료율(%)</label>
-          <input type="number" id="admin-fee-input" value="10" min="1" max="30" style="width:64px; padding:5px 8px; font-family:var(--font-mono); font-weight:700; border:1px solid var(--border-strong);" onchange="updateCommissionRate(this.value)" />
-          <button class="btn-mall btn-mall-brand" style="padding:6px 12px; font-size:12px;" onclick="updateCommissionRate(document.getElementById('admin-fee-input').value)">정책 일괄 적용</button>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn-mall btn-mall-dark" style="padding:7px 12px; font-size:12px;" onclick="openRfpModal()">DB·PG 연동 및 서버 초기화 설정</button>
+          <div style="display:flex; align-items:center; gap:8px; background:var(--bg-gray); padding:6px 12px; border:1px solid var(--border-color);">
+            <label for="admin-fee-input" style="font-size:12.5px; font-weight:700;">중개 수수료율(%)</label>
+            <input type="number" id="admin-fee-input" value="10" min="1" max="30" style="width:60px; padding:4px 6px; font-family:var(--font-mono); font-weight:700; border:1px solid var(--border-strong);" onchange="updateCommissionRate(this.value)" />
+            <button class="btn-mall btn-mall-brand" style="padding:5px 10px; font-size:12px;" onclick="updateCommissionRate(document.getElementById('admin-fee-input').value)">적용</button>
+          </div>
         </div>
       </div>
 
@@ -3299,21 +3336,40 @@
       </div>
 
       <div class="seller-split" style="margin-top:18px;">
-        <!-- 전체 회원 및 권한(Role) 관리 -->
+        <!-- 전체 회원 및 임직원 어드민 권한(Role) 관리 -->
         <div class="erp-box">
           <div class="erp-box-head">
-            <span>전체 회원 계정 및 등급(Role) 권한 관리</span>
-            <span style="font-size:11.5px; color:var(--text-secondary);">개인 회원 / 기업·연구 회원 / 관리자</span>
+            <span>임직원 어드민 권한 부여 및 전체 회원 등급(Role) 관리</span>
+            <span style="font-size:11.5px; color:var(--brand-dark); font-weight:700;">직원·임원 관리자 추가 및 승격</span>
           </div>
-          <div class="erp-box-body" style="padding:0; overflow-x:auto;">
+          <div class="erp-box-body" style="border-bottom:1px solid var(--border-color); background:var(--bg-gray); padding:12px 14px;">
+            <div style="font-size:12.5px; font-weight:800; color:var(--text-primary); margin-bottom:6px;">
+              + 신규 직원·임원 계정 직접 발급 (또는 어드민 권한 즉시 부여)
+            </div>
+            <form onsubmit="handleAdminCreateStaff(event)" style="display:grid; grid-template-columns:1fr 1fr 1.1fr 1fr auto; gap:6px; align-items:center;">
+              <input type="text" class="erp-input" id="staff-new-id" placeholder="아이디 (예: staff01)" style="padding:6px 8px; font-size:12px;" required />
+              <input type="password" class="erp-input" id="staff-new-pw" placeholder="초기 비밀번호" style="padding:6px 8px; font-size:12px;" required />
+              <input type="text" class="erp-input" id="staff-new-name" placeholder="성명·직급 (예: 이팀장/임원)" style="padding:6px 8px; font-size:12px;" required />
+              <select class="erp-input" id="staff-new-role" style="padding:6px 8px; font-size:12px; font-weight:700;">
+                <option value="ADMIN" selected>관리자 (임직원 어드민)</option>
+                <option value="CORPORATE">기업/연구 회원</option>
+                <option value="PERSONAL">개인 회원</option>
+              </select>
+              <button type="submit" class="btn-mall btn-mall-brand" style="padding:6px 12px; font-size:12px;">계정 발급</button>
+            </form>
+            <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span style="font-size:11px; color:var(--text-secondary);">* 이미 회원가입한 직원·임원은 아래 목록에서 <strong>[어드민 권한 부여]</strong> 버튼을 누르면 즉시 관리자 권한이 부여됩니다.</span>
+              <input type="text" class="erp-input" id="admin-user-search" placeholder="회원 아이디 또는 이름 검색..." style="max-width:210px; padding:4px 8px; font-size:11.5px; background:#fff;" oninput="renderAdminDashboard()" />
+            </div>
+          </div>
+          <div class="erp-box-body" style="padding:0; overflow-x:auto; max-height:320px; overflow-y:auto;">
             <table class="erp-table" style="border:none;">
               <thead>
                 <tr>
-                  <th>아이디 / 성명(상호)</th>
-                  <th>보안 비밀번호 해시(SHA-256)</th>
-                  <th>계정 유형 (Role)</th>
-                  <th>증빙·연구비결제</th>
-                  <th>권한 변경</th>
+                  <th>아이디 / 성명(직급·상호)</th>
+                  <th>현재 등급 (Role)</th>
+                  <th>임직원 어드민 빠른 지정</th>
+                  <th>상세 등급 변경</th>
                 </tr>
               </thead>
               <tbody id="admin-users-tbody"></tbody>
@@ -3544,29 +3600,14 @@
         <h3 style="font-size:18px; font-weight:800; margin-top:2px;">자투리마켓 로그인</h3>
       </div>
 
-      <div style="background:var(--brand-light); border:1px solid var(--brand-border); padding:10px 12px; margin-bottom:14px; font-size:12px;">
-        <div style="font-weight:800; color:var(--brand-dark); margin-bottom:6px;">계정 유형(Role)별 시딩 계정 빠른 선택</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">
-          <button type="button" class="btn-mall btn-mall-white" style="padding:7px 8px; font-size:11.5px;" onclick="fillLoginAccount('user01', '1234')">
-            [개인 회원] user01
-          </button>
-          <button type="button" class="btn-mall btn-mall-white" style="padding:7px 8px; font-size:11.5px;" onclick="fillLoginAccount('corp01', '1234')">
-            [기업/연구 회원] corp01
-          </button>
-        </div>
-        <div style="font-size:11px; color:var(--text-secondary);">
-          * 관리자 계정(<strong>jaturimarket</strong>) 로그인 시 통합 어드민 대시보드로 즉시 진입합니다.
-        </div>
-      </div>
-
       <form onsubmit="handleLoginSubmit(event)">
         <div class="form-row">
           <label for="login-id-input">아이디 (ID)</label>
-          <input type="text" class="erp-input" id="login-id-input" placeholder="아이디 입력 (user01 / corp01 / jaturimarket)" required />
+          <input type="text" class="erp-input" id="login-id-input" placeholder="아이디를 입력하세요" required />
         </div>
         <div class="form-row">
           <label for="login-pw-input">비밀번호 (PW)</label>
-          <input type="password" class="erp-input" id="login-pw-input" placeholder="비밀번호 입력 (SHA-256 보안 검증)" required />
+          <input type="password" class="erp-input" id="login-pw-input" placeholder="비밀번호를 입력하세요" required />
         </div>
         <button type="submit" class="btn-mall btn-mall-brand" style="width:100%; padding:11px; margin-top:4px;">로그인</button>
       </form>
@@ -3722,6 +3763,39 @@
 
 
   <!-- ==========================================
+       MODAL G: 다품목 장바구니 모달 (예: 알루미늄 1 · 파이프 1 묶음 확인 및 일괄 주문)
+       ========================================== -->
+  <div class="modal-backdrop no-print" id="cartModal">
+    <div class="modal-win" style="max-width:680px;">
+      <button class="modal-close-btn" onclick="closeModal('cartModal')">X</button>
+      <div style="border-bottom:2px solid var(--border-dark); padding-bottom:10px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:flex-end; padding-right:32px; flex-wrap:wrap; gap:8px;">
+        <div>
+          <span style="font-size:11px; font-weight:700; color:var(--brand);">MULTI-ITEM SHOPPING CART</span>
+          <h3 style="font-size:18px; font-weight:800; margin-top:2px;">장바구니 담은 품목 내역</h3>
+        </div>
+        <div id="cart-modal-cat-badges" style="font-size:12.5px; font-weight:800; color:var(--brand-dark); background:var(--brand-light); border:1px solid var(--brand-border); padding:4px 10px; border-radius:3px;">
+          담긴 품목 없음
+        </div>
+      </div>
+
+      <div id="cart-modal-body" style="max-height:380px; overflow-y:auto; margin-bottom:14px;"></div>
+
+      <div style="background:var(--bg-gray); border:1px solid var(--border-strong); padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div>
+          <span style="font-size:12px; color:var(--text-secondary);">장바구니 총 <strong id="cart-modal-count">0</strong>건 합산 결제 예정 금액 (VAT·직배송비 포함)</span>
+        </div>
+        <strong style="font-size:20px; font-weight:800; color:var(--price-red); font-family:var(--font-mono);" id="cart-modal-total-amt">0원</strong>
+      </div>
+
+      <div style="display:grid; grid-template-columns:auto 1fr 1.3fr; gap:8px;">
+        <button type="button" class="btn-mall btn-mall-white" style="color:var(--price-red);" onclick="clearCartItems()">장바구니 비우기</button>
+        <button type="button" class="btn-mall btn-mall-white" onclick="openCartQuoteModal()">장바구니 통합 견적서/명세서</button>
+        <button type="button" class="btn-mall btn-mall-brand" onclick="openCartOrderModal()">장바구니 전체 주문하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
        MODAL F: 하단 푸터 전용 페이지/안내 모달 (회사소개 · 파트너 공장 입점안내 · 대학/연구비 결제안내 · 이용약관 · 개인정보처리방침 · 고객센터)
        ========================================== -->
   <div class="modal-backdrop no-print" id="footerPolicyModal">
@@ -3783,6 +3857,9 @@
     let orderMode = 'CUT';
     let docType = '거 래 명 세 서';
     let currentCalcResult = null;
+    let cartItems = [];
+    let orderCheckoutMode = 'SINGLE'; // 'SINGLE' | 'CART'
+    let quoteRenderMode = 'SINGLE';   // 'SINGLE' | 'CART'
     let selectedPayMethodIdx = 1;
     let pendingOrderBuyerInfo = null;
     let signupMode = 'PERSONAL';
@@ -4362,14 +4439,14 @@
     // =========================================================================
     let pendingRedirectAfterLogin = null;
 
-    function openLoginConfirmModal() {
-      pendingRedirectAfterLogin = 'mypage';
+    function openLoginConfirmModal(targetRole) {
+      pendingRedirectAfterLogin = targetRole || 'mypage';
       document.getElementById('loginConfirmModal').classList.add('open');
     }
 
     function confirmMoveToLogin() {
       closeModal('loginConfirmModal');
-      pendingRedirectAfterLogin = 'mypage';
+      if (!pendingRedirectAfterLogin) pendingRedirectAfterLogin = 'mypage';
       openLoginModal();
     }
 
@@ -4437,9 +4514,10 @@
         return;
       }
 
-      if (pendingRedirectAfterLogin === 'mypage') {
+      if (pendingRedirectAfterLogin) {
+        const nextView = pendingRedirectAfterLogin;
         pendingRedirectAfterLogin = null;
-        switchRole('mypage');
+        switchRole(nextView);
       } else if (found.org && document.getElementById('buyer-org')) {
         document.getElementById('buyer-org').value = found.org;
       }
@@ -4455,7 +4533,7 @@
       renderNoticeBoard();
       renderAdminQnaBoard();
       const activeSec = document.querySelector('.view-section.active');
-      if (activeSec && (activeSec.id === 'view-mypage' || activeSec.id === 'view-seller' || activeSec.id === 'view-admin')) {
+      if (activeSec && (activeSec.id === 'view-mypage' || activeSec.id === 'view-orders' || activeSec.id === 'view-seller' || activeSec.id === 'view-admin')) {
         switchRole('buyer');
       }
       showToast('로그아웃 되었습니다.');
@@ -4531,11 +4609,24 @@
       // 등급(Role)별 상단 전용 탭 권한 분기:
       // - 공장 파트너센터(tab-seller): [기업/연구 회원(CORPORATE)] 및 [관리자(ADMIN)]만 노출 (개인회원/비로그인 숨김)
       // - 통합 어드민(tab-admin): [관리자(ADMIN)]만 노출
+      const utilRfpLi = document.getElementById('util-rfp-li');
+      const qBtnMypage = document.getElementById('quick-btn-mypage');
+      const qBtnQuote = document.getElementById('quick-btn-quote');
+      const qBtnOrders = document.getElementById('quick-btn-orders');
+      const isLoggedIn = Boolean(currentUser);
+
+      if (qBtnMypage) qBtnMypage.style.display = isLoggedIn ? 'flex' : 'none';
+      if (qBtnQuote) qBtnQuote.style.display = isLoggedIn ? 'flex' : 'none';
+      if (qBtnOrders) qBtnOrders.style.display = isLoggedIn ? 'flex' : 'none';
+
       if (tabSeller) {
         tabSeller.style.display = (role === 'CORPORATE' || role === 'ADMIN') ? '' : 'none';
       }
       if (tabAdmin) {
         tabAdmin.style.display = (role === 'ADMIN') ? '' : 'none';
+      }
+      if (utilRfpLi) {
+        utilRfpLi.style.display = (role === 'ADMIN') ? '' : 'none';
       }
 
       if (!currentUser) {
@@ -5020,7 +5111,7 @@
             ` : ''}
             ${(currentUser && (currentUser.role === 'ADMIN' || currentUser.type === 'ADMIN')) ? `
               <div class="qna-reply-form">
-                <input type="text" class="erp-input" id="admin-reply-input-${post.id}" placeholder="관리자(jaturimarket) 공식 답변 내용을 입력하거나 수정하세요..." value="${post.answer || ''}" />
+                <input type="text" class="erp-input" id="admin-reply-input-${post.id}" placeholder="관리자 공식 답변 내용을 입력하거나 수정하세요..." value="${post.answer || ''}" />
                 <button type="button" class="btn-mall btn-mall-dark" style="padding:7px 12px; font-size:12px;" onclick="submitAdminQnaReply('${post.id}')">
                   ${hasAnswer ? '관리자 답변 수정' : '관리자 답변 등록'}
                 </button>
@@ -5431,7 +5522,7 @@
     function handleNoticeSubmit(e) {
       e.preventDefault();
       if (!currentUser || (currentUser.role !== 'ADMIN' && currentUser.type !== 'ADMIN')) {
-        showToast('공지사항 등록은 관리자(jaturimarket) 권한 전용입니다.');
+        showToast('공지사항 등록은 관리자 권한 전용입니다.');
         return;
       }
       const cat = document.getElementById('notice-cat-input').value;
@@ -5456,9 +5547,9 @@
     }
 
     function switchRole(role) {
-      // 1) 비로그인 상태에서 마이페이지 접근 시 진입 차단 후 "로그인 하시겠습니까?" 확인 모달 노출
-      if (role === 'mypage' && !currentUser) {
-        openLoginConfirmModal();
+      // 1) 비로그인 상태에서 마이페이지 또는 주문내역 접근 시 진입 차단 후 "로그인 하시겠습니까?" 확인 모달 노출
+      if ((role === 'mypage' || role === 'orders') && !currentUser) {
+        openLoginConfirmModal(role);
         return;
       }
 
@@ -5470,7 +5561,7 @@
         return;
       }
       if (role === 'admin' && userRole !== 'ADMIN') {
-        showToast('통합 어드민 대시보드는 [관리자(jaturimarket)] 전용 메뉴입니다.');
+        showToast('통합 어드민 대시보드는 [관리자] 전용 메뉴입니다.');
         openLoginModal();
         return;
       }
@@ -5865,7 +5956,7 @@
                     </div>
                     <div class="prd-market-price">시중 ${calcMarketPrice.toLocaleString()}원</div>
                   </div>
-                  <button type="button" class="btn-order-mini">${isSelected ? '선택됨 (계산중)' : '맞춤재단·주문'}</button>
+                  <button type="button" class="btn-order-mini">${isSelected ? '선택됨 (재클릭 해제)' : '맞춤재단·주문'}</button>
                 </div>
                 <div class="prd-meta-bottom">
                   <span>자투리시세 ${rateSpec.scrapPerKg.toLocaleString()}원/kg</span>
@@ -5879,6 +5970,15 @@
     }
 
     function selectMaterial(id) {
+      if (selectedMaterialId === id) {
+        selectedMaterialId = '';
+        currentCalcResult = null;
+        renderCatalog();
+        updateCalculator();
+        renderProductDetailCommunity();
+        showToast('상품 선택이 해제되었습니다.');
+        return;
+      }
       selectedMaterialId = id;
       const mat = materials.find(m => m.id === id);
       if (!mat) return;
@@ -5895,6 +5995,7 @@
 
       renderCatalog();
       updateCalculator();
+      renderCartUI();
       renderProductDetailCommunity();
     }
 
@@ -6143,14 +6244,239 @@
     }
 
     // =========================================================================
-    // 7. 주문 1단계(이름/주소 입력창) -> 2단계(결제창 & 가상계좌 발급)
+    // 6-B. 다품목 장바구니 (예: 알루미늄 1 · 파이프 1) 담기, 요약, 일괄 주문 기능
     // =========================================================================
-    function openOrderStep1Modal() {
-      if (!currentCalcResult) {
-        showToast('먼저 상품 목록에서 원하시는 자재를 클릭해 선택해 주세요.');
+    function getShortCatLabel(cat) {
+      if (!cat) return '기타';
+      if (cat.includes('파이프')) return '파이프';
+      if (cat.includes('알루미늄')) return '알루미늄';
+      if (cat.includes('스테인리스')) return '스테인리스';
+      if (cat.includes('아크릴')) return '아크릴';
+      if (cat.includes('구리')) return '구리·황동';
+      return cat;
+    }
+
+    function getCartCategorySummaryText() {
+      if (cartItems.length === 0) return '비어 있음 (상품 선택 후 담아보세요)';
+      const counts = {};
+      cartItems.forEach(item => {
+        const label = getShortCatLabel(item.category);
+        counts[label] = (counts[label] || 0) + 1;
+      });
+      return Object.entries(counts).map(([k, v]) => `${k} ${v}`).join(' · ');
+    }
+
+    function addToCart() {
+      if (!currentCalcResult || !selectedMaterialId) {
+        showToast('먼저 상품 목록에서 자재를 클릭해 치수·수량을 확인한 뒤 담아주세요.');
         return;
       }
       const c = currentCalcResult;
+      const scrapText = document.getElementById('scrap-handling').value === 'INCLUDE'
+        ? '잔여 자투리 동봉 발송'
+        : '재단 면적만큼만 최저시세 결제';
+
+      const cartItem = {
+        cartId: `CART-${Date.now()}-${Math.floor(Math.random() * 100)}`,
+        materialId: c.mat.id,
+        code: c.mat.code,
+        category: c.mat.category,
+        materialName: c.mat.name,
+        partner: c.mat.partner,
+        origSpec: `${c.mat.w} x ${c.mat.l} x ${c.mat.t}mm`,
+        t: c.mat.t,
+        mode: c.mode,
+        reqW: c.reqW,
+        reqL: c.reqL,
+        reqQty: c.reqQty,
+        platesNeeded: c.platesNeeded,
+        cutCount: c.cutCount,
+        cutSpec: c.mode === 'CUT'
+          ? `${c.reqW} x ${c.reqL} x ${c.mat.t}mm (${c.reqQty}EA) / 절단 ${c.cutCount}회`
+          : `원판 구매 (${c.mat.w}x${c.mat.l}x${c.mat.t}mm, ${c.reqQty}장)`,
+        scrapOption: scrapText,
+        weightKg: c.weightKg,
+        baseCost: c.baseCost,
+        cutCost: c.cutCost,
+        shipCost: c.shipCost,
+        vat: c.vat,
+        total: c.total
+      };
+
+      cartItems.push(cartItem);
+      saveStateToStorage();
+      syncTableRowToSupabase('cart_items', {
+        id: cartItem.cartId,
+        buyer_id: currentUser ? currentUser.id : 'guest',
+        material_id: cartItem.materialId,
+        code: cartItem.code,
+        category: cartItem.category,
+        material_name: cartItem.materialName,
+        partner: cartItem.partner,
+        orig_spec: cartItem.origSpec,
+        mode: cartItem.mode,
+        req_w: cartItem.reqW,
+        req_l: cartItem.reqL,
+        req_qty: cartItem.reqQty,
+        cut_spec: cartItem.cutSpec,
+        scrap_option: cartItem.scrapOption,
+        weight_kg: Number(cartItem.weightKg.toFixed(2)),
+        base_cost: cartItem.baseCost,
+        cut_cost: cartItem.cutCost,
+        ship_cost: cartItem.shipCost,
+        vat: cartItem.vat,
+        total_amount: cartItem.total
+      });
+      renderCartUI();
+      updateBadges();
+      showToast(`장바구니 담기 완료 [${getCartCategorySummaryText()}]`);
+    }
+
+    function removeFromCart(cartId) {
+      const idx = cartItems.findIndex(item => item.cartId === cartId);
+      if (idx === -1) return;
+      cartItems.splice(idx, 1);
+      saveStateToStorage();
+      deleteRowFromSupabase('cart_items', cartId);
+      renderCartUI();
+      updateBadges();
+      showToast('장바구니에서 선택한 품목이 삭제되었습니다.');
+    }
+
+    function clearCartItems() {
+      if (cartItems.length === 0) return;
+      cartItems.forEach(item => deleteRowFromSupabase('cart_items', item.cartId));
+      cartItems.length = 0;
+      saveStateToStorage();
+      renderCartUI();
+      updateBadges();
+      showToast('장바구니를 비웠습니다.');
+    }
+
+    function renderCartUI() {
+      const summaryText = getCartCategorySummaryText();
+      const totalAmt = cartItems.reduce((acc, item) => acc + item.total, 0);
+
+      const cntEl = document.getElementById('calc-cart-total-count');
+      const sumEl = document.getElementById('calc-cart-cat-summary');
+      const miniEl = document.getElementById('calc-cart-items-mini');
+      const actEl = document.getElementById('calc-cart-actions');
+      const priceEl = document.getElementById('calc-cart-total-price');
+
+      if (cntEl) cntEl.textContent = cartItems.length;
+      if (sumEl) sumEl.textContent = summaryText;
+      if (priceEl) priceEl.textContent = `${totalAmt.toLocaleString()}원`;
+
+      if (miniEl && actEl) {
+        if (cartItems.length === 0) {
+          miniEl.style.display = 'none';
+          actEl.style.display = 'none';
+        } else {
+          miniEl.style.display = 'block';
+          actEl.style.display = 'flex';
+          miniEl.innerHTML = cartItems.map((item, idx) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; padding:4px 0; border-bottom:1px dotted var(--border-color);">
+              <div style="min-width:0; flex:1;">
+                <span class="tag-square tag-cut" style="font-size:10px; padding:1px 5px; margin-right:4px;">${getShortCatLabel(item.category)}</span>
+                <strong style="color:var(--text-primary);">${item.materialName.replace(/^\[[^\]]+\]\s*/, '')}</strong>
+                <div style="font-family:var(--font-mono); font-size:10.5px; color:var(--text-secondary);">${item.cutSpec}</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                <strong style="font-family:var(--font-mono); color:var(--brand-dark);">${item.total.toLocaleString()}원</strong>
+                <button type="button" class="util-btn" style="color:var(--price-red); font-weight:800; padding:0 4px;" onclick="removeFromCart('${item.cartId}')">X</button>
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Update Cart Modal if open
+      const modalBadges = document.getElementById('cart-modal-cat-badges');
+      const modalBody = document.getElementById('cart-modal-body');
+      const modalCount = document.getElementById('cart-modal-count');
+      const modalTotal = document.getElementById('cart-modal-total-amt');
+
+      if (modalBadges) modalBadges.textContent = cartItems.length > 0 ? `담은 구성: ${summaryText}` : '담긴 품목 없음';
+      if (modalCount) modalCount.textContent = cartItems.length;
+      if (modalTotal) modalTotal.textContent = `${totalAmt.toLocaleString()}원`;
+      if (modalBody) {
+        if (cartItems.length === 0) {
+          modalBody.innerHTML = `<div style="padding:36px 16px; text-align:center; color:var(--text-secondary); border:1px dashed var(--border-color);">장바구니에 담긴 자재가 없습니다.<br/>상품 목록에서 알루미늄, 파이프 등을 클릭해 치수를 입력한 뒤 <strong>[+ 장바구니 담기]</strong>를 눌러보세요.</div>`;
+        } else {
+          modalBody.innerHTML = `
+            <table class="erp-table">
+              <thead>
+                <tr>
+                  <th>분류</th>
+                  <th>품목명 / 공급사</th>
+                  <th>맞춤재단 치수·수량</th>
+                  <th class="num">합산금액(VAT포함)</th>
+                  <th>삭제</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${cartItems.map(item => `
+                  <tr>
+                    <td><span class="tag-square tag-cut">${getShortCatLabel(item.category)}</span></td>
+                    <td>
+                      <div style="font-weight:700;">[${item.code}] ${item.materialName}</div>
+                      <div style="font-size:11px; color:var(--text-muted);">${item.partner}</div>
+                    </td>
+                    <td style="font-family:var(--font-mono); font-size:11.5px; color:var(--brand-dark); font-weight:700;">${item.cutSpec}</td>
+                    <td class="num" style="font-weight:800;">${item.total.toLocaleString()}원</td>
+                    <td style="text-align:center;">
+                      <button type="button" class="btn-mall btn-mall-white" style="padding:3px 8px; font-size:11px; color:var(--price-red);" onclick="removeFromCart('${item.cartId}')">삭제</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        }
+      }
+    }
+
+    function openCartModal() {
+      renderCartUI();
+      document.getElementById('cartModal').classList.add('open');
+    }
+
+    function openCartOrderModal() {
+      if (cartItems.length === 0) {
+        showToast('장바구니에 담긴 상품이 없습니다.');
+        return;
+      }
+      closeModal('cartModal');
+      orderCheckoutMode = 'CART';
+      openOrderStep1Modal(true);
+    }
+
+    function openCartQuoteModal() {
+      if (cartItems.length === 0) {
+        showToast('장바구니에 담긴 상품이 없습니다.');
+        return;
+      }
+      closeModal('cartModal');
+      quoteRenderMode = 'CART';
+      renderPrintableDocument();
+      document.getElementById('quoteModal').classList.add('open');
+    }
+
+    // =========================================================================
+    // 7. 주문 1단계(이름/주소 입력창) -> 2단계(결제창 & 가상계좌 발급)
+    // =========================================================================
+    function openOrderStep1Modal(fromCart) {
+      if (!fromCart) {
+        if (!currentCalcResult) {
+          if (cartItems.length > 0) {
+            openCartOrderModal();
+            return;
+          }
+          showToast('먼저 상품 목록에서 원하시는 자재를 클릭해 선택해 주세요.');
+          return;
+        }
+        orderCheckoutMode = 'SINGLE';
+      }
 
       if (currentUser) {
         document.getElementById('ord-buyer-name').value = currentUser.name || '';
@@ -6158,27 +6484,45 @@
         document.getElementById('ord-buyer-addr').value = currentUser.addr || '';
         document.getElementById('ord-buyer-addr-detail').value = currentUser.addrDetail || '상세주소 입력';
       } else if (!document.getElementById('ord-buyer-name').value) {
-        document.getElementById('ord-buyer-name').value = '김연구';
-        document.getElementById('ord-buyer-phone').value = '010-2849-1029';
-        document.getElementById('ord-buyer-addr').value = '울산광역시 남구 대학로 93';
-        document.getElementById('ord-buyer-addr-detail').value = '기계공학관 302호 실험실';
+        document.getElementById('ord-buyer-name').value = '';
+        document.getElementById('ord-buyer-phone').value = '';
+        document.getElementById('ord-buyer-addr').value = '';
+        document.getElementById('ord-buyer-addr-detail').value = '';
       }
 
-      document.getElementById('step1-item-brief').innerHTML = `
-        <div style="font-weight:800; color:var(--text-primary); margin-bottom:2px;">주문 품목: [${c.mat.code}] ${c.mat.name}</div>
-        <div style="font-family:var(--font-mono); color:var(--brand-dark); font-weight:700;">
-          ${c.mode === 'CUT'
-            ? `맞춤 재단: ${c.reqW} x ${c.reqL} x ${c.mat.t}mm (${c.reqQty}EA / ${c.weightKg.toFixed(2)}kg)`
-            : `원판 구매: ${c.mat.w} x ${c.mat.l} x ${c.mat.t}mm (${c.reqQty}장 / ${c.weightKg.toFixed(2)}kg)`}
-          | 결제금액: <span style="color:var(--price-red);">${c.total.toLocaleString()}원</span>
-        </div>
-      `;
+      if (orderCheckoutMode === 'CART') {
+        const totalAmt = cartItems.reduce((acc, item) => acc + item.total, 0);
+        document.getElementById('step1-item-brief').innerHTML = `
+          <div style="font-weight:800; color:var(--text-primary); margin-bottom:2px;">장바구니 일괄 주문 (${cartItems.length}건): ${getCartCategorySummaryText()}</div>
+          <div style="font-family:var(--font-mono); color:var(--brand-dark); font-weight:700;">
+            총 결제 예정 금액: <span style="color:var(--price-red);">${totalAmt.toLocaleString()}원</span>
+          </div>
+        `;
+      } else {
+        const c = currentCalcResult;
+        document.getElementById('step1-item-brief').innerHTML = `
+          <div style="font-weight:800; color:var(--text-primary); margin-bottom:2px;">주문 품목: [${c.mat.code}] ${c.mat.name}</div>
+          <div style="font-family:var(--font-mono); color:var(--brand-dark); font-weight:700;">
+            ${c.mode === 'CUT'
+              ? `맞춤 재단: ${c.reqW} x ${c.reqL} x ${c.mat.t}mm (${c.reqQty}EA / ${c.weightKg.toFixed(2)}kg)`
+              : `원판 구매: ${c.mat.w} x ${c.mat.l} x ${c.mat.t}mm (${c.reqQty}장 / ${c.weightKg.toFixed(2)}kg)`}
+            | 결제금액: <span style="color:var(--price-red);">${c.total.toLocaleString()}원</span>
+          </div>
+        `;
+      }
       document.getElementById('orderInfoModal').classList.add('open');
+    }
+
+    function getActiveCheckoutTotal() {
+      if (orderCheckoutMode === 'CART') {
+        return cartItems.reduce((acc, item) => acc + item.total, 0);
+      }
+      return currentCalcResult ? currentCalcResult.total : 0;
     }
 
     function proceedToPaymentStep2(e) {
       e.preventDefault();
-      if (!currentCalcResult) return;
+      if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
 
       const name = document.getElementById('ord-buyer-name').value.trim();
       const phone = document.getElementById('ord-buyer-phone').value.trim();
@@ -6203,29 +6547,47 @@
     }
 
     function openPaymentModal() {
-      if (!currentCalcResult) return;
-      const c = currentCalcResult;
-      const b = pendingOrderBuyerInfo || { name: '김연구', phone: '010-2849-1029', fullAddress: '울산광역시 남구 대학로 93', org: '울산모빌리티연구실' };
+      if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
+      const b = pendingOrderBuyerInfo || { name: '구매고객', phone: '-', fullAddress: '-', org: '개인/기업' };
 
       document.getElementById('va-depositor-name').value = b.name;
       generateVirtualAccountNumber();
 
-      document.getElementById('payment-summary-box').innerHTML = `
-        <div style="font-weight:800; font-size:13.5px; margin-bottom:4px;">[${c.mat.code}] ${c.mat.name}</div>
-        <div style="color:var(--brand-dark); font-weight:700; font-family:var(--font-mono); margin-bottom:6px;">
-          ${c.mode === 'CUT'
-            ? `맞춤 재단: ${c.reqW} x ${c.reqL}mm (${c.reqQty}EA) / 절단 ${c.cutCount}회`
-            : `원판 그대로 구매: ${c.mat.w} x ${c.mat.l} x ${c.mat.t}mm (${c.reqQty}장)`}
-        </div>
-        <div style="font-size:12px; color:var(--text-secondary); border-top:1px dashed var(--border-strong); padding-top:6px; margin-bottom:6px;">
-          <div><strong>수령인:</strong> ${b.name} (${b.phone})</div>
-          <div><strong>배송지 주소:</strong> ${b.fullAddress}</div>
-        </div>
-        <div style="border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between; font-size:14px; font-weight:800;">
-          <span>총 결제 금액 (VAT 포함)</span>
-          <span style="color:var(--price-red); font-family:var(--font-mono);">${c.total.toLocaleString()}원</span>
-        </div>
-      `;
+      if (orderCheckoutMode === 'CART') {
+        const totalAmt = getActiveCheckoutTotal();
+        document.getElementById('payment-summary-box').innerHTML = `
+          <div style="font-weight:800; font-size:13.5px; margin-bottom:4px;">장바구니 일괄 결제 (${cartItems.length}개 품목: ${getCartCategorySummaryText()})</div>
+          <div style="color:var(--brand-dark); font-weight:700; font-family:var(--font-mono); font-size:11.5px; margin-bottom:6px;">
+            ${cartItems.map(i => `• [${getShortCatLabel(i.category)}] ${i.cutSpec}`).join('<br/>')}
+          </div>
+          <div style="font-size:12px; color:var(--text-secondary); border-top:1px dashed var(--border-strong); padding-top:6px; margin-bottom:6px;">
+            <div><strong>수령인:</strong> ${b.name} (${b.phone})</div>
+            <div><strong>배송지 주소:</strong> ${b.fullAddress}</div>
+          </div>
+          <div style="border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between; font-size:14px; font-weight:800;">
+            <span>총 결제 금액 (VAT 포함)</span>
+            <span style="color:var(--price-red); font-family:var(--font-mono);">${totalAmt.toLocaleString()}원</span>
+          </div>
+        `;
+      } else {
+        const c = currentCalcResult;
+        document.getElementById('payment-summary-box').innerHTML = `
+          <div style="font-weight:800; font-size:13.5px; margin-bottom:4px;">[${c.mat.code}] ${c.mat.name}</div>
+          <div style="color:var(--brand-dark); font-weight:700; font-family:var(--font-mono); margin-bottom:6px;">
+            ${c.mode === 'CUT'
+              ? `맞춤 재단: ${c.reqW} x ${c.reqL}mm (${c.reqQty}EA) / 절단 ${c.cutCount}회`
+              : `원판 그대로 구매: ${c.mat.w} x ${c.mat.l} x ${c.mat.t}mm (${c.reqQty}장)`}
+          </div>
+          <div style="font-size:12px; color:var(--text-secondary); border-top:1px dashed var(--border-strong); padding-top:6px; margin-bottom:6px;">
+            <div><strong>수령인:</strong> ${b.name} (${b.phone})</div>
+            <div><strong>배송지 주소:</strong> ${b.fullAddress}</div>
+          </div>
+          <div style="border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between; font-size:14px; font-weight:800;">
+            <span>총 결제 금액 (VAT 포함)</span>
+            <span style="color:var(--price-red); font-family:var(--font-mono);">${c.total.toLocaleString()}원</span>
+          </div>
+        `;
+      }
       selectPayMethod(1);
       document.getElementById('paymentModal').classList.add('open');
     }
@@ -6241,9 +6603,8 @@
       };
       const acct = bankAccountMap[bank] || '042-891024-01-019';
       document.getElementById('va-issued-number').textContent = `${bank} ${acct}`;
-      if (currentCalcResult) {
-        document.getElementById('va-exact-amount').textContent = `${currentCalcResult.total.toLocaleString()}원`;
-      }
+      const exactAmt = getActiveCheckoutTotal();
+      document.getElementById('va-exact-amount').textContent = `${exactAmt.toLocaleString()}원`;
     }
 
     function selectPayMethod(idx) {
@@ -6267,13 +6628,8 @@
     }
 
     function confirmOrderPayment() {
-      const c = currentCalcResult;
-      if (!c) return;
-      const b = pendingOrderBuyerInfo || { name: '김연구', phone: '010-2849-1029', fullAddress: '울산광역시 남구 대학로 93', org: '울산모빌리티연구실' };
-
-      const scrapText = document.getElementById('scrap-handling').value === 'INCLUDE'
-        ? '잔여 자투리 동봉 발송'
-        : '재단 면적만큼만 최저시세 결제';
+      if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
+      const b = pendingOrderBuyerInfo || { name: '구매고객', phone: '-', fullAddress: '-', org: '개인/기업' };
 
       let payMethodDesc = '';
       if (selectedPayMethodIdx === 1) {
@@ -6286,14 +6642,63 @@
         payMethodDesc = '카카오·토스 간편결제';
       }
 
+      if (orderCheckoutMode === 'CART') {
+        const createdIds = [];
+        cartItems.slice().reverse().forEach((item, idx) => {
+          const ordId = `ORD-261016-0${orders.length + 1}`;
+          const newOrd = {
+            id: ordId,
+            date: '2026-10-16 10:00',
+            buyerId: currentUser ? currentUser.id : 'guest',
+            buyer: `${b.name} (${b.org})`,
+            phone: b.phone,
+            address: b.fullAddress,
+            partner: item.partner,
+            materialId: item.materialId,
+            materialName: item.materialName,
+            origSpec: item.origSpec,
+            mode: item.mode,
+            cutSpec: item.cutSpec,
+            scrapOption: item.scrapOption,
+            payMethod: payMethodDesc,
+            totalAmount: item.total,
+            status: 'RECEIVED',
+            courier: '',
+            waybill: '',
+            settled: false
+          };
+          orders.unshift(newOrd);
+          createdIds.push(ordId);
+          const m = materials.find(x => x.id === item.materialId);
+          if (m) m.stock = Math.max(1, m.stock - (item.platesNeeded || 1));
+          syncOrderToSupabase(newOrd);
+          deleteRowFromSupabase('cart_items', item.cartId);
+        });
+        cartItems.length = 0;
+        saveStateToStorage();
+        closeModal('paymentModal');
+        renderCartUI();
+        updateBadges();
+        renderCatalog();
+        updateCalculator();
+        showToast(`장바구니 ${createdIds.length}건 일괄 주문이 완료되었습니다! [주문내역]에서 확인하세요.`);
+        return;
+      }
+
+      const c = currentCalcResult;
+      const scrapText = document.getElementById('scrap-handling').value === 'INCLUDE'
+        ? '잔여 자투리 동봉 발송'
+        : '재단 면적만큼만 최저시세 결제';
+
       const newOrder = {
-        id: `ORD-261014-0${orders.length + 1}`,
-        date: '2026-10-14 20:25',
+        id: `ORD-261016-0${orders.length + 1}`,
+        date: '2026-10-16 10:00',
         buyerId: currentUser ? currentUser.id : 'guest',
         buyer: `${b.name} (${b.org})`,
         phone: b.phone,
         address: b.fullAddress,
         partner: c.mat.partner,
+        materialId: c.mat.id,
         materialName: c.mat.name,
         origSpec: `${c.mat.w} x ${c.mat.l} x ${c.mat.t}mm`,
         mode: c.mode,
@@ -6312,11 +6717,12 @@
       orders.unshift(newOrder);
       c.mat.stock = Math.max(1, c.mat.stock - c.platesNeeded);
       saveStateToStorage();
+      syncOrderToSupabase(newOrder);
       closeModal('paymentModal');
       updateBadges();
       renderCatalog();
       updateCalculator();
-      showToast(`주문 완료 [${newOrder.id}] — 마이페이지 주문내역에서 바로 확인하실 수 있습니다.`);
+      showToast(`주문 완료 [${newOrder.id}] — 주문내역에서 바로 확인하실 수 있습니다.`);
     }
 
 
@@ -6511,8 +6917,12 @@
     }
 
     function openQuoteModal() {
-      if (!currentCalcResult) {
-        showToast('먼저 상품 목록에서 원하시는 자재를 클릭해 선택해 주세요.');
+      if (currentCalcResult) {
+        quoteRenderMode = 'SINGLE';
+      } else if (cartItems.length > 0) {
+        quoteRenderMode = 'CART';
+      } else {
+        showToast('먼저 상품 목록에서 자재를 선택하거나 장바구니에 상품을 담아주세요.');
         return;
       }
       renderPrintableDocument();
@@ -6525,13 +6935,90 @@
     }
 
     function renderPrintableDocument() {
-      const c = currentCalcResult;
       const buyerOrg = document.getElementById('buyer-org').value || (currentUser ? currentUser.name : '귀하');
+      const area = document.getElementById('printable-doc-area');
+
+      if (quoteRenderMode === 'CART' && cartItems.length > 0) {
+        const sumSupply = cartItems.reduce((acc, i) => acc + i.baseCost + i.cutCost + i.shipCost, 0);
+        const sumVat = cartItems.reduce((acc, i) => acc + i.vat, 0);
+        const sumTotal = cartItems.reduce((acc, i) => acc + i.total, 0);
+        const rowsHtml = cartItems.map((item, idx) => `
+          <tr>
+            <td style="text-align:center;">${idx + 1}</td>
+            <td style="white-space:normal;">[${item.code}] ${item.materialName} (${item.partner})</td>
+            <td style="white-space:normal;">${item.cutSpec} (직배송비 포함)</td>
+            <td style="text-align:center;">${item.reqQty}EA (${item.weightKg.toFixed(2)}kg)</td>
+            <td style="text-align:right; font-family:monospace;">${(item.baseCost + item.cutCost + item.shipCost).toLocaleString()}원</td>
+          </tr>
+        `).join('');
+
+        area.innerHTML = `
+          <div class="quote-header-row">
+            <div>
+              <div style="font-size:11px; font-weight:700; color:#277381;">산업용 자투리 자재 맞춤재단 오픈마켓 (${getCartCategorySummaryText()})</div>
+              <div style="font-size:15px; font-weight:900;">자투리마켓 (Jaturi Market)</div>
+            </div>
+            <div class="quote-title">${docType}</div>
+            <div style="text-align:right; font-size:11.5px; font-family:monospace;">
+              <div>문서번호: JM-20261016-CART</div>
+              <div>발행일자: 2026-10-16</div>
+            </div>
+          </div>
+          <table class="quote-table" style="margin-bottom:12px;">
+            <tbody>
+              <tr>
+                <th style="width:15%;">수신처</th>
+                <td style="width:35%; font-weight:700; white-space:normal;">${buyerOrg} 귀하</td>
+                <th style="width:15%;">공급자 상호</th>
+                <td style="width:35%;">자투리마켓 통합 정산 (${cartItems.length}건)</td>
+              </tr>
+              <tr>
+                <th>결제구분</th>
+                <td>가상계좌 무통장 / 연구비·법인카드</td>
+                <th>품목구성</th>
+                <td>${getCartCategorySummaryText()}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="border:2px solid #000; padding:9px 14px; margin-bottom:12px; background:#f8f9fa; display:flex; justify-content:space-between; font-size:14px; font-weight:800;">
+            <span>총 합계금액 (부가가치세 포함)</span>
+            <span style="font-family:monospace;">일금 ${sumTotal.toLocaleString()} 원정</span>
+          </div>
+          <table class="quote-table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>품목코드 / 재질명</th>
+                <th>규격 및 재단 치수(mm)</th>
+                <th>수량/중량</th>
+                <th>공급가액</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot>
+              <tr>
+                <th colspan="4" style="text-align:right;">공급가액 합계</th>
+                <th style="text-align:right; font-family:monospace;">${sumSupply.toLocaleString()}원</th>
+              </tr>
+              <tr>
+                <th colspan="4" style="text-align:right;">부가가치세 (VAT 10%)</th>
+                <th style="text-align:right; font-family:monospace;">${sumVat.toLocaleString()}원</th>
+              </tr>
+              <tr>
+                <th colspan="4" style="text-align:right;">총 청구(결제) 금액</th>
+                <th style="text-align:right; font-family:monospace; color:#e03131;">${sumTotal.toLocaleString()}원</th>
+              </tr>
+            </tfoot>
+          </table>
+        `;
+        return;
+      }
+
+      const c = currentCalcResult;
+      if (!c) return;
       const specDesc = c.mode === 'CUT'
         ? `맞춤 재단: ${c.reqW}x${c.reqL}x${c.mat.t}mm (${c.reqQty}EA / ${c.weightKg.toFixed(2)}kg)`
         : `원판 그대로 구매: ${c.mat.w}x${c.mat.l}x${c.mat.t}mm (${c.reqQty}장)`;
-
-      const area = document.getElementById('printable-doc-area');
       area.innerHTML = `
         <div class="quote-header-row">
           <div style="display:flex; align-items:center; gap:10px;">
@@ -6835,9 +7322,34 @@
       showToast(`[${orderId}] 주문 상태가 변경되었습니다.`);
     }
 
+    function syncUserToSupabase(u) {
+      syncTableRowToSupabase('users', {
+        id: u.id,
+        pw_hash: u.pwHash || sha256Hex(u.pw || '1234'),
+        role: u.role || u.type || 'PERSONAL',
+        name: u.name || '',
+        phone: u.phone || '',
+        addr: u.addr || '',
+        addr_detail: u.addrDetail || '',
+        org: u.org || u.name || '',
+        partner_id: u.partnerId || null,
+        region: u.region || '',
+        items: u.items || '',
+        equip: u.equip || '',
+        logo_text: u.logoText || '',
+        logo_url: u.logoUrl || '',
+        can_issue_docs: true
+      });
+    }
+
     function changeUserRoleByAdmin(userId, newRole) {
       const u = users.find(item => item.id === userId);
       if (!u) return;
+      if (u.id === 'jaturimarket' && newRole !== 'ADMIN') {
+        showToast('최고 관리자 계정의 어드민 권한은 해제할 수 없습니다.');
+        renderAdminDashboard();
+        return;
+      }
       u.role = newRole;
       u.type = newRole;
       if (currentUser && currentUser.id === u.id) {
@@ -6845,9 +7357,50 @@
         currentUser.type = newRole;
       }
       saveStateToStorage();
+      syncUserToSupabase(u);
       updateAuthUI();
       renderAdminDashboard();
-      showToast(`[${u.id}] 계정의 권한 등급이 [${getRoleLabel(newRole)}](으)로 변경되었습니다.`);
+      showToast(`[${u.name} (${u.id})] 계정의 권한 등급이 [${getRoleLabel(newRole)}](으)로 변경되었습니다.`);
+    }
+
+    function handleAdminCreateStaff(e) {
+      e.preventDefault();
+      if (!currentUser || (currentUser.role !== 'ADMIN' && currentUser.type !== 'ADMIN')) {
+        showToast('관리자 권한이 필요합니다.');
+        return;
+      }
+      const id = document.getElementById('staff-new-id').value.trim();
+      const pw = document.getElementById('staff-new-pw').value.trim();
+      const name = document.getElementById('staff-new-name').value.trim();
+      const role = document.getElementById('staff-new-role').value;
+
+      if (!id || !pw || !name) return;
+      if (users.some(u => u.id === id)) {
+        showToast('이미 존재하는 아이디입니다. 아래 목록에서 해당 계정의 권한을 변경해 주세요.');
+        return;
+      }
+
+      const newStaff = {
+        id,
+        pwHash: sha256Hex(pw),
+        type: role,
+        role: role,
+        name,
+        phone: '052-000-0000',
+        addr: '자투리마켓 운영본부',
+        addrDetail: '임직원 계정',
+        org: `자투리마켓 (${name})`,
+        canIssueDocs: true
+      };
+
+      users.unshift(newStaff);
+      saveStateToStorage();
+      syncUserToSupabase(newStaff);
+      document.getElementById('staff-new-id').value = '';
+      document.getElementById('staff-new-pw').value = '';
+      document.getElementById('staff-new-name').value = '';
+      renderAdminDashboard();
+      showToast(`신규 계정 [${name} (${id})]이(가) [${getRoleLabel(role)}] 권한으로 발급되었습니다.`);
     }
 
     function deleteMaterialByAdmin(matId) {
@@ -6973,27 +7526,36 @@
 
       const uTbody = document.getElementById('admin-users-tbody');
       if (uTbody) {
-        uTbody.innerHTML = users.map(u => {
+        const searchKw = (document.getElementById('admin-user-search') ? document.getElementById('admin-user-search').value : '').trim().toLowerCase();
+        const filteredUsers = users.filter(u => {
+          if (!searchKw) return true;
+          return `${u.id} ${u.name} ${u.org || ''}`.toLowerCase().includes(searchKw);
+        });
+        uTbody.innerHTML = filteredUsers.map(u => {
           const r = u.role || u.type || 'PERSONAL';
-          const shortHash = (u.pwHash || sha256Hex(u.pw || '')).substring(0, 16) + '...';
+          const isRootAdmin = (u.id === 'jaturimarket');
+          const quickBtnHtml = isRootAdmin
+            ? `<span style="font-size:11px; color:var(--brand-dark); font-weight:800;">대표 관리자</span>`
+            : (r === 'ADMIN'
+                ? `<button type="button" class="btn-mall btn-mall-white" style="padding:4px 8px; font-size:11px; color:var(--price-red);" onclick="changeUserRoleByAdmin('${u.id}', 'PERSONAL')">어드민 해제</button>`
+                : `<button type="button" class="btn-mall btn-mall-brand" style="padding:4px 9px; font-size:11px;" onclick="changeUserRoleByAdmin('${u.id}', 'ADMIN')">어드민 권한 부여</button>`);
           return `
             <tr>
               <td>
                 <div style="font-family:var(--font-mono); font-weight:800;">${u.id}</div>
                 <div style="font-size:11.5px; color:var(--text-secondary);">${u.name}</div>
               </td>
-              <td style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);" title="${u.pwHash || ''}">${shortHash}</td>
               <td>
                 <span class="state-badge ${r === 'ADMIN' ? 'state-done' : (r === 'CORPORATE' ? 'state-work' : 'state-wait')}">
                   ${getRoleLabel(r)}
                 </span>
               </td>
-              <td style="font-size:11.5px; color:var(--brand-dark); font-weight:700;">견적·명세서 / 연구비카드 허용</td>
+              <td>${quickBtnHtml}</td>
               <td>
-                <select class="inline-select" style="font-size:11px;" onchange="changeUserRoleByAdmin('${u.id}', this.value)">
+                <select class="inline-select" style="font-size:11px;" ${isRootAdmin ? 'disabled' : ''} onchange="changeUserRoleByAdmin('${u.id}', this.value)">
                   <option value="PERSONAL" ${r === 'PERSONAL' ? 'selected' : ''}>개인 회원</option>
                   <option value="CORPORATE" ${r === 'CORPORATE' ? 'selected' : ''}>기업/연구 회원</option>
-                  <option value="ADMIN" ${r === 'ADMIN' ? 'selected' : ''}>관리자</option>
+                  <option value="ADMIN" ${r === 'ADMIN' ? 'selected' : ''}>관리자 (임직원)</option>
                 </select>
               </td>
             </tr>
@@ -7060,9 +7622,24 @@
           mpOrderBadge.style.display = 'none';
         }
       }
+
+      const headerCartBadge = document.getElementById('header-cart-count');
+      if (headerCartBadge) {
+        if (cartItems.length > 0) {
+          headerCartBadge.textContent = cartItems.length;
+          headerCartBadge.style.display = 'inline-flex';
+        } else {
+          headerCartBadge.textContent = '';
+          headerCartBadge.style.display = 'none';
+        }
+      }
     }
 
     function openRfpModal() {
+      if (!currentUser || (currentUser.role !== 'ADMIN' && currentUser.type !== 'ADMIN')) {
+        showToast('DB·PG 연동 및 초기화 설정은 [관리자] 계정 로그인 시에만 이용 가능합니다.');
+        return;
+      }
       document.getElementById('rfpModal').classList.add('open');
     }
 
@@ -7101,6 +7678,7 @@
         localStorage.setItem('jaturi_notices_v9', JSON.stringify(noticePosts));
         localStorage.setItem('jaturi_prod_qna_v9', JSON.stringify(productQnaPosts));
         localStorage.setItem('jaturi_prod_rev_v9', JSON.stringify(productReviews));
+        localStorage.setItem('jaturi_cart_v11', JSON.stringify(cartItems));
       } catch (err) {
         console.warn('Storage save skipped:', err);
       }
@@ -7165,13 +7743,22 @@
           parsed.forEach(x => productReviews.push(x));
         }
 
+        const cartStr = localStorage.getItem('jaturi_cart_v11');
+        if (cartStr) {
+          const parsedCart = JSON.parse(cartStr);
+          cartItems.length = 0;
+          parsedCart.forEach(x => cartItems.push(x));
+        }
+
         const cfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v1') || '{}');
-        if (cfg.sbUrl) document.getElementById('cfg-sb-url').value = cfg.sbUrl;
+        const defaultSbUrl = 'https://qyaexsrtplnsqwmujpfn.supabase.co';
+        document.getElementById('cfg-sb-url').value = cfg.sbUrl || defaultSbUrl;
         if (cfg.sbKey) document.getElementById('cfg-sb-key').value = cfg.sbKey;
         if (cfg.poStore) document.getElementById('cfg-po-store').value = cfg.poStore;
         if (cfg.poChannel) document.getElementById('cfg-po-channel').value = cfg.poChannel;
         if (cfg.sbUrl && cfg.sbKey) {
           document.getElementById('live-mode-indicator').textContent = 'Supabase 클라우드 DB + 로컬 동기화 활성화됨';
+          pullFromSupabaseCloud(cfg.sbUrl, cfg.sbKey);
         }
       } catch (err) {
         console.warn('Storage load skipped:', err);
@@ -7212,6 +7799,115 @@
       URL.revokeObjectURL(url);
     }
 
+    function getSupabaseCreds() {
+      try {
+        const cfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v1') || '{}');
+        if (cfg.sbUrl && cfg.sbKey) return { sbUrl: cfg.sbUrl.replace(/\/$/, ''), sbKey: cfg.sbKey.trim() };
+      } catch (e) {}
+      return null;
+    }
+
+    async function syncTableRowToSupabase(table, rowObj) {
+      const creds = getSupabaseCreds();
+      if (!creds) return;
+      try {
+        await fetch(`${creds.sbUrl}/rest/v1/${table}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': creds.sbKey,
+            'Authorization': `Bearer ${creds.sbKey}`,
+            'Prefer': 'resolution=merge-duplicates'
+          },
+          body: JSON.stringify(rowObj)
+        });
+      } catch (err) {
+        console.warn(`Supabase sync (${table}) skipped:`, err);
+      }
+    }
+
+    async function deleteRowFromSupabase(table, idVal) {
+      const creds = getSupabaseCreds();
+      if (!creds) return;
+      try {
+        await fetch(`${creds.sbUrl}/rest/v1/${table}?id=eq.${encodeURIComponent(idVal)}`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': creds.sbKey,
+            'Authorization': `Bearer ${creds.sbKey}`
+          }
+        });
+      } catch (err) {
+        console.warn(`Supabase delete (${table}) skipped:`, err);
+      }
+    }
+
+    function syncOrderToSupabase(o) {
+      syncTableRowToSupabase('orders', {
+        id: o.id,
+        order_date: o.date,
+        buyer_id: o.buyerId || 'guest',
+        buyer: o.buyer,
+        phone: o.phone || '',
+        address: o.address || '',
+        partner: o.partner,
+        material_id: o.materialId || null,
+        material_name: o.materialName,
+        orig_spec: o.origSpec,
+        mode: o.mode,
+        cut_spec: o.cutSpec,
+        scrap_option: o.scrapOption || '',
+        pay_method: o.payMethod || '',
+        total_amount: o.totalAmount,
+        status: o.status,
+        courier: o.courier || '',
+        waybill: o.waybill || '',
+        settled: Boolean(o.settled)
+      });
+    }
+
+    async function pullFromSupabaseCloud(sbUrl, sbKey) {
+      try {
+        const headers = { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` };
+        const res = await fetch(`${sbUrl}/rest/v1/materials?select=*&order=created_at.asc`, { headers });
+        if (!res.ok) return false;
+        const dbMats = await res.json();
+        if (Array.isArray(dbMats) && dbMats.length > 0) {
+          materials.length = 0;
+          dbMats.forEach(m => {
+            materials.push({
+              id: m.id,
+              code: m.code,
+              category: m.category,
+              name: m.name,
+              grade: m.grade || '',
+              partner: m.partner,
+              region: m.region,
+              w: m.w,
+              l: m.l,
+              t: m.t,
+              stock: m.stock,
+              marketPrice: m.market_price || Math.round(m.price * 2.2),
+              price: m.price,
+              cuttable: m.cuttable !== false,
+              cutFeePerCut: m.cut_fee_per_cut || 0,
+              rating: m.rating || '5.0',
+              reviews: m.reviews || 1,
+              dispatch: m.dispatch || '당일~익일',
+              surfaceType: m.surface_type || (m.category === '쇠파이프·각관' ? 'STEEL_PIPE' : 'METAL_AL'),
+              imageUrl: m.image_url || ''
+            });
+          });
+          renderCatalog();
+          updateBadges();
+        }
+        return true;
+      } catch (err) {
+        console.warn('Supabase pull skipped:', err);
+        return false;
+      }
+    }
+
     async function saveCloudConfig() {
       const sbUrl = document.getElementById('cfg-sb-url').value.trim().replace(/\/$/, '');
       const sbKey = document.getElementById('cfg-sb-key').value.trim();
@@ -7220,8 +7916,11 @@
       localStorage.setItem('jaturi_cloud_cfg_v1', JSON.stringify({ sbUrl, sbKey, poStore, poChannel }));
 
       if (sbUrl && sbKey) {
-        document.getElementById('live-mode-indicator').textContent = 'Supabase 클라우드 DB + 로컬 동기화 활성화됨';
-        showToast('Supabase 연동 설정이 저장되었습니다.');
+        const ok = await pullFromSupabaseCloud(sbUrl, sbKey);
+        document.getElementById('live-mode-indicator').textContent = ok
+          ? 'Supabase 클라우드 DB 실시간 연결 완료'
+          : 'Supabase 연동 키 저장됨 (로컬 동기화 병행)';
+        showToast(ok ? 'Supabase 클라우드 DB와 실시간 연동이 완료되었습니다!' : 'Supabase 연동 설정이 저장되었습니다.');
       } else {
         showToast('설정이 저장되었습니다 (로컬 영구저장 모드).');
       }
