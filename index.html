@@ -7900,36 +7900,29 @@
     }
 
     async function syncPartnerToSupabase(p) {
-      const fullPayload = {
+      const combinedAddr = (p.addrDetail && !(p.addr || '').includes(p.addrDetail))
+        ? `${p.addr || ''} ${p.addrDetail}`.trim()
+        : (p.addr || '');
+      // 11개 초기 핵심 컬럼 (구버전/신버전 partners 테이블 100% 호환)
+      const corePayload = {
         id: p.id,
+        name: p.name,
+        biz_no: p.bizNo || '-',
+        logo_text: p.logoText || p.name.substring(0, 2),
+        logo_url: p.logoUrl || '',
+        items: p.items || '',
+        addr: combinedAddr,
+        region: p.region || '',
+        phone: p.phone || '',
+        equip: p.equip || '',
+        status: p.status || 'PENDING'
+      };
+      const fullPayload = Object.assign({}, corePayload, {
         user_id: p.userId || '',
-        name: p.name,
-        biz_no: p.bizNo || '-',
-        logo_text: p.logoText || p.name.substring(0, 2),
-        logo_url: p.logoUrl || '',
-        items: p.items || '',
-        addr: p.addr || '',
         addr_detail: p.addrDetail || '',
-        region: p.region || '',
-        phone: p.phone || '',
-        email: p.email || '',
-        equip: p.equip || '',
-        status: p.status || 'PENDING'
-      };
-      const basePayload = {
-        id: p.id,
-        name: p.name,
-        biz_no: p.bizNo || '-',
-        logo_text: p.logoText || p.name.substring(0, 2),
-        logo_url: p.logoUrl || '',
-        items: p.items || '',
-        addr: p.addr || '',
-        region: p.region || '',
-        phone: p.phone || '',
-        equip: p.equip || '',
-        status: p.status || 'PENDING'
-      };
-      return await syncTableRowToSupabase('partners', fullPayload, basePayload);
+        email: p.email || ''
+      });
+      return await syncTableRowToSupabase('partners', corePayload, fullPayload);
     }
 
     function syncMaterialToSupabase(m) {
@@ -8052,43 +8045,33 @@
 
     async function syncUserToSupabase(u) {
       const isApproved = (u.approvalStatus !== 'PENDING');
-      const fullPayload = {
+      const combinedAddr = (u.addrDetail && !(u.addr || '').includes(u.addrDetail))
+        ? `${u.addr || ''} ${u.addrDetail}`.trim()
+        : (u.addr || '');
+      // 14개 핵심 호환 컬럼 (image_7d6bed.png의 기존 Supabase users 테이블과 100% 일치 - addr_detail, email, approval_status 미포함 시에도 첫 시도에 즉시 201 저장!)
+      const corePayload = {
         id: u.id,
+        pw_hash: u.pwHash || sha256Hex(u.pw || '1234'),
+        role: u.role || u.type || 'PERSONAL',
+        name: u.name || u.id,
+        phone: u.phone || '',
+        addr: combinedAddr,
+        org: u.org || u.name || '',
+        partner_id: null,
+        region: u.region || '',
+        items: u.items || '',
+        equip: u.equip || '',
+        logo_text: u.logoText || '',
+        logo_url: u.logoUrl || '',
+        can_issue_docs: isApproved
+      };
+      const extendedPayload = Object.assign({}, corePayload, {
         email: u.email || '',
-        pw_hash: u.pwHash || sha256Hex(u.pw || '1234'),
-        role: u.role || u.type || 'PERSONAL',
         approval_status: u.approvalStatus || 'APPROVED',
-        name: u.name || '',
-        phone: u.phone || '',
-        addr: u.addr || '',
         addr_detail: u.addrDetail || '',
-        org: u.org || u.name || '',
-        partner_id: u.partnerId || null,
-        region: u.region || '',
-        items: u.items || '',
-        equip: u.equip || '',
-        logo_text: u.logoText || '',
-        logo_url: u.logoUrl || '',
-        can_issue_docs: isApproved
-      };
-      const basePayload = {
-        id: u.id,
-        pw_hash: u.pwHash || sha256Hex(u.pw || '1234'),
-        role: u.role || u.type || 'PERSONAL',
-        name: u.name || '',
-        phone: u.phone || '',
-        addr: u.addr || '',
-        addr_detail: u.addrDetail || '',
-        org: u.org || u.name || '',
-        partner_id: u.partnerId || null,
-        region: u.region || '',
-        items: u.items || '',
-        equip: u.equip || '',
-        logo_text: u.logoText || '',
-        logo_url: u.logoUrl || '',
-        can_issue_docs: isApproved
-      };
-      return await syncTableRowToSupabase('users', fullPayload, basePayload);
+        partner_id: u.partnerId || null
+      });
+      return await syncTableRowToSupabase('users', corePayload, extendedPayload);
     }
 
     function changeUserRoleByAdmin(userId, newRole) {
@@ -8688,52 +8671,44 @@
       return supabaseClientInstance;
     }
 
-    // Supabase 신형 Publishable Key (sb_publishable_...)는 3파트 JWT가 아니므로
-    // PostgREST에 Authorization: Bearer sb_publishable_... 를 직접 보내면 PGRST301 (HTTP 400 Expected 3 parts in JWT) 오류가 발생할 수 있음.
-    // 따라서 1차로 apikey 단독 헤더로 요청하고, 게이트웨이가 Authorization 헤더를 요구하는 경우에만 2차로 Bearer를 포함해 재시도!
+    // Supabase API Gateway (Kong) + PostgREST 호환 요청 헬퍼:
+    // 1차로 표준 헤더(apikey + Authorization: Bearer)를 전송하고,
+    // 만약 게이트웨이/PostgREST가 PGRST301(JWT 형식 오류) 또는 401/403을 반환하면 즉시 apikey 단독 헤더로 재시도하며,
+    // 재시도 응답(retryRes)을 절대 버리지 않고 그대로 반환합니다.
     function buildSupabaseHeaders(sbKey, extra = {}) {
-      const h = Object.assign({ 'apikey': sbKey }, extra);
-      if (sbKey && sbKey.startsWith('eyJ')) {
-        h['Authorization'] = `Bearer ${sbKey}`;
-      }
-      return h;
+      return Object.assign({
+        'apikey': sbKey,
+        'Authorization': `Bearer ${sbKey}`
+      }, extra);
     }
 
     async function supabaseRestFetch(url, options = {}, sbKey = '') {
       const key = sbKey || (getSupabaseCreds() ? getSupabaseCreds().sbKey : DEFAULT_SUPABASE_KEY);
-      const isJwt = Boolean(key && key.startsWith('eyJ'));
 
-      // 1차 시도: sb_publishable_ 키는 apikey 단독 헤더(게이트웨이가 anon JWT 자동 주입), eyJ_ 키는 apikey + Bearer 동시 전송
-      const primaryHeaders = Object.assign({ 'apikey': key }, options.headers || {});
-      if (isJwt) {
-        primaryHeaders['Authorization'] = `Bearer ${key}`;
-      } else {
-        delete primaryHeaders['Authorization'];
-      }
+      // 1차 시도: apikey + Authorization: Bearer 동시 전송 (Supabase 공식 SDK와 동일한 헤더 구성)
+      const headersWithBearer = Object.assign({
+        'apikey': key,
+        'Authorization': `Bearer ${key}`
+      }, options.headers || {});
 
-      let res = await fetch(url, Object.assign({}, options, { headers: primaryHeaders }));
+      let res = await fetch(url, Object.assign({}, options, { headers: headersWithBearer }));
       if (res.ok) return res;
 
-      // 만약 1차 시도에서 인증/JWT 관련 오류(401, 403, 또는 400 PGRST301 JWT 오류)가 발생한 경우 반대 헤더 조합으로 즉시 재시도
-      const cloneText = await res.clone().text().catch(() => '');
-      const isAuthOrJwtError = (
+      // 1차 응답 본문 확인: 인증/JWT 에러(401, 403, PGRST301 등)인 경우에만 Authorization 제거 후 2차 시도
+      const errBody = await res.clone().text().catch(() => '');
+      if (
         res.status === 401 ||
         res.status === 403 ||
-        cloneText.includes('PGRST301') ||
-        cloneText.includes('JWT') ||
-        cloneText.includes('JWS') ||
-        cloneText.includes('apikey') ||
-        cloneText.includes('Authorization')
-      );
-      if (isAuthOrJwtError) {
-        const secondaryHeaders = Object.assign({ 'apikey': key }, options.headers || {});
-        if (isJwt) {
-          delete secondaryHeaders['Authorization'];
-        } else {
-          secondaryHeaders['Authorization'] = `Bearer ${key}`;
+        errBody.includes('PGRST301') ||
+        errBody.includes('JWSInvalid') ||
+        errBody.includes('Expected 3 parts in JWT')
+      ) {
+        const headersApiKeyOnly = Object.assign({ 'apikey': key }, options.headers || {});
+        delete headersApiKeyOnly['Authorization'];
+        const retryRes = await fetch(url, Object.assign({}, options, { headers: headersApiKeyOnly }));
+        if (retryRes.ok || (retryRes.status !== 401 && retryRes.status !== 403)) {
+          return retryRes;
         }
-        const retryRes = await fetch(url, Object.assign({}, options, { headers: secondaryHeaders }));
-        if (retryRes.ok) return retryRes;
       }
       return res;
     }
@@ -8745,19 +8720,19 @@
       const creds = getSupabaseCreds();
       if (!creds) return null;
       try {
-        const res = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}?select=*&limit=1`, {}, creds.sbKey);
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0 && rows[0]) {
-            tableSchemaColumnsCache[table] = new Set(Object.keys(rows[0]));
-            return tableSchemaColumnsCache[table];
-          }
-        }
         const client = ensureSupabaseClient();
         if (client) {
           const { data, error } = await client.from(table).select('*').limit(1);
           if (!error && Array.isArray(data) && data.length > 0 && data[0]) {
             tableSchemaColumnsCache[table] = new Set(Object.keys(data[0]));
+            return tableSchemaColumnsCache[table];
+          }
+        }
+        const res = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}?select=*&limit=1`, {}, creds.sbKey);
+        if (res.ok) {
+          const rows = await res.json();
+          if (Array.isArray(rows) && rows.length > 0 && rows[0]) {
+            tableSchemaColumnsCache[table] = new Set(Object.keys(rows[0]));
             return tableSchemaColumnsCache[table];
           }
         }
@@ -8784,8 +8759,31 @@
       };
       let payload = Object.assign({}, payloadObj);
 
-      for (let attempt = 0; attempt < 18; attempt++) {
-        // 1) Upsert 시도
+      // A) @supabase/supabase-js 공식 클라이언트로 먼저 Upsert 시도 (누락 컬럼 자동 제거 포함)
+      const client = ensureSupabaseClient();
+      if (client) {
+        let sdkPayload = Object.assign({}, payload);
+        for (let attempt = 0; attempt < 15; attempt++) {
+          const { error } = await client.from(table).upsert(sdkPayload, { onConflict: 'id' });
+          if (!error) return true;
+          const msg = `${error.message || ''} ${error.details || ''} ${error.hint || ''}`;
+          const colMatch = (
+            msg.match(/Could not find the '([^']+)' column/i) ||
+            msg.match(/column "([^"]+)" of relation/i) ||
+            msg.match(/column [a-z0-9_]+\.([a-z0-9_]+) does not exist/i)
+          );
+          if (colMatch && colMatch[1] && Object.prototype.hasOwnProperty.call(sdkPayload, colMatch[1])) {
+            delete sdkPayload[colMatch[1]];
+            delete payload[colMatch[1]];
+            if (tableSchemaColumnsCache[table]) tableSchemaColumnsCache[table].delete(colMatch[1]);
+            continue;
+          }
+          break;
+        }
+      }
+
+      // B) REST API 직접 Upsert -> 실패 시 순수 POST Insert -> 409 시 PATCH Update
+      for (let attempt = 0; attempt < 15; attempt++) {
         let res = await supabaseRestFetch(upsertUrl, {
           method: 'POST',
           headers: upsertHeaders,
@@ -8795,8 +8793,16 @@
 
         let errText = await res.text().catch(() => '');
 
-        // 만약 on_conflict 또는 Prefer 헤더 문제(400/409)인 경우 순수 INSERT -> 409 시 PATCH 시도
-        if (res.status === 409 || errText.includes('23505') || errText.includes('duplicate key')) {
+        // 순수 POST Insert 시도
+        const insertRes = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify(payload)
+        }, creds.sbKey);
+        if (insertRes.ok) return true;
+
+        const insertErrText = await insertRes.text().catch(() => '');
+        if (insertRes.status === 409 || insertErrText.includes('23505') || errText.includes('23505')) {
           const patchRes = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}?id=eq.${encodeURIComponent(payload.id)}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
@@ -8805,11 +8811,11 @@
           if (patchRes.ok) return true;
         }
 
-        // PostgREST PGRST204 / PostgreSQL 42703: 존재하지 않는 컬럼 자동 감지 후 즉시 제거하여 재전송
+        const combinedErr = `${errText} ${insertErrText}`;
         const colMatch = (
-          errText.match(/Could not find the '([^']+)' column/i) ||
-          errText.match(/column "([^"]+)" of relation/i) ||
-          errText.match(/column [a-z0-9_]+\.([a-z0-9_]+) does not exist/i)
+          combinedErr.match(/Could not find the '([^']+)' column/i) ||
+          combinedErr.match(/column "([^"]+)" of relation/i) ||
+          combinedErr.match(/column [a-z0-9_]+\.([a-z0-9_]+) does not exist/i)
         );
         if (colMatch && colMatch[1] && Object.prototype.hasOwnProperty.call(payload, colMatch[1])) {
           delete payload[colMatch[1]];
@@ -8821,56 +8827,42 @@
       return false;
     }
 
-    async function syncTableRowToSupabase(table, rowObj, fallbackRowObj) {
+    async function syncTableRowToSupabase(table, coreRowObj, extendedRowObj) {
       const creds = getSupabaseCreds();
       if (!creds) return false;
       try {
-        // 0) 현재 Supabase 서버의 실제 테이블 컬럼 목록을 먼저 조회하여 존재하지 않는 컬럼(예: 구버전 테이블의 email, approval_status 등)을 사전 제거
+        // 1단계: 구버전·신버전 테이블 모두에 100% 존재하는 핵심 호환 컬럼(coreRowObj)으로 먼저 즉시 저장!
         const knownCols = await discoverTableColumns(table);
-        let payload = filterPayloadByKnownColumns(table, rowObj, knownCols);
-        if (Object.keys(payload).length === 0) payload = Object.assign({}, rowObj);
+        let corePayload = filterPayloadByKnownColumns(table, coreRowObj, knownCols);
+        if (Object.keys(corePayload).length === 0) corePayload = Object.assign({}, coreRowObj);
 
-        // 1) REST API 직접 Upsert/Insert (신형 sb_publishable_ 키 완벽 호환 + 누락 컬럼 자동 제거)
-        const restOk = await tryRestUpsertOrInsertPatch(creds, table, payload);
-        if (restOk) {
-          if (table === 'users' && rowObj.id) confirmedCloudUserIds.add(rowObj.id);
-          if (table === 'partners' && rowObj.id) confirmedCloudPartnerIds.add(rowObj.id);
+        const coreOk = await tryRestUpsertOrInsertPatch(creds, table, corePayload);
+
+        // 2단계: 만약 테이블에 확장 컬럼(email, approval_status, addr_detail 등)도 존재한다면 추가 업데이트
+        if (extendedRowObj && knownCols && knownCols.size > 0) {
+          const extPayload = filterPayloadByKnownColumns(table, extendedRowObj, knownCols);
+          if (Object.keys(extPayload).length > Object.keys(corePayload).length) {
+            await tryRestUpsertOrInsertPatch(creds, table, extPayload);
+          }
+        }
+
+        if (coreOk) {
+          if (table === 'users' && coreRowObj.id) confirmedCloudUserIds.add(coreRowObj.id);
+          if (table === 'partners' && coreRowObj.id) confirmedCloudPartnerIds.add(coreRowObj.id);
           return true;
         }
 
-        // 2) 기본 호환 컬럼(fallbackRowObj)으로 재시도
-        if (fallbackRowObj) {
-          const fbPayload = filterPayloadByKnownColumns(table, fallbackRowObj, knownCols);
-          const fbOk = await tryRestUpsertOrInsertPatch(creds, table, fbPayload);
-          if (fbOk) {
-            if (table === 'users' && rowObj.id) confirmedCloudUserIds.add(rowObj.id);
-            if (table === 'partners' && rowObj.id) confirmedCloudPartnerIds.add(rowObj.id);
-            return true;
-          }
-        }
-
-        // 3) @supabase/supabase-js 공식 SDK로 재시도
-        const client = ensureSupabaseClient();
-        if (client) {
-          const { error } = await client.from(table).upsert(payload, { onConflict: 'id' });
-          if (!error) {
-            if (table === 'users' && rowObj.id) confirmedCloudUserIds.add(rowObj.id);
-            if (table === 'partners' && rowObj.id) confirmedCloudPartnerIds.add(rowObj.id);
-            return true;
-          }
-          if (fallbackRowObj) {
-            const fbPayload = filterPayloadByKnownColumns(table, fallbackRowObj, knownCols);
-            const { error: fbErr } = await client.from(table).upsert(fbPayload, { onConflict: 'id' });
-            if (!fbErr) return true;
-          }
-        }
-
-        // 4) 최후 보장: id, pw_hash, role, name 핵심 4개 컬럼만으로 저장 시도 (users 테이블인 경우)
-        if (table === 'users' && rowObj.id) {
-          const minUser = { id: rowObj.id, pw_hash: rowObj.pw_hash, role: rowObj.role || 'PERSONAL', name: rowObj.name || rowObj.id };
+        // 3단계: 최후 보장 — users 테이블인 경우 필수 4개 컬럼(id, pw_hash, role, name)만으로 즉시 저장
+        if (table === 'users' && coreRowObj.id) {
+          const minUser = {
+            id: coreRowObj.id,
+            pw_hash: coreRowObj.pw_hash,
+            role: coreRowObj.role || 'PERSONAL',
+            name: coreRowObj.name || coreRowObj.id
+          };
           const minOk = await tryRestUpsertOrInsertPatch(creds, 'users', minUser);
           if (minOk) {
-            confirmedCloudUserIds.add(rowObj.id);
+            confirmedCloudUserIds.add(coreRowObj.id);
             return true;
           }
         }
