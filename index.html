@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>자투리마켓 (Jaturi Market) - 산업용 자투리·잉여 자재 맞춤재단 전문 쇼핑몰</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --brand: #277381;
@@ -1317,6 +1318,8 @@
       #companyDetailModal,
       #rfpModal,
       #cartModal,
+      #guestCartChoiceModal,
+      #corpPendingModal,
       .no-print {
         display: none !important;
       }
@@ -2227,7 +2230,7 @@
           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="17" y2="13"/><line x1="7" y1="17" x2="13" y2="17"/></svg>
           <span>마이페이지</span>
         </button>
-        <button class="quick-icon-btn" id="quick-btn-cart" onclick="openCartModal()">
+        <button class="quick-icon-btn" id="quick-btn-cart" onclick="handleCartEntryClick('MODAL')">
           <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
           <span>장바구니</span>
           <span class="cart-count-badge" id="header-cart-count" style="display:none; background:var(--price-red);">0</span>
@@ -2366,10 +2369,25 @@
 
       <!-- Main Split Workspace: Product Grid + Custom Cut Calculator -->
       <div class="shop-workspace">
-        <div>
-          <div class="section-bar">
+        <div id="buyer-left-column">
+          <!-- 자재 선택 시 좌측 상단에 즉시 전환·표시되는 전용 상세 페이지 뷰 (우측 계산기 레이아웃 유지) -->
+          <div class="erp-box" id="buyer-selected-detail-view" style="display:none; border:2px solid var(--brand); margin-bottom:18px; background:#fff; box-shadow:0 4px 14px rgba(39,115,129,0.10);">
+            <div class="erp-box-head" style="background:var(--brand-light); border-bottom:1px solid var(--brand-border); padding:12px 16px;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span class="tag-square tag-cut">선택 자재 상세페이지</span>
+                <strong style="font-size:14.5px; color:var(--brand-dark);" id="bsdv-head-title">자재 상세 정보</strong>
+              </div>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <button type="button" class="btn-mall btn-mall-white" style="padding:5px 10px; font-size:11.5px;" onclick="scrollToProductReviews()">구매후기·상품Q&amp;A 바로가기</button>
+                <button type="button" class="btn-mall btn-mall-dark" style="padding:5px 11px; font-size:11.5px;" onclick="selectMaterial(selectedMaterialId)">← 전체 자재 목록으로 돌아가기 (선택해제)</button>
+              </div>
+            </div>
+            <div class="erp-box-body" id="bsdv-body" style="padding:16px;"></div>
+          </div>
+
+          <div class="section-bar" id="catalog-section-bar">
             <h3>실시간 등록 자투리·잉여 자재 <span class="count-num" id="catalog-result-count">10</span>건</h3>
-            <span style="font-size:12px; color:var(--text-secondary);">상품 클릭 시 우측 <strong>[맞춤 재단 주문서 및 구매후기(리뷰) 작성창]</strong>과 하단 상세탭에 즉시 연동됩니다.</span>
+            <span style="font-size:12px; color:var(--text-secondary);">자재 클릭 시 우측 <strong>[맞춤 재단 계산기]</strong>는 그대로 유지되며 해당 자재의 <strong>[상세 페이지 뷰]</strong>로 즉시 전환됩니다.</span>
           </div>
           <div class="product-grid" id="material-grid"></div>
 
@@ -2486,8 +2504,8 @@
               <div id="calc-cart-actions" style="display:none; margin-top:8px; padding-top:8px; border-top:1px solid var(--brand-border); justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
                 <span style="font-size:12px; font-weight:800; color:var(--text-primary);">합계: <strong id="calc-cart-total-price" style="color:var(--price-red); font-family:var(--font-mono);">0원</strong></span>
                 <div style="display:flex; gap:5px;">
-                  <button type="button" class="btn-mall btn-mall-white" style="padding:5px 9px; font-size:11px;" onclick="openCartModal()">장바구니 상세</button>
-                  <button type="button" class="btn-mall btn-mall-brand" style="padding:5px 10px; font-size:11px;" onclick="openCartOrderModal()">장바구니 일괄주문</button>
+                  <button type="button" class="btn-mall btn-mall-white" style="padding:5px 9px; font-size:11px;" onclick="handleCartEntryClick('MODAL')">장바구니 상세</button>
+                  <button type="button" class="btn-mall btn-mall-brand" style="padding:5px 10px; font-size:11px;" onclick="handleCartEntryClick('ORDER')">장바구니 일괄주문</button>
                 </div>
               </div>
             </div>
@@ -2877,10 +2895,10 @@
                 <input type="text" class="erp-input" id="mp-p-org" />
               </div>
               <div class="form-row">
-                <label>비밀번호 변경 (변경 희망 시 입력)</label>
-                <input type="password" class="erp-input" id="mp-p-newpw" placeholder="현재 비밀번호 유지 시 공란" />
+                <label>이메일 (Email)</label>
+                <input type="email" class="erp-input" id="mp-p-email" placeholder="예: user@ulsan.ac.kr" />
               </div>
-              <button type="submit" class="btn-mall btn-mall-brand" style="width:100%;">회원 계정 정보 저장</button>
+              <button type="submit" class="btn-mall btn-mall-brand" style="width:100%;">회원 기본 정보 저장</button>
             </form>
           </div>
         </div>
@@ -2919,6 +2937,33 @@
               <button type="button" class="btn-mall btn-mall-brand" onclick="switchRole('orders')">주문/배송 조회 바로가기</button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- 공통: 마이페이지 비밀번호 안전 변경 (기존 비밀번호 검증 + 새 비밀번호 변경 + Supabase 실시간 연동) -->
+      <div class="erp-box" id="mypage-pw-change-section" style="display:none; margin-bottom:20px; border-top:2px solid var(--brand);">
+        <div class="erp-box-head">
+          <span>비밀번호 안전 변경 (기존 비밀번호 확인 후 변경)</span>
+          <span class="state-badge state-done">SHA-256 암호화 · Supabase DB 즉시 동기화</span>
+        </div>
+        <div class="erp-box-body">
+          <form onsubmit="handleChangePasswordSubmit(event)" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; align-items:end;">
+            <div class="form-row" style="margin-bottom:0;">
+              <label for="mp-cur-pw">현재(기존) 비밀번호</label>
+              <input type="password" class="erp-input" id="mp-cur-pw" placeholder="현재 사용 중인 비밀번호 입력" required />
+            </div>
+            <div class="form-row" style="margin-bottom:0;">
+              <label for="mp-new-pw">새 비밀번호</label>
+              <input type="password" class="erp-input" id="mp-new-pw" placeholder="변경할 새 비밀번호 입력" required />
+            </div>
+            <div class="form-row" style="margin-bottom:0;">
+              <label for="mp-new-pw-confirm">새 비밀번호 확인</label>
+              <input type="password" class="erp-input" id="mp-new-pw-confirm" placeholder="새 비밀번호 재입력" required />
+            </div>
+            <div>
+              <button type="submit" class="btn-mall btn-mall-dark" style="width:100%; padding:9px 14px;">비밀번호 변경 저장</button>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -3352,7 +3397,7 @@
               <input type="text" class="erp-input" id="staff-new-name" placeholder="성명·직급 (예: 이팀장/임원)" style="padding:6px 8px; font-size:12px;" required />
               <select class="erp-input" id="staff-new-role" style="padding:6px 8px; font-size:12px; font-weight:700;">
                 <option value="ADMIN" selected>관리자 (임직원 어드민)</option>
-                <option value="CORPORATE">기업 회원</option>
+                <option value="CORPORATE">기업/연구 회원</option>
                 <option value="PERSONAL">개인 회원</option>
               </select>
               <button type="submit" class="btn-mall btn-mall-brand" style="padding:6px 12px; font-size:12px;">계정 발급</button>
@@ -3366,10 +3411,10 @@
             <table class="erp-table" style="border:none;">
               <thead>
                 <tr>
-                  <th>아이디 / 성명(직급·상호)</th>
-                  <th>현재 등급 (Role)</th>
-                  <th>임직원 어드민 빠른 지정</th>
-                  <th>상세 등급 변경</th>
+                  <th>아이디 / 성명(상호) · 이메일</th>
+                  <th>현재 등급 / 승인상태</th>
+                  <th>기업승인 · 어드민 지정</th>
+                  <th>상세 등급 / 계정관리</th>
                 </tr>
               </thead>
               <tbody id="admin-users-tbody"></tbody>
@@ -3635,7 +3680,7 @@
           개인 회원 가입
         </button>
         <button type="button" class="type-tab" id="signup-tab-corporate" onclick="setSignupType('CORPORATE')">
-          기업 회원 가입
+          기업/연구 회원 가입
         </button>
       </div>
 
@@ -3661,11 +3706,22 @@
           </div>
         </div>
         <div class="form-row">
-          <label for="su-addr" id="su-addr-label">기본 배송지 주소</label>
+          <label for="su-email">이메일 (Email · 견적/안내 수신용)</label>
+          <input type="email" class="erp-input" id="su-email" placeholder="예: user@ulsan.ac.kr" required />
+        </div>
+        <div class="form-row">
+          <label for="su-addr" id="su-addr-label">기본 주소 (도로명/지번 주소)</label>
           <input type="text" class="erp-input" id="su-addr" placeholder="예: 울산광역시 남구 대학로 93" required />
+        </div>
+        <div class="form-row">
+          <label for="su-addr-detail" id="su-addr-detail-label">상세 주소 (건물명·동·호수·실험실/공장 동호수)</label>
+          <input type="text" class="erp-input" id="su-addr-detail" placeholder="예: 기계공학관 302호 실험실 / 기계금속단지 B동 104호" required />
         </div>
 
         <div id="signup-corp-extra" style="display:none; border-top:1px dashed var(--border-strong); padding-top:10px; margin-top:6px;">
+          <div style="background:#fff9db; border:1px solid #ffe066; color:#e67700; padding:8px 10px; font-size:11.5px; font-weight:700; margin-bottom:10px; border-radius:2px;">
+            * [기업 회원 가입 승인제 안내] 기업 회원으로 가입 신청 시 <strong>승인 대기(PENDING)</strong> 상태로 접수되며, 관리자가 통합 어드민에서 <strong>승인(APPROVED)</strong> 처리한 이후부터 로그인 및 물품 등록이 가능합니다.
+          </div>
           <div class="form-row">
             <label for="su-corp-region">공장 발송 권역</label>
             <select class="erp-input" id="su-corp-region">
@@ -3791,6 +3847,64 @@
         <button type="button" class="btn-mall btn-mall-white" style="color:var(--price-red);" onclick="clearCartItems()">장바구니 비우기</button>
         <button type="button" class="btn-mall btn-mall-white" onclick="openCartQuoteModal()">장바구니 통합 견적서/명세서</button>
         <button type="button" class="btn-mall btn-mall-brand" onclick="openCartOrderModal()">장바구니 전체 주문하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL H: 비회원 장바구니 클릭 시 '비회원 구매 진행' 또는 '회원가입/로그인' 선택 모달
+       ========================================== -->
+  <div class="modal-backdrop no-print" id="guestCartChoiceModal">
+    <div class="modal-win" style="max-width:460px;">
+      <button class="modal-close-btn" onclick="closeModal('guestCartChoiceModal')">X</button>
+      <div style="border-bottom:2px solid var(--border-dark); padding-bottom:10px; margin-bottom:14px;">
+        <span style="font-size:11px; font-weight:700; color:var(--brand);">SHOPPING CART &amp; CHECKOUT OPTIONS</span>
+        <h3 style="font-size:18px; font-weight:800; margin-top:2px;">비회원 장바구니 이용 안내</h3>
+      </div>
+      <div style="padding:4px 2px 8px;">
+        <p style="font-size:13.5px; color:var(--text-primary); font-weight:700; margin-bottom:6px;">현재 로그인하지 않은 상태입니다.</p>
+        <p style="font-size:12.5px; color:var(--text-secondary); line-height:1.55; margin-bottom:12px;">
+          로그인 없이 <strong>비회원으로 장바구니 확인 및 구매를 바로 진행</strong>하시거나, <strong>로그인 / 회원가입</strong> 후 기본 배송지 자동 연동 및 주문내역 상시 조회 혜택을 이용하실 수 있습니다.
+        </p>
+        <div id="guest-cart-choice-summary" style="background:var(--brand-light); border:1px solid var(--brand-border); padding:9px 12px; font-size:12px; font-weight:800; color:var(--brand-dark); margin-bottom:16px; border-radius:2px;">
+          현재 기기 장바구니: 비어 있음
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button type="button" class="btn-mall btn-mall-brand" style="width:100%; padding:11px;" onclick="proceedGuestCartChoice()">
+            비회원 구매 진행 (장바구니 바로 열기)
+          </button>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button type="button" class="btn-mall btn-mall-dark" onclick="closeModal('guestCartChoiceModal'); openLoginModal();">
+              로그인하기
+            </button>
+            <button type="button" class="btn-mall btn-mall-white" style="border-color:var(--brand); color:var(--brand-dark);" onclick="closeModal('guestCartChoiceModal'); openSignupModal('PERSONAL');">
+              신규 회원가입
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL I: 기업 회원 가입 승인 대기(PENDING) 안내 모달
+       ========================================== -->
+  <div class="modal-backdrop no-print" id="corpPendingModal">
+    <div class="modal-win" style="max-width:460px;">
+      <button class="modal-close-btn" onclick="closeModal('corpPendingModal')">X</button>
+      <div style="border-bottom:2px solid var(--border-dark); padding-bottom:10px; margin-bottom:14px;">
+        <span style="font-size:11px; font-weight:700; color:#e67700;">CORPORATE APPROVAL PENDING</span>
+        <h3 style="font-size:18px; font-weight:800; margin-top:2px;">기업 회원 가입 승인 대기 안내</h3>
+      </div>
+      <div style="padding:6px 2px;">
+        <div style="background:#fff9db; border:1px solid #ffe066; color:#e67700; padding:12px 14px; font-size:13px; font-weight:800; margin-bottom:12px; border-radius:2px;" id="corp-pending-modal-title">
+          현재 [승인 대기 (PENDING)] 상태입니다.
+        </div>
+        <p style="font-size:12.5px; color:var(--text-secondary); line-height:1.6; margin-bottom:16px;" id="corp-pending-modal-desc">
+          기업 회원은 안전한 자재 공급 및 파트너 검증을 위해 <strong>관리자 승인제</strong>로 운영됩니다.<br/>
+          관리자가 <strong>[통합 어드민]</strong>에서 가입 신청을 <strong>승인(APPROVED)</strong> 처리한 이후부터 정상적인 로그인 및 자재 등록·판매가 가능합니다.
+        </p>
+        <button type="button" class="btn-mall btn-mall-brand" style="width:100%;" onclick="closeModal('corpPendingModal')">확인</button>
       </div>
     </div>
   </div>
@@ -3942,7 +4056,7 @@
 
     function getRoleLabel(roleOrType) {
       if (roleOrType === 'ADMIN') return '관리자';
-      if (roleOrType === 'CORPORATE') return '기업 회원';
+      if (roleOrType === 'CORPORATE') return '기업/연구 회원';
       return '개인 회원';
     }
 
@@ -3952,14 +4066,16 @@
       return Boolean(o && o.status && o.status !== 'COMPLETED');
     }
 
-    // 3대 계정 역할(Role) 초기 시딩: [개인 회원], [기업 회원], [관리자(jaturimarket)]
+    // 3대 계정 역할(Role) 초기 시딩: [개인 회원], [기업/연구 회원], [관리자(jaturimarket)]
     // 모든 비밀번호는 SHA-256 보안 해시(pwHash)로 저장됨
     const users = [
       {
         id: 'user01',
+        email: 'user01@ulsan.ac.kr',
         pwHash: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',
         type: 'PERSONAL',
         role: 'PERSONAL',
+        approvalStatus: 'APPROVED',
         name: '김연구',
         phone: '010-2849-1029',
         addr: '울산광역시 남구 대학로 93',
@@ -3969,9 +4085,11 @@
       },
       {
         id: 'corp01',
+        email: 'contact@dongnam-metal.co.kr',
         pwHash: '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',
         type: 'CORPORATE',
         role: 'CORPORATE',
+        approvalStatus: 'APPROVED',
         partnerId: 'PTN-01',
         name: '동남정밀금속',
         phone: '052-289-4010',
@@ -3985,9 +4103,11 @@
       },
       {
         id: 'jaturimarket',
+        email: 'admin@jaturimarket.kr',
         pwHash: '8a58e2670ad190ddc7072c121dc9fc39c9f3a4291d24d0e3cbe817e2ab263291',
         type: 'ADMIN',
         role: 'ADMIN',
+        approvalStatus: 'APPROVED',
         name: '자투리마켓 관리자',
         phone: '052-000-0000',
         addr: '울산광역시 본사 운영본부',
@@ -4358,7 +4478,8 @@
       const grid = document.getElementById('partner-banner-grid');
       if (!grid) return;
 
-      grid.innerHTML = partners.map(p => {
+      const approvedList = partners.filter(p => p.status !== 'PENDING');
+      grid.innerHTML = approvedList.map(p => {
         const logoHtml = p.logoUrl
           ? `<img src="${p.logoUrl}" alt="${p.name} 로고" />`
           : `<span>${p.logoText || p.name.substring(0, 2)}</span>`;
@@ -4486,21 +4607,82 @@
       performLogin(id, pw);
     }
 
-    function performLogin(id, pw) {
-      const inputHash = sha256Hex(pw);
-      const found = users.find(u => u.id === id && (u.pwHash === inputHash || u.pw === pw));
-      if (!found) {
+    async function fetchLatestUserFromSupabase(userId) {
+      const creds = getSupabaseCreds();
+      if (!creds) return null;
+      try {
+        const res = await fetch(`${creds.sbUrl}/rest/v1/users?id=eq.${encodeURIComponent(userId)}&select=*`, {
+          headers: { 'apikey': creds.sbKey, 'Authorization': `Bearer ${creds.sbKey}` }
+        });
+        if (!res.ok) return null;
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length > 0) {
+          const u = mapDbUserToLocal(rows[0]);
+          const idx = users.findIndex(x => x.id === u.id);
+          if (idx !== -1) {
+            users[idx] = u;
+          } else {
+            users.push(u);
+          }
+          saveStateToStorage();
+          return u;
+        }
+      } catch (err) {
+        console.warn('Supabase user lookup skipped:', err);
+      }
+      return null;
+    }
+
+    async function performLogin(id, pw) {
+      const cleanId = String(id || '').trim();
+      const cleanPw = String(pw || '').trim();
+      const inputHash = sha256Hex(cleanPw);
+
+      // 1) 로컬 메모리/스토리지에 없거나 최신 승인 상태 확인이 필요한 경우 Supabase에서도 실시간 조회
+      let found = users.find(u => u.id === cleanId);
+      if (getSupabaseCreds()) {
+        const cloudUser = await fetchLatestUserFromSupabase(cleanId);
+        if (cloudUser) found = cloudUser;
+      }
+
+      if (!found || (found.pwHash !== inputHash && found.pw !== cleanPw)) {
         showToast('아이디 또는 비밀번호가 일치하지 않습니다.');
         return;
       }
+
       if (!found.role) found.role = found.type || 'PERSONAL';
       if (!found.type) found.type = found.role;
+      if (!found.approvalStatus) found.approvalStatus = 'APPROVED';
+
+      // 2) 기업 회원(CORPORATE) 승인 대기(PENDING) 상태 검증: 관리자 승인 전에는 로그인 차단!
+      if (found.role === 'CORPORATE') {
+        const linkedPartner = partners.find(p => p.id === found.partnerId || p.name === found.name);
+        const isPending = (found.approvalStatus === 'PENDING') || (linkedPartner && linkedPartner.status === 'PENDING');
+        if (isPending) {
+          closeModal('loginModal');
+          const titleEl = document.getElementById('corp-pending-modal-title');
+          const descEl = document.getElementById('corp-pending-modal-desc');
+          if (titleEl) titleEl.textContent = `[${found.name} (${found.id})] 계정은 현재 승인 대기(PENDING) 상태입니다.`;
+          if (descEl) descEl.innerHTML = `기업 회원 가입 신청이 접수되어 관리자 심사 대기 중입니다.<br/>관리자가 <strong>[통합 어드민]</strong>에서 <strong>승인(APPROVED)</strong> 처리한 이후부터 로그인이 가능합니다.`;
+          document.getElementById('corpPendingModal').classList.add('open');
+          showToast('현재 관리자 승인 대기(PENDING) 중인 기업 계정입니다. 승인 후 로그인 가능합니다.');
+          return;
+        }
+      }
 
       currentUser = found;
+      loadActiveSessionCart(true); // 비회원 장바구니에 담아둔 품목이 있으면 회원 장바구니로 안전 병합 후 분리
       saveStateToStorage();
       closeModal('loginModal');
+
+      const loginIdInput = document.getElementById('login-id-input');
+      const loginPwInput = document.getElementById('login-pw-input');
+      if (loginIdInput) loginIdInput.value = '';
+      if (loginPwInput) loginPwInput.value = '';
+
       detectViewportMode();
       updateAuthUI();
+      renderCartUI();
       updateBadges();
       renderMypage();
       renderNoticeBoard();
@@ -4527,8 +4709,10 @@
     function logoutUser() {
       currentUser = null;
       pendingRedirectAfterLogin = null;
+      loadActiveSessionCart(false); // 로그아웃 시 회원 장바구니와 분리된 비회원 장바구니 세션으로 전환
       saveStateToStorage();
       updateAuthUI();
+      renderCartUI();
       updateBadges();
       renderNoticeBoard();
       renderAdminQnaBoard();
@@ -4544,17 +4728,27 @@
       document.getElementById('signup-tab-personal').classList.toggle('active', type === 'PERSONAL');
       document.getElementById('signup-tab-corporate').classList.toggle('active', type === 'CORPORATE');
       document.getElementById('signup-corp-extra').style.display = (type === 'CORPORATE') ? 'block' : 'none';
-      document.getElementById('su-name-label').textContent = (type === 'CORPORATE') ? '기업명 (상호)' : '이름 (성명)';
-      document.getElementById('su-addr-label').textContent = (type === 'CORPORATE') ? '기업·기관 주소 (소재지)' : '기본 배송지 주소';
+      document.getElementById('su-name-label').textContent = (type === 'CORPORATE') ? '기업·연구기관명 (상호)' : '이름 (성명)';
+      document.getElementById('su-addr-label').textContent = (type === 'CORPORATE') ? '기업·기관 기본 주소 (도로명/지번)' : '기본 배송지 주소 (도로명/지번)';
+      const detailLabel = document.getElementById('su-addr-detail-label');
+      if (detailLabel) {
+        detailLabel.textContent = (type === 'CORPORATE')
+          ? '상세 주소 (공단명·동·호수)'
+          : '상세 주소 (건물명·동·호수·실험실명)';
+      }
     }
 
-    function handleSignupSubmit(e) {
+    async function handleSignupSubmit(e) {
       e.preventDefault();
       const id = document.getElementById('su-id').value.trim();
       const pw = document.getElementById('su-pw').value.trim();
       const name = document.getElementById('su-name').value.trim();
       const phone = document.getElementById('su-phone').value.trim();
+      const emailEl = document.getElementById('su-email');
+      const email = emailEl ? emailEl.value.trim() : '';
       const addr = document.getElementById('su-addr').value.trim();
+      const addrDetailEl = document.getElementById('su-addr-detail');
+      const addrDetail = addrDetailEl ? addrDetailEl.value.trim() : '';
 
       if (users.some(u => u.id === id)) {
         showToast('이미 등록된 아이디입니다. 다른 아이디를 입력해 주세요.');
@@ -4563,38 +4757,73 @@
 
       const pwHash = sha256Hex(pw);
 
+      // 입력 폼 초기화
+      const clearForm = () => {
+        ['su-id', 'su-pw', 'su-name', 'su-phone', 'su-email', 'su-addr', 'su-addr-detail', 'su-corp-items', 'su-corp-equip'].forEach(fid => {
+          const el = document.getElementById(fid);
+          if (el) el.value = '';
+        });
+      };
+
       if (signupMode === 'PERSONAL') {
         const newU = {
-          id, pwHash, type: 'PERSONAL', role: 'PERSONAL', name, phone,
-          addr, addrDetail: '', org: name, canIssueDocs: true
+          id, email, pwHash, type: 'PERSONAL', role: 'PERSONAL',
+          approvalStatus: 'APPROVED',
+          name, phone, addr, addrDetail, org: name, canIssueDocs: true
         };
         users.push(newU);
         currentUser = newU;
+        loadActiveSessionCart(true);
+        saveStateToStorage();
+        await syncUserToSupabase(newU);
+        clearForm();
+        renderPartnerBanners();
+        updateAuthUI();
+        renderCartUI();
+        updateBadges();
+        closeModal('signupModal');
+        switchRole('mypage');
+        showToast(`개인 회원가입이 완료되어 [${newU.name}] 계정으로 로그인되었습니다.`);
       } else {
+        // [기업 회원 가입 승인제] 기업 회원은 가입 즉시 PENDING(승인 대기) 상태가 되며, 관리자 승인 후 로그인 가능!
         const region = document.getElementById('su-corp-region').value;
         const items = document.getElementById('su-corp-items').value.trim() || '알루미늄·스테인리스·아크릴 자투리';
         const equip = document.getElementById('su-corp-equip').value.trim() || '레이저 커팅기, 샤링기, 정밀 톱절단기';
         const pId = `PTN-0${partners.length + 1}`;
-        partners.push({
-          id: pId, name, bizNo: '-', logoText: name.substring(0, 2), logoUrl: '',
-          items, addr, region, phone, equip, status: 'APPROVED'
-        });
+        const fullAddr = addrDetail ? `${addr}, ${addrDetail}` : addr;
+
+        const newPartner = {
+          id: pId, userId: id, name, bizNo: '-', logoText: name.substring(0, 2), logoUrl: '',
+          items, addr: fullAddr, addrDetail, region, phone, email, equip, status: 'PENDING'
+        };
+        partners.push(newPartner);
+
         const newCorp = {
-          id, pwHash, type: 'CORPORATE', role: 'CORPORATE', partnerId: pId,
-          name, phone, addr, region, items, equip,
+          id, email, pwHash, type: 'CORPORATE', role: 'CORPORATE',
+          approvalStatus: 'PENDING',
+          partnerId: pId,
+          name, phone, addr, addrDetail, org: name, region, items, equip,
           logoText: name.substring(0, 2), logoUrl: '', canIssueDocs: true
         };
         users.push(newCorp);
-        currentUser = newCorp;
-      }
 
-      saveStateToStorage();
-      renderPartnerBanners();
-      updateAuthUI();
-      updateBadges();
-      closeModal('signupModal');
-      switchRole('mypage');
-      showToast(`회원가입이 완료되어 [${getRoleLabel(currentUser.role)}] ${currentUser.name} 계정으로 로그인되었습니다.`);
+        // 주의: 기업 회원은 승인 대기(PENDING)이므로 자동 로그인(currentUser = newCorp)하지 않음!
+        saveStateToStorage();
+        await syncUserToSupabase(newCorp);
+        await syncPartnerToSupabase(newPartner);
+        clearForm();
+        renderPartnerBanners();
+        updateAuthUI();
+        updateBadges();
+        closeModal('signupModal');
+
+        const titleEl = document.getElementById('corp-pending-modal-title');
+        const descEl = document.getElementById('corp-pending-modal-desc');
+        if (titleEl) titleEl.textContent = `[${name} (${id})] 기업 회원 가입 신청 완료 — 승인 대기(PENDING)`;
+        if (descEl) descEl.innerHTML = `기업 회원 가입 신청이 정상적으로 접수되었습니다.<br/>관리자가 <strong>[통합 어드민]</strong>에서 가입 신청을 <strong>승인(APPROVED)</strong> 처리한 이후부터 로그인 및 물품 등록을 이용하실 수 있습니다.`;
+        document.getElementById('corpPendingModal').classList.add('open');
+        showToast(`기업 회원가입 신청 접수 완료 [승인 대기(PENDING)] — 관리자 승인 후 로그인 가능합니다.`);
+      }
     }
 
     function updateAuthUI() {
@@ -4607,7 +4836,7 @@
       const role = currentUser ? (currentUser.role || currentUser.type) : 'GUEST';
 
       // 등급(Role)별 상단 전용 탭 권한 분기:
-      // - 공장 파트너센터(tab-seller): [기업 회원(CORPORATE)] 및 [관리자(ADMIN)]만 노출 (개인회원/비로그인 숨김)
+      // - 공장 파트너센터(tab-seller): [기업/연구 회원(CORPORATE)] 및 [관리자(ADMIN)]만 노출 (개인회원/비로그인 숨김)
       // - 통합 어드민(tab-admin): [관리자(ADMIN)]만 노출
       const utilRfpLi = document.getElementById('util-rfp-li');
       const qBtnMypage = document.getElementById('quick-btn-mypage');
@@ -4658,10 +4887,12 @@
       const titleEl = document.getElementById('mypage-title-heading');
       const subEl = document.getElementById('mypage-sub-heading');
 
+      const pwSec = document.getElementById('mypage-pw-change-section');
       if (!currentUser) {
         guestBox.style.display = 'block';
         personalSec.style.display = 'none';
         corpSec.style.display = 'none';
+        if (pwSec) pwSec.style.display = 'none';
         if (adminSec) adminSec.style.display = 'none';
         if (btnPartnerShortcut) btnPartnerShortcut.style.display = 'none';
         if (btnAdminShortcut) btnAdminShortcut.style.display = 'none';
@@ -4670,6 +4901,7 @@
 
       const role = currentUser.role || currentUser.type || 'PERSONAL';
       guestBox.style.display = 'none';
+      if (pwSec) pwSec.style.display = 'block';
 
       if (btnPartnerShortcut) btnPartnerShortcut.style.display = (role === 'CORPORATE' || role === 'ADMIN') ? 'inline-block' : 'none';
       if (btnAdminShortcut) btnAdminShortcut.style.display = (role === 'ADMIN') ? 'inline-block' : 'none';
@@ -4682,14 +4914,14 @@
                 <span class="state-badge state-done" style="margin-right:6px;">계정 등급: [개인 회원]</span>
                 <strong>이용 가능 권한:</strong> 맞춤 재단 자재 구매 · 기본 배송지 관리 · <strong>대학 연구비/동아리 증빙용 전자 견적서·거래명세서 발급 및 연구비·법인카드 결제 공통 지원</strong>
               </div>
-              <span style="font-size:11.5px; color:var(--text-secondary);">* 자투리 물품 판매 등록 및 공장 파트너센터는 [기업 회원] 전용 기능입니다.</span>
+              <span style="font-size:11.5px; color:var(--text-secondary);">* 자투리 물품 판매 등록 및 공장 파트너센터는 [기업/연구 회원] 전용 기능입니다.</span>
             </div>
           `;
         } else if (role === 'CORPORATE') {
           permBody.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
               <div>
-                <span class="state-badge state-work" style="margin-right:6px;">계정 등급: [기업 회원]</span>
+                <span class="state-badge state-work" style="margin-right:6px;">계정 등급: [기업/연구 회원]</span>
                 <strong>기업 전용 + 공통 권한:</strong> <strong>공장 파트너센터(발주확인·송장등록·정산대장)</strong> · <strong>자투리 판매 물품 업로드</strong> · <strong>제휴 파트너 배너(로고·장비) 관리</strong> · 전자 견적서/거래명세서 및 연구비·법인카드 결제
               </div>
             </div>
@@ -4717,6 +4949,7 @@
         document.getElementById('mp-p-org').value = currentUser.org || '';
         document.getElementById('mp-p-addr').value = currentUser.addr || '';
         document.getElementById('mp-p-addr-detail').value = currentUser.addrDetail || '';
+        if (document.getElementById('mp-p-email')) document.getElementById('mp-p-email').value = currentUser.email || '';
         document.getElementById('mp-c-name').value = currentUser.name || '';
         document.getElementById('mp-c-addr').value = currentUser.addr || '';
         document.getElementById('mp-c-region').value = currentUser.region || '울산·경남';
@@ -4727,7 +4960,7 @@
         personalSec.style.display = 'none';
         corpSec.style.display = 'grid';
         if (adminSec) adminSec.style.display = 'none';
-        titleEl.textContent = `[기업 회원] 마이페이지 — ${currentUser.name} (${currentUser.id})`;
+        titleEl.textContent = `[기업/연구 회원] 마이페이지 — ${currentUser.name} (${currentUser.id})`;
         subEl.textContent = '기업 로고·주소·취급 품목·보유 장비를 설정하고 자투리 판매 물품을 직접 업로드합니다.';
 
         document.getElementById('mp-c-name').value = currentUser.name || '';
@@ -4755,6 +4988,7 @@
         document.getElementById('mp-p-org').value = currentUser.org || '';
         document.getElementById('mp-p-addr').value = currentUser.addr || '';
         document.getElementById('mp-p-addr-detail').value = currentUser.addrDetail || '';
+        if (document.getElementById('mp-p-email')) document.getElementById('mp-p-email').value = currentUser.email || '';
       }
 
       // 공통 주문 내역 테이블 렌더링
@@ -4787,7 +5021,7 @@
       }
     }
 
-    function savePersonalProfile(e) {
+    async function savePersonalProfile(e) {
       e.preventDefault();
       if (!currentUser) return;
       currentUser.name = document.getElementById('mp-p-name').value.trim();
@@ -4795,14 +5029,66 @@
       currentUser.org = document.getElementById('mp-p-org').value.trim();
       currentUser.addr = document.getElementById('mp-p-addr').value.trim();
       currentUser.addrDetail = document.getElementById('mp-p-addr-detail').value.trim();
-      const newPwEl = document.getElementById('mp-p-newpw');
-      if (newPwEl && newPwEl.value.trim()) {
-        currentUser.pwHash = sha256Hex(newPwEl.value.trim()); delete currentUser.pw;
-        newPwEl.value = '';
-      }
+      const emailEl = document.getElementById('mp-p-email');
+      if (emailEl) currentUser.email = emailEl.value.trim();
+
+      const uIdx = users.findIndex(u => u.id === currentUser.id);
+      if (uIdx !== -1) users[uIdx] = currentUser;
+
       saveStateToStorage();
+      await syncUserToSupabase(currentUser);
       updateAuthUI();
-      showToast('회원 계정 정보 및 기본 배송지 설정이 저장되었습니다.');
+      showToast('회원 계정 정보 및 기본 배송지(상세주소 포함) 설정이 저장되었습니다.');
+    }
+
+    async function handleChangePasswordSubmit(e) {
+      e.preventDefault();
+      if (!currentUser) {
+        showToast('로그인이 필요합니다.');
+        return;
+      }
+      const curPw = document.getElementById('mp-cur-pw').value.trim();
+      const newPw = document.getElementById('mp-new-pw').value.trim();
+      const confirmPw = document.getElementById('mp-new-pw-confirm').value.trim();
+
+      if (!curPw || !newPw || !confirmPw) {
+        showToast('현재 비밀번호와 새 비밀번호를 모두 입력해 주세요.');
+        return;
+      }
+
+      const curHash = sha256Hex(curPw);
+      if (currentUser.pwHash !== curHash && currentUser.pw !== curPw) {
+        showToast('현재(기존) 비밀번호가 일치하지 않습니다. 다시 확인해 주세요.');
+        return;
+      }
+
+      if (newPw !== confirmPw) {
+        showToast('새 비밀번호와 새 비밀번호 확인이 일치하지 않습니다.');
+        return;
+      }
+
+      if (curPw === newPw) {
+        showToast('기존 비밀번호와 다른 새 비밀번호를 입력해 주세요.');
+        return;
+      }
+
+      const newHash = sha256Hex(newPw);
+      currentUser.pwHash = newHash;
+      delete currentUser.pw;
+
+      const uIdx = users.findIndex(u => u.id === currentUser.id);
+      if (uIdx !== -1) {
+        users[uIdx].pwHash = newHash;
+        delete users[uIdx].pw;
+      }
+
+      saveStateToStorage();
+      await syncUserToSupabase(currentUser);
+
+      document.getElementById('mp-cur-pw').value = '';
+      document.getElementById('mp-new-pw').value = '';
+      document.getElementById('mp-new-pw-confirm').value = '';
+      showToast('비밀번호가 안전하게 변경되었으며 클라우드 DB에 즉시 반영되었습니다.');
     }
 
     function previewCorpLogoUpload(e) {
@@ -4883,6 +5169,7 @@
       selectedMaterialId = newMat.id;
       uploadedPhotoDataUrl = '';
       saveStateToStorage();
+      syncMaterialToSupabase(newMat);
       updateBadges();
       renderCatalog();
       showToast(`판매 물품 [${newMat.name}] 업로드가 완료되었습니다.`);
@@ -4925,7 +5212,7 @@
         author: '이대표 (정밀가공업)',
         date: '2026-10-14 11:10',
         content: '레이저 절단 후 남는 A급 SUS304 및 알루미늄 잔여 판재가 매주 발생합니다. 기업 회원으로 가입하면 바로 물품을 올릴 수 있나요?',
-        answer: '상단 [회원가입]에서 [기업 회원 가입] 탭을 선택해 가입하시면, 마이페이지에서 회사 로고·주소·보유 장비를 설정하고 자투리 판매 물품을 즉시 업로드하실 수 있습니다.',
+        answer: '상단 [회원가입]에서 [기업/연구 회원 가입] 탭을 선택해 가입하시면, 마이페이지에서 회사 로고·주소·보유 장비를 설정하고 자투리 판매 물품을 즉시 업로드하실 수 있습니다.',
         answeredAt: '2026-10-14 11:25'
       }
     ];
@@ -5142,6 +5429,7 @@
       };
 
       adminQnaPosts.unshift(newPost);
+      syncTableRowToSupabase('admin_qna_posts', { id: newPost.id, category: newPost.category, title: newPost.title, author: newPost.author, post_date: newPost.date, content: newPost.content, answer: '', answered_at: '' });
       document.getElementById('aqna-title').value = '';
       document.getElementById('aqna-content').value = '';
       saveStateToStorage();
@@ -5158,8 +5446,9 @@
         return;
       }
       post.answer = inputEl.value.trim();
-      post.answeredAt = '2026-10-14 21:32';
+      post.answeredAt = '2026-10-16 19:45';
       saveStateToStorage();
+      syncTableRowToSupabase('admin_qna_posts', { id: post.id, category: post.category, title: post.title, author: post.author, post_date: post.date, content: post.content, answer: post.answer, answered_at: post.answeredAt });
       renderAdminQnaBoard();
       showToast('관리자 공식 답변이 등록되었습니다.');
     }
@@ -5282,7 +5571,12 @@
                 <strong style="font-size:12.5px;">${r.author}</strong>
                 <span style="font-size:11px; color:var(--brand-dark); font-family:var(--font-mono); margin-left:6px;">[${r.cutSpec}]</span>
               </div>
-              <span style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">${r.date}</span>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">${r.date}</span>
+                ${(currentUser && (currentUser.role === 'ADMIN' || currentUser.type === 'ADMIN'))
+                  ? `<button type="button" class="btn-mall btn-mall-white" style="padding:1px 6px; font-size:10.5px; color:var(--price-red);" onclick="deleteProductReviewByAdmin('${r.id}')">리뷰삭제</button>`
+                  : ''}
+              </div>
             </div>
             <div style="font-size:12.5px; color:var(--text-primary); line-height:1.5;">${r.content}</div>
           </div>
@@ -5341,6 +5635,7 @@
 
       document.getElementById('pqna-question').value = '';
       saveStateToStorage();
+      syncTableRowToSupabase('product_qna_posts', { id: productQnaPosts[0].id, material_id: mat.id, author, post_date: productQnaPosts[0].date, question, seller_name: mat.partner, answer: '', answered_at: '' });
       renderProductDetailCommunity();
       showToast(`[${mat.partner}] 판매기업 앞으로 상품 문의가 등록되었습니다.`);
     }
@@ -5355,8 +5650,9 @@
       }
       q.answer = inputEl.value.trim();
       q.sellerName = (currentUser && currentUser.type === 'CORPORATE') ? currentUser.name : sellerName;
-      q.answeredAt = '2026-10-14 21:32';
+      q.answeredAt = '2026-10-16 19:45';
       saveStateToStorage();
+      syncTableRowToSupabase('product_qna_posts', { id: q.id, material_id: q.materialId, author: q.author, post_date: q.date, question: q.question, seller_name: q.sellerName, answer: q.answer, answered_at: q.answeredAt });
       renderProductDetailCommunity();
       showToast('판매기업 답변이 등록되었습니다.');
     }
@@ -5383,6 +5679,16 @@
       mat.reviews = (mat.reviews || 0) + 1;
       document.getElementById('prev-content').value = '';
       saveStateToStorage();
+      syncTableRowToSupabase('product_reviews', {
+        id: productReviews[0].id,
+        material_id: mat.id,
+        author,
+        score,
+        review_date: productReviews[0].date,
+        cut_spec: cutSpec,
+        content
+      });
+      syncMaterialToSupabase(mat);
       renderProductDetailCommunity();
       renderCatalog();
       showToast(`[${mat.code}] 구매후기(리뷰)가 등록되었습니다.`);
@@ -5413,6 +5719,16 @@
       mat.reviews = (mat.reviews || 0) + 1;
       document.getElementById('inline-rev-content').value = '';
       saveStateToStorage();
+      syncTableRowToSupabase('product_reviews', {
+        id: productReviews[0].id,
+        material_id: mat.id,
+        author,
+        score,
+        review_date: productReviews[0].date,
+        cut_spec: cutSpec,
+        content
+      });
+      syncMaterialToSupabase(mat);
       renderProductDetailCommunity();
       renderCatalog();
       showToast(`[${mat.code}] 구매후기(리뷰)가 등록되었습니다.`);
@@ -5463,12 +5779,31 @@
       }
     ];
 
+    async function deleteProductReviewByAdmin(revId) {
+      if (!currentUser || (currentUser.role !== 'ADMIN' && currentUser.type !== 'ADMIN')) return;
+      const idx = productReviews.findIndex(r => r.id === revId);
+      if (idx === -1) return;
+      const removed = productReviews.splice(idx, 1)[0];
+      const mat = materials.find(m => m.id === removed.materialId);
+      if (mat) {
+        mat.reviews = Math.max(0, productReviews.filter(r => r.materialId === mat.id).length);
+        syncMaterialToSupabase(mat);
+      }
+      saveStateToStorage();
+      await deleteRowFromSupabase('product_reviews', revId);
+      renderProductDetailCommunity();
+      renderSelectedMaterialDetailView();
+      renderCatalog();
+      showToast('선택한 구매후기(리뷰)가 삭제되었습니다.');
+    }
+
     function deleteNoticePost(noticeId) {
       if (!currentUser || (currentUser.role !== 'ADMIN' && currentUser.type !== 'ADMIN')) return;
       const idx = noticePosts.findIndex(n => n.id === noticeId);
       if (idx !== -1) {
         noticePosts.splice(idx, 1);
         saveStateToStorage();
+        deleteRowFromSupabase('notices', noticeId);
         renderNoticeBoard();
         showToast('공지사항이 삭제되었습니다.');
       }
@@ -5480,6 +5815,7 @@
       if (idx !== -1) {
         adminQnaPosts.splice(idx, 1);
         saveStateToStorage();
+        deleteRowFromSupabase('admin_qna_posts', qnaId);
         renderAdminQnaBoard();
         showToast('Q&A 게시글이 삭제되었습니다.');
       }
@@ -5542,6 +5878,7 @@
       document.getElementById('notice-title-input').value = '';
       document.getElementById('notice-content-input').value = '';
       saveStateToStorage();
+      syncTableRowToSupabase('notices', { id: noticePosts[0].id, cat: noticePosts[0].cat, title: noticePosts[0].title, notice_date: noticePosts[0].date, views: 1, content: noticePosts[0].content });
       renderNoticeBoard();
       showToast('신규 공지사항이 등록되었습니다.');
     }
@@ -5556,7 +5893,7 @@
       // 2) 등급(Role)별 페이지 접근 권한 검증
       const userRole = currentUser ? (currentUser.role || currentUser.type) : 'GUEST';
       if (role === 'seller' && userRole !== 'CORPORATE' && userRole !== 'ADMIN') {
-        showToast('공장 파트너센터는 [기업 회원] 또는 [관리자] 전용 메뉴입니다.');
+        showToast('공장 파트너센터는 [기업/연구 회원] 또는 [관리자] 전용 메뉴입니다.');
         openLoginModal();
         return;
       }
@@ -5644,7 +5981,8 @@
           ? '결제완료 (상품준비중)'
           : (o.status === 'CUT_DONE' ? '상품준비중 (재단완료)' : (o.status === 'SHIPPED' ? '배송중' : '배송완료'));
 
-        const completeBtnHtml = o.status !== 'COMPLETED'
+        const canChangeOrderStatus = Boolean(currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'CORPORATE'));
+        const completeBtnHtml = (o.status !== 'COMPLETED' && canChangeOrderStatus)
           ? `<div style="margin-top:5px;"><button type="button" class="btn-mall btn-mall-white" style="padding:3px 8px; font-size:11px; border-color:var(--brand); color:var(--brand-dark);" onclick="completeOrderDelivery('${o.id}')">배송완료 전환</button></div>`
           : '';
 
@@ -5969,11 +6307,82 @@
       }).join('');
     }
 
-    function selectMaterial(id) {
-      if (selectedMaterialId === id) {
+    function scrollToProductReviews() {
+      const box = document.getElementById('product-detail-community-box');
+      if (box) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderSelectedMaterialDetailView() {
+      const viewBox = document.getElementById('buyer-selected-detail-view');
+      const bodyEl = document.getElementById('bsdv-body');
+      const titleEl = document.getElementById('bsdv-head-title');
+      if (!viewBox || !bodyEl) return;
+
+      const mat = materials.find(m => m.id === selectedMaterialId);
+      if (!mat) {
+        viewBox.style.display = 'none';
+        bodyEl.innerHTML = '';
+        return;
+      }
+
+      const rateSpec = getRateSpec(mat);
+      const plateWeight = calcWeightKg(mat.w, mat.l, mat.t, 1, rateSpec.density);
+      const calcMarketPrice = Math.max(mat.marketPrice, Math.round((plateWeight * rateSpec.marketPerKg) / 100) * 100);
+      const calcScrapPrice = Math.max(mat.price, Math.round((plateWeight * rateSpec.scrapPerKg) / 100) * 100);
+      const discount = Math.round((1 - calcScrapPrice / calcMarketPrice) * 100);
+      const pInfo = partners.find(p => p.name === mat.partner) || { addr: mat.region, equip: '정밀 레이저·샤링·톱절단 설비' };
+
+      viewBox.style.display = 'block';
+      if (titleEl) titleEl.textContent = `[${mat.code}] ${mat.name}`;
+
+      bodyEl.innerHTML = `
+        <div style="display:grid; grid-template-columns:220px 1fr; gap:18px; align-items:center;">
+          <div style="background:var(--bg-gray); border:1px solid var(--border-color); height:168px; display:flex; align-items:center; justify-content:center; padding:10px; position:relative;">
+            ${mat.imageUrl
+              ? `<img src="${mat.imageUrl}" alt="${mat.name}" style="width:100%; height:148px; object-fit:cover;" />`
+              : getRealisticMaterialSVG(mat)}
+            <span class="prd-code">[${mat.code}]</span>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+              <span style="font-size:12px; font-weight:800; color:var(--brand-dark);">공급 파트너: ${mat.partner} (${mat.region})</span>
+              <span style="font-size:11.5px; color:var(--text-secondary);">발송소요일: <strong>${mat.dispatch}</strong> · 평점 <strong>${mat.rating}</strong> (${mat.reviews}건)</span>
+            </div>
+            <h4 style="font-size:16px; font-weight:800; color:var(--text-primary); margin-bottom:10px;">${mat.name}</h4>
+            <table class="erp-table" style="margin-bottom:10px; font-size:12px;">
+              <tbody>
+                <tr>
+                  <th style="width:110px;">원판 보유규격</th>
+                  <td style="font-family:var(--font-mono); font-weight:800; color:var(--brand-dark);">가로 ${mat.w} x 세로 ${mat.l} x 두께 ${mat.t}mm (재고 ${mat.stock}장)</td>
+                  <th style="width:110px;">재질 / 비중</th>
+                  <td>${mat.category} (${mat.grade}) · ${rateSpec.density}g/cm³</td>
+                </tr>
+                <tr>
+                  <th>자투리 최저시세</th>
+                  <td><strong style="color:var(--price-red); font-family:var(--font-mono);">${rateSpec.scrapPerKg.toLocaleString()}원/kg</strong> <span style="color:var(--text-muted); text-decoration:line-through; font-size:11px;">(시중 ${rateSpec.marketPerKg.toLocaleString()}원/kg)</span></td>
+                  <th>원판 기준단가</th>
+                  <td><strong style="color:var(--price-red); font-family:var(--font-mono);">${discount}% ↓ ${calcScrapPrice.toLocaleString()}원</strong></td>
+                </tr>
+                <tr>
+                  <th>가공 설비/옵션</th>
+                  <td colspan="3">${mat.cuttable ? `1mm 단위 맞춤 재단 가능 (회당 ${mat.cutFeePerCut.toLocaleString()}원 기준) · ${pInfo.equip}` : '원판 그대로 출고 전용 품목 (무가공 특가)'}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:11.5px; color:var(--text-secondary);">
+              <span>* 우측 <strong>[맞춤 재단 치수 계산 및 주문서]</strong>에서 가로·세로 치수를 입력하고 바로 주문하거나 장바구니에 담으실 수 있습니다.</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function selectMaterial(id, skipScroll) {
+      if (selectedMaterialId === id && !skipScroll) {
         selectedMaterialId = '';
         currentCalcResult = null;
         renderCatalog();
+        renderSelectedMaterialDetailView();
         updateCalculator();
         renderProductDetailCommunity();
         showToast('상품 선택이 해제되었습니다.');
@@ -5981,7 +6390,10 @@
       }
       selectedMaterialId = id;
       const mat = materials.find(m => m.id === id);
-      if (!mat) return;
+      if (!mat) {
+        renderSelectedMaterialDetailView();
+        return;
+      }
 
       if (!mat.cuttable) {
         orderMode = 'RAW';
@@ -5994,9 +6406,16 @@
       }
 
       renderCatalog();
+      renderSelectedMaterialDetailView();
       updateCalculator();
-      renderCartUI();
       renderProductDetailCommunity();
+
+      if (!skipScroll) {
+        const detailView = document.getElementById('buyer-selected-detail-view');
+        if (detailView) {
+          detailView.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
     }
 
     function setOrderMode(mode) {
@@ -6433,6 +6852,75 @@
             </table>
           `;
         }
+      }
+    }
+
+    let pendingGuestCartTarget = 'MODAL'; // 'MODAL' | 'ORDER'
+
+    function getActiveCartStorageKey() {
+      return currentUser && currentUser.id
+        ? `jaturi_cart_v14_user_${currentUser.id}`
+        : 'jaturi_cart_v14_guest';
+    }
+
+    function loadActiveSessionCart(mergeGuestIntoUser) {
+      try {
+        const guestStr = localStorage.getItem('jaturi_cart_v14_guest') || localStorage.getItem('jaturi_cart_v11') || '[]';
+        const guestArr = JSON.parse(guestStr);
+
+        if (currentUser && currentUser.id) {
+          const userKey = `jaturi_cart_v14_user_${currentUser.id}`;
+          const userArr = JSON.parse(localStorage.getItem(userKey) || '[]');
+          if (mergeGuestIntoUser && Array.isArray(guestArr) && guestArr.length > 0) {
+            guestArr.forEach(gItem => {
+              if (!userArr.some(uItem => uItem.cartId === gItem.cartId)) {
+                gItem.ownerId = currentUser.id;
+                userArr.push(gItem);
+              }
+            });
+            localStorage.removeItem('jaturi_cart_v14_guest');
+            localStorage.removeItem('jaturi_cart_v11');
+          }
+          cartItems.length = 0;
+          userArr.forEach(x => cartItems.push(x));
+          localStorage.setItem(userKey, JSON.stringify(cartItems));
+        } else {
+          cartItems.length = 0;
+          if (Array.isArray(guestArr)) {
+            guestArr.forEach(x => cartItems.push(x));
+          }
+        }
+      } catch (e) {
+        console.warn('Session cart load skipped:', e);
+      }
+    }
+
+    function handleCartEntryClick(targetAction) {
+      pendingGuestCartTarget = targetAction || 'MODAL';
+      if (!currentUser) {
+        const sumEl = document.getElementById('guest-cart-choice-summary');
+        if (sumEl) {
+          const totalAmt = cartItems.reduce((acc, i) => acc + i.total, 0);
+          sumEl.textContent = cartItems.length > 0
+            ? `현재 기기 장바구니 (${cartItems.length}건): ${getCartCategorySummaryText()} | 합계 ${totalAmt.toLocaleString()}원`
+            : '현재 기기 장바구니: 담긴 품목 없음 (비회원 구매 진행 또는 로그인 선택)';
+        }
+        document.getElementById('guestCartChoiceModal').classList.add('open');
+        return;
+      }
+      if (pendingGuestCartTarget === 'ORDER') {
+        openCartOrderModal();
+      } else {
+        openCartModal();
+      }
+    }
+
+    function proceedGuestCartChoice() {
+      closeModal('guestCartChoiceModal');
+      if (pendingGuestCartTarget === 'ORDER') {
+        openCartOrderModal();
+      } else {
+        openCartModal();
       }
     }
 
@@ -7149,6 +7637,7 @@
       const prev = document.getElementById('reg-photo-preview');
       if (prev) prev.style.display = 'none';
       saveStateToStorage();
+      syncMaterialToSupabase(newMat);
       updateBadges();
       showToast(`신규 자투리 품목 [${newMat.code}] (${w}x${l}x${t}mm)이 쇼핑몰에 등록되었습니다.`);
     }
@@ -7257,6 +7746,7 @@
       if (!ord) return;
       ord.status = nextStatus;
       saveStateToStorage();
+      syncOrderToSupabase(ord);
       updateBadges();
       renderSellerDashboard();
       showToast(`[${orderId}] 주문 상태가 업데이트되었습니다.`);
@@ -7271,6 +7761,7 @@
       ord.waybill = waybill;
       ord.status = 'SHIPPED';
       saveStateToStorage();
+      syncOrderToSupabase(ord);
       updateBadges();
       renderSellerDashboard();
       showToast(`[${orderId}] ${courier} (${waybill}) 송장 등록 및 출고 처리가 완료되었습니다.`);
@@ -7286,20 +7777,119 @@
       showToast(`플랫폼 중개 수수료율이 ${commissionRate}%로 변경 적용되었습니다.`);
     }
 
-    function togglePartnerStatus(partnerId) {
+    function syncPartnerToSupabase(p) {
+      syncTableRowToSupabase('partners', {
+        id: p.id,
+        user_id: p.userId || '',
+        name: p.name,
+        biz_no: p.bizNo || '-',
+        logo_text: p.logoText || p.name.substring(0, 2),
+        logo_url: p.logoUrl || '',
+        items: p.items || '',
+        addr: p.addr || '',
+        addr_detail: p.addrDetail || '',
+        region: p.region || '',
+        phone: p.phone || '',
+        email: p.email || '',
+        equip: p.equip || '',
+        status: p.status || 'PENDING'
+      });
+    }
+
+    function syncMaterialToSupabase(m) {
+      syncTableRowToSupabase('materials', {
+        id: m.id,
+        code: m.code,
+        category: m.category,
+        name: m.name,
+        grade: m.grade || '',
+        partner: m.partner,
+        region: m.region,
+        w: m.w,
+        l: m.l,
+        t: m.t,
+        stock: m.stock,
+        market_price: m.marketPrice || Math.round(m.price * 2.1),
+        price: m.price,
+        cuttable: m.cuttable !== false,
+        cut_fee_per_cut: m.cutFeePerCut || 0,
+        rating: String(m.rating || '5.0'),
+        reviews: m.reviews || 1,
+        dispatch: m.dispatch || '당일~익일',
+        surface_type: m.surfaceType || 'METAL_AL',
+        image_url: m.imageUrl || ''
+      });
+    }
+
+    async function togglePartnerStatus(partnerId) {
       const p = partners.find(item => item.id === partnerId);
       if (!p) return;
-      p.status = (p.status === 'APPROVED') ? 'PENDING' : 'APPROVED';
+      const nextStatus = (p.status === 'APPROVED') ? 'PENDING' : 'APPROVED';
+      p.status = nextStatus;
+
+      // 연동된 기업 회원 계정(users)의 approvalStatus도 함께 변경
+      users.forEach(u => {
+        if (u.partnerId === p.id || (u.role === 'CORPORATE' && u.name === p.name) || (p.userId && u.id === p.userId)) {
+          u.approvalStatus = nextStatus;
+          syncUserToSupabase(u);
+        }
+      });
+
       saveStateToStorage();
+      await syncPartnerToSupabase(p);
+      renderPartnerBanners();
       renderAdminDashboard();
-      showToast(`파트너사 [${p.name}] 상태가 변경되었습니다.`);
+      showToast(`기업 파트너 [${p.name}] 상태가 [${nextStatus === 'APPROVED' ? '가입·입점 승인(APPROVED)' : '승인 대기(PENDING)'}](으)로 변경되었습니다.`);
+    }
+
+    async function toggleCorporateUserApproval(userId) {
+      const u = users.find(item => item.id === userId);
+      if (!u) return;
+      const nextStatus = (u.approvalStatus === 'PENDING') ? 'APPROVED' : 'PENDING';
+      u.approvalStatus = nextStatus;
+
+      const p = partners.find(item => item.id === u.partnerId || item.name === u.name || item.userId === u.id);
+      if (p) {
+        p.status = nextStatus;
+        await syncPartnerToSupabase(p);
+      }
+
+      saveStateToStorage();
+      await syncUserToSupabase(u);
+      renderPartnerBanners();
+      renderAdminDashboard();
+      showToast(`기업 회원 [${u.name} (${u.id})] 계정이 [${nextStatus === 'APPROVED' ? '승인 완료(APPROVED) — 로그인 허용' : '승인 대기(PENDING)'}] 처리되었습니다.`);
+    }
+
+    async function deleteUserByAdmin(userId) {
+      if (userId === 'jaturimarket') {
+        showToast('최고 관리자 계정은 삭제할 수 없습니다.');
+        return;
+      }
+      const idx = users.findIndex(u => u.id === userId);
+      if (idx === -1) return;
+      const removed = users.splice(idx, 1)[0];
+      if (currentUser && currentUser.id === userId) {
+        currentUser = null;
+      }
+      saveStateToStorage();
+      await deleteRowFromSupabase('users', userId);
+      updateAuthUI();
+      renderAdminDashboard();
+      showToast(`회원 계정 [${removed.name} (${removed.id})]이(가) 삭제되었습니다.`);
     }
 
     function completeOrderDelivery(orderId) {
+      const role = currentUser ? (currentUser.role || currentUser.type) : 'GUEST';
+      if (role !== 'ADMIN' && role !== 'CORPORATE') {
+        showToast('개인 구매자 계정은 주문 상태를 임의로 배송 완료로 변경할 수 없습니다. (관리자·파트너 전용)');
+        return;
+      }
       const ord = orders.find(o => o.id === orderId);
       if (!ord) return;
       ord.status = 'COMPLETED';
       saveStateToStorage();
+      syncOrderToSupabase(ord);
       updateBadges();
       renderOrdersPage();
       renderSellerDashboard();
@@ -7315,6 +7905,7 @@
       if (!ord) return;
       ord.status = newStatus;
       saveStateToStorage();
+      syncOrderToSupabase(ord);
       updateBadges();
       renderOrdersPage();
       renderSellerDashboard();
@@ -7322,11 +7913,13 @@
       showToast(`[${orderId}] 주문 상태가 변경되었습니다.`);
     }
 
-    function syncUserToSupabase(u) {
-      syncTableRowToSupabase('users', {
+    async function syncUserToSupabase(u) {
+      await syncTableRowToSupabase('users', {
         id: u.id,
+        email: u.email || '',
         pw_hash: u.pwHash || sha256Hex(u.pw || '1234'),
         role: u.role || u.type || 'PERSONAL',
+        approval_status: u.approvalStatus || 'APPROVED',
         name: u.name || '',
         phone: u.phone || '',
         addr: u.addr || '',
@@ -7411,10 +8004,11 @@
       const idx = materials.findIndex(m => m.id === matId);
       if (idx === -1) return;
       const removed = materials.splice(idx, 1)[0];
-      if (selectedMaterialId === matId && materials.length > 0) {
-        selectedMaterialId = materials[0].id;
+      if (selectedMaterialId === matId) {
+        selectedMaterialId = '';
       }
       saveStateToStorage();
+      deleteRowFromSupabase('materials', matId);
       updateBadges();
       renderCatalog();
       renderAdminDashboard();
@@ -7427,6 +8021,7 @@
       ord.status = 'COMPLETED';
       ord.settled = true;
       saveStateToStorage();
+      syncOrderToSupabase(ord);
       updateBadges();
       renderOrdersPage();
       renderSellerDashboard();
@@ -7534,29 +8129,51 @@
         uTbody.innerHTML = filteredUsers.map(u => {
           const r = u.role || u.type || 'PERSONAL';
           const isRootAdmin = (u.id === 'jaturimarket');
-          const quickBtnHtml = isRootAdmin
-            ? `<span style="font-size:11px; color:var(--brand-dark); font-weight:800;">대표 관리자</span>`
-            : (r === 'ADMIN'
-                ? `<button type="button" class="btn-mall btn-mall-white" style="padding:4px 8px; font-size:11px; color:var(--price-red);" onclick="changeUserRoleByAdmin('${u.id}', 'PERSONAL')">어드민 해제</button>`
-                : `<button type="button" class="btn-mall btn-mall-brand" style="padding:4px 9px; font-size:11px;" onclick="changeUserRoleByAdmin('${u.id}', 'ADMIN')">어드민 권한 부여</button>`);
+          const linkedPartner = partners.find(p => p.id === u.partnerId || p.name === u.name || p.userId === u.id);
+          const isPendingCorp = (r === 'CORPORATE') && (u.approvalStatus === 'PENDING' || (linkedPartner && linkedPartner.status === 'PENDING'));
+
+          const approvalBadgeHtml = (r === 'CORPORATE')
+            ? (isPendingCorp
+                ? `<div style="margin-top:3px;"><span class="state-badge state-wait">승인대기(PENDING)</span></div>`
+                : `<div style="margin-top:3px;"><span class="state-badge state-done">승인완료(APPROVED)</span></div>`)
+            : '';
+
+          let actionBtnsHtml = '';
+          if (isRootAdmin) {
+            actionBtnsHtml = `<span style="font-size:11px; color:var(--brand-dark); font-weight:800;">대표 관리자</span>`;
+          } else {
+            const corpApproveBtn = (r === 'CORPORATE')
+              ? `<button type="button" class="btn-mall ${isPendingCorp ? 'btn-mall-brand' : 'btn-mall-white'}" style="padding:4px 8px; font-size:11px; margin-right:4px;" onclick="toggleCorporateUserApproval('${u.id}')">${isPendingCorp ? '기업 가입승인' : '승인대기로 전환'}</button>`
+              : '';
+            const adminRoleBtn = (r === 'ADMIN')
+              ? `<button type="button" class="btn-mall btn-mall-white" style="padding:4px 8px; font-size:11px; color:var(--price-red);" onclick="changeUserRoleByAdmin('${u.id}', 'PERSONAL')">어드민 해제</button>`
+              : `<button type="button" class="btn-mall btn-mall-dark" style="padding:4px 8px; font-size:11px;" onclick="changeUserRoleByAdmin('${u.id}', 'ADMIN')">어드민 부여</button>`;
+            actionBtnsHtml = `<div style="display:flex; gap:4px; flex-wrap:wrap;">${corpApproveBtn}${adminRoleBtn}</div>`;
+          }
+
           return `
             <tr>
               <td>
                 <div style="font-family:var(--font-mono); font-weight:800;">${u.id}</div>
-                <div style="font-size:11.5px; color:var(--text-secondary);">${u.name}</div>
+                <div style="font-size:11.5px; color:var(--text-secondary);">${u.name} ${u.email ? `<span style="color:var(--text-muted);">(${u.email})</span>` : ''}</div>
+                ${u.addr ? `<div style="font-size:10.5px; color:var(--text-muted);">${u.addr} ${u.addrDetail || ''}</div>` : ''}
               </td>
               <td>
                 <span class="state-badge ${r === 'ADMIN' ? 'state-done' : (r === 'CORPORATE' ? 'state-work' : 'state-wait')}">
                   ${getRoleLabel(r)}
                 </span>
+                ${approvalBadgeHtml}
               </td>
-              <td>${quickBtnHtml}</td>
+              <td>${actionBtnsHtml}</td>
               <td>
-                <select class="inline-select" style="font-size:11px;" ${isRootAdmin ? 'disabled' : ''} onchange="changeUserRoleByAdmin('${u.id}', this.value)">
-                  <option value="PERSONAL" ${r === 'PERSONAL' ? 'selected' : ''}>개인 회원</option>
-                  <option value="CORPORATE" ${r === 'CORPORATE' ? 'selected' : ''}>기업 회원</option>
-                  <option value="ADMIN" ${r === 'ADMIN' ? 'selected' : ''}>관리자 (임직원)</option>
-                </select>
+                <div style="display:flex; gap:4px; align-items:center;">
+                  <select class="inline-select" style="font-size:11px;" ${isRootAdmin ? 'disabled' : ''} onchange="changeUserRoleByAdmin('${u.id}', this.value)">
+                    <option value="PERSONAL" ${r === 'PERSONAL' ? 'selected' : ''}>개인 회원</option>
+                    <option value="CORPORATE" ${r === 'CORPORATE' ? 'selected' : ''}>기업/연구 회원</option>
+                    <option value="ADMIN" ${r === 'ADMIN' ? 'selected' : ''}>관리자 (임직원)</option>
+                  </select>
+                  ${!isRootAdmin ? `<button type="button" class="btn-mall btn-mall-white" style="padding:4px 7px; font-size:11px; color:var(--price-red);" onclick="deleteUserByAdmin('${u.id}')">삭제</button>` : ''}
+                </div>
               </td>
             </tr>
           `;
@@ -7678,7 +8295,7 @@
         localStorage.setItem('jaturi_notices_v9', JSON.stringify(noticePosts));
         localStorage.setItem('jaturi_prod_qna_v9', JSON.stringify(productQnaPosts));
         localStorage.setItem('jaturi_prod_rev_v9', JSON.stringify(productReviews));
-        localStorage.setItem('jaturi_cart_v11', JSON.stringify(cartItems));
+        localStorage.setItem(getActiveCartStorageKey(), JSON.stringify(cartItems));
       } catch (err) {
         console.warn('Storage save skipped:', err);
       }
@@ -7711,11 +8328,22 @@
         }
         if (uStr) {
           const parsedU = JSON.parse(uStr);
+          // 기본 시딩 계정(user01, corp01, jaturimarket)이 누락되지 않도록 병합 보장
+          const seedIds = new Set(parsedU.map(x => x.id));
+          users.forEach(seedU => {
+            if (!seedIds.has(seedU.id)) parsedU.push(seedU);
+          });
           users.length = 0;
-          parsedU.forEach(x => users.push(x));
+          parsedU.forEach(x => {
+            if (!x.approvalStatus) x.approvalStatus = 'APPROVED';
+            users.push(x);
+          });
         }
         if (cuStr && cuStr !== 'null') {
-          currentUser = JSON.parse(cuStr);
+          const savedCu = JSON.parse(cuStr);
+          // users 배열의 최신 정보와 동기화
+          const latestCu = users.find(u => u.id === savedCu.id) || savedCu;
+          currentUser = latestCu;
         }
         if (fStr) commissionRate = parseFloat(fStr) || 10;
         const ntcStr = localStorage.getItem('jaturi_notices_v9');
@@ -7743,12 +8371,7 @@
           parsed.forEach(x => productReviews.push(x));
         }
 
-        const cartStr = localStorage.getItem('jaturi_cart_v11');
-        if (cartStr) {
-          const parsedCart = JSON.parse(cartStr);
-          cartItems.length = 0;
-          parsedCart.forEach(x => cartItems.push(x));
-        }
+        loadActiveSessionCart(false);
 
         const cfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v1') || '{}');
         const defaultSbUrl = 'https://qyaexsrtplnsqwmujpfn.supabase.co';
@@ -7757,8 +8380,9 @@
         if (cfg.poStore) document.getElementById('cfg-po-store').value = cfg.poStore;
         if (cfg.poChannel) document.getElementById('cfg-po-channel').value = cfg.poChannel;
         if (cfg.sbUrl && cfg.sbKey) {
-          document.getElementById('live-mode-indicator').textContent = 'Supabase 클라우드 DB + 로컬 동기화 활성화됨';
+          document.getElementById('live-mode-indicator').textContent = 'Supabase 클라우드 DB + Realtime 실시간 반영 활성화됨';
           pullFromSupabaseCloud(cfg.sbUrl, cfg.sbKey);
+          initSupabaseRealtime(cfg.sbUrl, cfg.sbKey);
         }
       } catch (err) {
         console.warn('Storage load skipped:', err);
@@ -7866,13 +8490,117 @@
       });
     }
 
-    async function pullFromSupabaseCloud(sbUrl, sbKey) {
+    let supabaseClientInstance = null;
+    let supabaseRealtimeChannel = null;
+    let supabasePollTimer = null;
+
+    function mapDbUserToLocal(u) {
+      return {
+        id: u.id,
+        email: u.email || '',
+        pwHash: u.pw_hash || '',
+        type: u.role || 'PERSONAL',
+        role: u.role || 'PERSONAL',
+        approvalStatus: u.approval_status || 'APPROVED',
+        name: u.name || u.id,
+        phone: u.phone || '',
+        addr: u.addr || '',
+        addrDetail: u.addr_detail || '',
+        org: u.org || u.name || '',
+        partnerId: u.partner_id || null,
+        region: u.region || '',
+        items: u.items || '',
+        equip: u.equip || '',
+        logoText: u.logo_text || '',
+        logoUrl: u.logo_url || '',
+        canIssueDocs: u.can_issue_docs !== false
+      };
+    }
+
+    function refreshAllVisibleViews() {
+      updateAuthUI();
+      renderPartnerBanners();
+      renderCatalog();
+      renderSelectedMaterialDetailView();
+      updateCalculator();
+      renderCartUI();
+      renderProductDetailCommunity();
+      renderNoticeBoard();
+      renderAdminQnaBoard();
+      renderOrdersPage();
+      renderSellerDashboard();
+      renderAdminDashboard();
+      updateBadges();
+    }
+
+    async function pullFromSupabaseCloud(sbUrl, sbKey, isSilentRealtime) {
       try {
         const headers = { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` };
-        const res = await fetch(`${sbUrl}/rest/v1/materials?select=*&order=created_at.asc`, { headers });
-        if (!res.ok) return false;
-        const dbMats = await res.json();
-        if (Array.isArray(dbMats) && dbMats.length > 0) {
+
+        const [resUsers, resPartners, resMats, resOrders, resRevs, resPqna, resNotices, resAqna] = await Promise.all([
+          fetch(`${sbUrl}/rest/v1/users?select=*&order=created_at.asc`, { headers }).catch(() => null),
+          fetch(`${sbUrl}/rest/v1/partners?select=*&order=created_at.asc`, { headers }).catch(() => null),
+          fetch(`${sbUrl}/rest/v1/materials?select=*&order=created_at.asc`, { headers }).catch(() => null),
+          fetch(`${sbUrl}/rest/v1/orders?select=*&order=created_at.desc`, { headers }).catch(() => null),
+          fetch(`${sbUrl}/rest/v1/product_reviews?select=*&order=created_at.desc`, { headers }).catch(() => null),
+          fetch(`${sbUrl}/rest/v1/product_qna_posts?select=*&order=created_at.desc`, { headers }).catch(() => null),
+          fetch(`${sbUrl}/rest/v1/notices?select=*&order=created_at.desc`, { headers }).catch(() => null),
+          fetch(`${sbUrl}/rest/v1/admin_qna_posts?select=*&order=created_at.desc`, { headers }).catch(() => null)
+        ]);
+
+        if (!resMats || !resMats.ok) return false;
+
+        // 1) Users 동기화 (Supabase에서 삭제/추가/승인변경된 계정 즉시 반영)
+        if (resUsers && resUsers.ok) {
+          const dbUsers = await resUsers.json();
+          if (Array.isArray(dbUsers)) {
+            users.length = 0;
+            dbUsers.forEach(u => users.push(mapDbUserToLocal(u)));
+            if (currentUser) {
+              const latestMe = users.find(x => x.id === currentUser.id);
+              if (!latestMe) {
+                // 현재 로그인된 계정이 DB에서 삭제된 경우 즉시 로그아웃 처리
+                currentUser = null;
+                showToast('계정 정보가 변경되었거나 삭제되어 로그아웃되었습니다.');
+              } else if (latestMe.role === 'CORPORATE' && latestMe.approvalStatus === 'PENDING') {
+                currentUser = null;
+                showToast('기업 계정 승인 상태가 대기(PENDING)로 변경되어 로그아웃되었습니다.');
+              } else {
+                currentUser = latestMe;
+              }
+            }
+          }
+        }
+
+        // 2) Partners 동기화
+        if (resPartners && resPartners.ok) {
+          const dbPartners = await resPartners.json();
+          if (Array.isArray(dbPartners)) {
+            partners.length = 0;
+            dbPartners.forEach(p => {
+              partners.push({
+                id: p.id,
+                userId: p.user_id || '',
+                name: p.name,
+                bizNo: p.biz_no || '-',
+                logoText: p.logo_text || p.name.substring(0, 2),
+                logoUrl: p.logo_url || '',
+                items: p.items || '',
+                addr: p.addr || '',
+                addrDetail: p.addr_detail || '',
+                region: p.region || '',
+                phone: p.phone || '',
+                email: p.email || '',
+                equip: p.equip || '',
+                status: p.status || 'APPROVED'
+              });
+            });
+          }
+        }
+
+        // 3) Materials 동기화 (상품 삭제·수정·추가 시 즉시 반영)
+        const dbMats = await resMats.json();
+        if (Array.isArray(dbMats)) {
           materials.length = 0;
           dbMats.forEach(m => {
             materials.push({
@@ -7898,15 +8626,169 @@
               imageUrl: m.image_url || ''
             });
           });
-          renderCatalog();
-          updateBadges();
+          if (selectedMaterialId && !materials.some(m => m.id === selectedMaterialId)) {
+            selectedMaterialId = '';
+            currentCalcResult = null;
+          }
         }
+
+        // 4) Orders 동기화
+        if (resOrders && resOrders.ok) {
+          const dbOrders = await resOrders.json();
+          if (Array.isArray(dbOrders)) {
+            orders.length = 0;
+            dbOrders.forEach(o => {
+              orders.push({
+                id: o.id,
+                date: o.order_date || '',
+                buyerId: o.buyer_id || 'guest',
+                buyer: o.buyer,
+                phone: o.phone || '',
+                address: o.address || '',
+                partner: o.partner,
+                materialId: o.material_id || null,
+                materialName: o.material_name,
+                origSpec: o.orig_spec,
+                mode: o.mode || 'CUT',
+                cutSpec: o.cut_spec,
+                scrapOption: o.scrap_option || '',
+                payMethod: o.pay_method || '',
+                totalAmount: o.total_amount || 0,
+                status: o.status || 'RECEIVED',
+                courier: o.courier || '',
+                waybill: o.waybill || '',
+                settled: Boolean(o.settled)
+              });
+            });
+          }
+        }
+
+        // 5) Product Reviews 동기화 (리뷰 삭제/추가 시 즉시 반영)
+        if (resRevs && resRevs.ok) {
+          const dbRevs = await resRevs.json();
+          if (Array.isArray(dbRevs)) {
+            productReviews.length = 0;
+            dbRevs.forEach(r => {
+              productReviews.push({
+                id: r.id,
+                materialId: r.material_id,
+                author: r.author,
+                score: r.score || '5.0',
+                date: r.review_date || '',
+                cutSpec: r.cut_spec || '',
+                content: r.content || ''
+              });
+            });
+          }
+        }
+
+        // 6) Product Q&A 동기화
+        if (resPqna && resPqna.ok) {
+          const dbPqna = await resPqna.json();
+          if (Array.isArray(dbPqna)) {
+            productQnaPosts.length = 0;
+            dbPqna.forEach(q => {
+              productQnaPosts.push({
+                id: q.id,
+                materialId: q.material_id,
+                author: q.author,
+                date: q.post_date || '',
+                question: q.question,
+                sellerName: q.seller_name || '',
+                answer: q.answer || '',
+                answeredAt: q.answered_at || ''
+              });
+            });
+          }
+        }
+
+        // 7) Notices 동기화
+        if (resNotices && resNotices.ok) {
+          const dbNtc = await resNotices.json();
+          if (Array.isArray(dbNtc)) {
+            noticePosts.length = 0;
+            dbNtc.forEach(n => {
+              noticePosts.push({
+                id: n.id,
+                cat: n.cat || '안내',
+                title: n.title,
+                date: n.notice_date || '',
+                views: n.views || 1,
+                content: n.content || ''
+              });
+            });
+          }
+        }
+
+        // 8) Admin Q&A 동기화
+        if (resAqna && resAqna.ok) {
+          const dbAqna = await resAqna.json();
+          if (Array.isArray(dbAqna)) {
+            adminQnaPosts.length = 0;
+            dbAqna.forEach(a => {
+              adminQnaPosts.push({
+                id: a.id,
+                category: a.category || '기타',
+                title: a.title,
+                author: a.author,
+                date: a.post_date || '',
+                content: a.content || '',
+                answer: a.answer || '',
+                answeredAt: a.answered_at || ''
+              });
+            });
+          }
+        }
+
+        saveStateToStorage();
+        refreshAllVisibleViews();
         return true;
       } catch (err) {
-        console.warn('Supabase pull skipped:', err);
+        if (!isSilentRealtime) console.warn('Supabase pull skipped:', err);
         return false;
       }
     }
+
+    function initSupabaseRealtime(sbUrl, sbKey) {
+      if (!sbUrl || !sbKey) return;
+      try {
+        if (window.supabase && typeof window.supabase.createClient === 'function') {
+          if (supabaseRealtimeChannel && supabaseClientInstance) {
+            try { supabaseClientInstance.removeChannel(supabaseRealtimeChannel); } catch (e) {}
+          }
+          supabaseClientInstance = window.supabase.createClient(sbUrl, sbKey);
+          supabaseRealtimeChannel = supabaseClientInstance
+            .channel('jaturi-realtime-sync')
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public' },
+              (payload) => {
+                pullFromSupabaseCloud(sbUrl, sbKey, true);
+              }
+            )
+            .subscribe();
+        }
+      } catch (err) {
+        console.warn('Realtime WebSocket subscription fallback active:', err);
+      }
+
+      // 방화벽 환경에서도 무새로고침 실시간 동기화를 보장하는 경량 하트비트 폴링 (5초 주기)
+      if (supabasePollTimer) clearInterval(supabasePollTimer);
+      supabasePollTimer = setInterval(() => {
+        const creds = getSupabaseCreds();
+        if (creds) {
+          pullFromSupabaseCloud(creds.sbUrl, creds.sbKey, true);
+        }
+      }, 5000);
+    }
+
+    // 동일 브라우저 내 다중 탭(예: 관리자 탭 <-> 쇼핑몰 탭) 실시간 무새로고침 동기화
+    window.addEventListener('storage', (evt) => {
+      if (evt.key && evt.key.startsWith('jaturi_')) {
+        loadStateFromStorage();
+        refreshAllVisibleViews();
+      }
+    });
 
     async function saveCloudConfig() {
       const sbUrl = document.getElementById('cfg-sb-url').value.trim().replace(/\/$/, '');
@@ -7917,10 +8799,11 @@
 
       if (sbUrl && sbKey) {
         const ok = await pullFromSupabaseCloud(sbUrl, sbKey);
+        initSupabaseRealtime(sbUrl, sbKey);
         document.getElementById('live-mode-indicator').textContent = ok
-          ? 'Supabase 클라우드 DB 실시간 연결 완료'
-          : 'Supabase 연동 키 저장됨 (로컬 동기화 병행)';
-        showToast(ok ? 'Supabase 클라우드 DB와 실시간 연동이 완료되었습니다!' : 'Supabase 연동 설정이 저장되었습니다.');
+          ? 'Supabase 클라우드 DB + Realtime 실시간 반영 완료'
+          : 'Supabase 연동 키 저장됨 (Realtime 대기)';
+        showToast(ok ? 'Supabase 클라우드 DB 및 Realtime 실시간 연동이 활성화되었습니다!' : 'Supabase 연동 설정이 저장되었습니다.');
       } else {
         showToast('설정이 저장되었습니다 (로컬 영구저장 모드).');
       }
