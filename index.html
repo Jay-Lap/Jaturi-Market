@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>자투리마켓 (Jaturi Market) - 산업용 자투리·잉여 자재 맞춤재단 전문 쇼핑몰</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --brand: #277381;
@@ -4656,17 +4656,6 @@
       const creds = getSupabaseCreds();
       if (!creds) return null;
       try {
-        if (supabaseClientInstance) {
-          const { data, error } = await supabaseClientInstance.from('users').select('*').eq('id', userId).maybeSingle();
-          if (!error && data) {
-            const u = mapDbUserToLocal(data);
-            u._syncedToCloud = true;
-            const idx = users.findIndex(x => x.id === u.id);
-            if (idx !== -1) users[idx] = u; else users.push(u);
-            saveStateToStorage();
-            return u;
-          }
-        }
         const res = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/users?id=eq.${encodeURIComponent(userId)}&select=*`, {}, creds.sbKey);
         if (!res.ok) return null;
         const rows = await res.json();
@@ -8660,55 +8649,77 @@
       return { sbUrl: DEFAULT_SUPABASE_URL, sbKey: DEFAULT_SUPABASE_KEY };
     }
 
+    // 공식 Supabase 가이드 준수:
+    // sb_publishable_ 키는 JWT가 아니므로 Authorization: Bearer 헤더에 넣으면 서버가 "Invalid JWT"로 거절합니다.
+    // 따라서 sb_publishable_ 키를 사용할 때는 반드시 apikey 헤더만 단독 전송하도록 SDK와 REST fetch 모두에서 강제합니다.
+    function createPublishableSafeFetch(sbKey) {
+      return async function(input, init = {}) {
+        const headers = new Headers(init.headers || {});
+        headers.set('apikey', sbKey);
+        if (sbKey && sbKey.startsWith('sb_publishable_')) {
+          const authVal = headers.get('Authorization') || headers.get('authorization') || '';
+          if (!authVal || authVal.includes('sb_publishable_')) {
+            headers.delete('Authorization');
+            headers.delete('authorization');
+          }
+        } else if (sbKey && sbKey.startsWith('eyJ') && !headers.has('Authorization')) {
+          headers.set('Authorization', `Bearer ${sbKey}`);
+        }
+        return fetch(input, Object.assign({}, init, { headers }));
+      };
+    }
+
     function ensureSupabaseClient() {
       const creds = getSupabaseCreds();
       if (!creds) return null;
       if (!supabaseClientInstance && window.supabase && typeof window.supabase.createClient === 'function') {
         try {
-          supabaseClientInstance = window.supabase.createClient(creds.sbUrl, creds.sbKey);
+          supabaseClientInstance = window.supabase.createClient(creds.sbUrl, creds.sbKey, {
+            auth: { persistSession: false, autoRefreshToken: false },
+            global: { fetch: createPublishableSafeFetch(creds.sbKey) }
+          });
         } catch (e) {}
       }
       return supabaseClientInstance;
     }
 
-    // Supabase API Gateway (Kong) + PostgREST 호환 요청 헬퍼:
-    // 1차로 표준 헤더(apikey + Authorization: Bearer)를 전송하고,
-    // 만약 게이트웨이/PostgREST가 PGRST301(JWT 형식 오류) 또는 401/403을 반환하면 즉시 apikey 단독 헤더로 재시도하며,
-    // 재시도 응답(retryRes)을 절대 버리지 않고 그대로 반환합니다.
     function buildSupabaseHeaders(sbKey, extra = {}) {
-      return Object.assign({
-        'apikey': sbKey,
-        'Authorization': `Bearer ${sbKey}`
-      }, extra);
+      const h = Object.assign({ 'apikey': sbKey }, extra);
+      if (sbKey && sbKey.startsWith('eyJ')) {
+        h['Authorization'] = `Bearer ${sbKey}`;
+      } else {
+        delete h['Authorization'];
+        delete h['authorization'];
+      }
+      return h;
     }
 
     async function supabaseRestFetch(url, options = {}, sbKey = '') {
       const key = sbKey || (getSupabaseCreds() ? getSupabaseCreds().sbKey : DEFAULT_SUPABASE_KEY);
+      const isLegacyJwt = Boolean(key && key.startsWith('eyJ'));
 
-      // 1차 시도: apikey + Authorization: Bearer 동시 전송 (Supabase 공식 SDK와 동일한 헤더 구성)
-      const headersWithBearer = Object.assign({
-        'apikey': key,
-        'Authorization': `Bearer ${key}`
-      }, options.headers || {});
+      // 1차 시도: 공식 문서 기준 (sb_publishable_ 키는 apikey 단독 헤더만 전송, 구형 eyJ 키만 Authorization: Bearer 포함)
+      const primaryHeaders = Object.assign({ 'apikey': key }, options.headers || {});
+      if (isLegacyJwt) {
+        primaryHeaders['Authorization'] = `Bearer ${key}`;
+      } else {
+        delete primaryHeaders['Authorization'];
+        delete primaryHeaders['authorization'];
+      }
 
-      let res = await fetch(url, Object.assign({}, options, { headers: headersWithBearer }));
+      let res = await fetch(url, Object.assign({}, options, { headers: primaryHeaders }));
       if (res.ok) return res;
 
-      // 1차 응답 본문 확인: 인증/JWT 에러(401, 403, PGRST301 등)인 경우에만 Authorization 제거 후 2차 시도
-      const errBody = await res.clone().text().catch(() => '');
-      if (
-        res.status === 401 ||
-        res.status === 403 ||
-        errBody.includes('PGRST301') ||
-        errBody.includes('JWSInvalid') ||
-        errBody.includes('Expected 3 parts in JWT')
-      ) {
-        const headersApiKeyOnly = Object.assign({ 'apikey': key }, options.headers || {});
-        delete headersApiKeyOnly['Authorization'];
-        const retryRes = await fetch(url, Object.assign({}, options, { headers: headersApiKeyOnly }));
-        if (retryRes.ok || (retryRes.status !== 401 && retryRes.status !== 403)) {
-          return retryRes;
+      // 만약 401/403 발생 시에만 보조 헤더 조합으로 1회 폴백 시도하되, 보조 시도 응답이 2xx일 때만 채택
+      if (res.status === 401 || res.status === 403) {
+        const fallbackHeaders = Object.assign({ 'apikey': key }, options.headers || {});
+        if (isLegacyJwt) {
+          delete fallbackHeaders['Authorization'];
+        } else {
+          fallbackHeaders['Authorization'] = `Bearer ${key}`;
         }
+        const retryRes = await fetch(url, Object.assign({}, options, { headers: fallbackHeaders }));
+        if (retryRes.ok) return retryRes;
       }
       return res;
     }
@@ -8720,14 +8731,6 @@
       const creds = getSupabaseCreds();
       if (!creds) return null;
       try {
-        const client = ensureSupabaseClient();
-        if (client) {
-          const { data, error } = await client.from(table).select('*').limit(1);
-          if (!error && Array.isArray(data) && data.length > 0 && data[0]) {
-            tableSchemaColumnsCache[table] = new Set(Object.keys(data[0]));
-            return tableSchemaColumnsCache[table];
-          }
-        }
         const res = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}?select=*&limit=1`, {}, creds.sbKey);
         if (res.ok) {
           const rows = await res.json();
@@ -8741,7 +8744,7 @@
     }
 
     function filterPayloadByKnownColumns(table, rowObj, knownCols) {
-      if (!knownCols || knownCols.size === 0) return Object.assign({}, rowObj);
+      if (!knownCols || !knownCols.size) return Object.assign({}, rowObj);
       const filtered = {};
       Object.keys(rowObj).forEach(k => {
         if (knownCols.has(k)) {
@@ -8759,30 +8762,7 @@
       };
       let payload = Object.assign({}, payloadObj);
 
-      // A) @supabase/supabase-js 공식 클라이언트로 먼저 Upsert 시도 (누락 컬럼 자동 제거 포함)
-      const client = ensureSupabaseClient();
-      if (client) {
-        let sdkPayload = Object.assign({}, payload);
-        for (let attempt = 0; attempt < 15; attempt++) {
-          const { error } = await client.from(table).upsert(sdkPayload, { onConflict: 'id' });
-          if (!error) return true;
-          const msg = `${error.message || ''} ${error.details || ''} ${error.hint || ''}`;
-          const colMatch = (
-            msg.match(/Could not find the '([^']+)' column/i) ||
-            msg.match(/column "([^"]+)" of relation/i) ||
-            msg.match(/column [a-z0-9_]+\.([a-z0-9_]+) does not exist/i)
-          );
-          if (colMatch && colMatch[1] && Object.prototype.hasOwnProperty.call(sdkPayload, colMatch[1])) {
-            delete sdkPayload[colMatch[1]];
-            delete payload[colMatch[1]];
-            if (tableSchemaColumnsCache[table]) tableSchemaColumnsCache[table].delete(colMatch[1]);
-            continue;
-          }
-          break;
-        }
-      }
-
-      // B) REST API 직접 Upsert -> 실패 시 순수 POST Insert -> 409 시 PATCH Update
+      // 1순위: REST API 직접 호출 (apikey 단독 헤더 보장 + Upsert -> 순수 POST -> 409 시 PATCH + 누락 컬럼 자동 제거)
       for (let attempt = 0; attempt < 15; attempt++) {
         let res = await supabaseRestFetch(upsertUrl, {
           method: 'POST',
@@ -8812,6 +8792,7 @@
         }
 
         const combinedErr = `${errText} ${insertErrText}`;
+        window.lastSupabaseErrorText = combinedErr;
         const colMatch = (
           combinedErr.match(/Could not find the '([^']+)' column/i) ||
           combinedErr.match(/column "([^"]+)" of relation/i) ||
@@ -8823,6 +8804,13 @@
           continue;
         }
         break;
+      }
+
+      // 2순위: @supabase/supabase-js 클라이언트 폴백 (createPublishableSafeFetch 적용됨)
+      const client = ensureSupabaseClient();
+      if (client) {
+        const { error } = await client.from(table).upsert(payload, { onConflict: 'id' });
+        if (!error) return true;
       }
       return false;
     }
@@ -9213,7 +9201,7 @@
       if (!window.supabase && !document.getElementById('supabase-cdn-script') && window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') {
         const sc = document.createElement('script');
         sc.id = 'supabase-cdn-script';
-        sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4';
+        sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
         sc.async = true;
         sc.onload = () => initSupabaseRealtime(sbUrl, sbKey);
         document.head.appendChild(sc);
@@ -9239,14 +9227,12 @@
         console.warn('Realtime WebSocket subscription fallback active:', err);
       }
 
-      // 방화벽 환경에서도 무새로고침 실시간 동기화를 보장하는 경량 하트비트 폴링 (5초 주기)
-      if (supabasePollTimer) clearInterval(supabasePollTimer);
-      supabasePollTimer = setInterval(() => {
-        const creds = getSupabaseCreds();
-        if (creds) {
-          pullFromSupabaseCloud(creds.sbUrl, creds.sbKey, true);
-        }
-      }, 5000);
+      // [RAM 및 로그 최적화 완료] 기존 5초 주기 8개 테이블 무한 폴링(분당 96회 요청)을 제거하여
+      // Supabase API 로그 폭주 및 NANO 인스턴스 RAM 점유율 상승을 방지합니다.
+      if (supabasePollTimer) {
+        clearInterval(supabasePollTimer);
+        supabasePollTimer = null;
+      }
     }
 
     // 동일 브라우저 내 다중 탭(예: 관리자 탭 <-> 쇼핑몰 탭) 실시간 무새로고침 동기화
