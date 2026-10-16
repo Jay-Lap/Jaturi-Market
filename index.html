@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>자투리마켓 (Jaturi Market) - 산업용 자투리·잉여 자재 맞춤재단 전문 쇼핑몰</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --brand: #277381;
@@ -3148,7 +3147,7 @@
     <section id="view-seller" class="view-section">
       <div class="erp-header-box">
         <div>
-          <h2 style="font-size:18px; font-weight:800;">공장 파트너 센터 — (공장 섭외·입점 등록 대기)</h2>
+          <h2 style="font-size:18px; font-weight:800;" id="seller-center-main-heading">공장 파트너 센터 — 수주·발주 및 정산 관리</h2>
           <p style="font-size:12.5px; color:var(--text-secondary); margin-top:3px;">현장 모바일/웹에서 보유 중인 자투리 자재 규격(가로·세로·두께·수량)을 등록하고, 접수된 맞춤 재단 발주서의 치수 확인 및 송장 입력을 처리합니다.</p>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
@@ -4060,10 +4059,47 @@
       return '개인 회원';
     }
 
+    let guestSessionOrderIds = [];
+    let explicitlyDeletedUserIds = [];
+
     function isOrderInProgress(o) {
       // 'RECEIVED'(결제완료/발주접수), 'PAID'(결제완료), 'CUT_DONE'(상품준비중/재단완료), 'PREPARING'(상품준비중), 'SHIPPED'(배송중)만 카운트
       // 'COMPLETED'(배송완료) 상태가 되면 진행 중 카운트에서 제외
       return Boolean(o && o.status && o.status !== 'COMPLETED');
+    }
+
+    // [핵심 권한 분리] 로그인한 계정에 따라 조회 가능한 주문 목록 필터링
+    // - 관리자(ADMIN): 전체 주문 노출
+    // - 개인 회원(PERSONAL): 본인이 구매한 주문(o.buyerId === currentUser.id)만 노출
+    // - 기업 회원(CORPORATE): 본인 기업이 주문받은 내역(o.partner === currentUser.name)만 노출 (본인 직접 구매 건 포함)
+    // - 비회원(GUEST): 현재 기기 세션에서 본인이 방금 주문한 건만 노출 (타인 주문 노출 원천 차단)
+    function getVisibleOrdersForCurrentUser() {
+      if (!currentUser) {
+        return orders.filter(o => guestSessionOrderIds.includes(o.id));
+      }
+      const role = currentUser.role || currentUser.type || 'PERSONAL';
+      if (role === 'ADMIN') {
+        return orders;
+      }
+      if (role === 'CORPORATE') {
+        return orders.filter(o => o.partner === currentUser.name || o.buyerId === currentUser.id);
+      }
+      return orders.filter(o => o.buyerId === currentUser.id);
+    }
+
+    // 공장 파트너센터(#view-seller) 전용 주문 필터링:
+    // - 관리자(ADMIN): 전체 파트너 주문 노출
+    // - 기업 회원(CORPORATE): 본인 기업이 수주한(주문받은) 제품(o.partner === currentUser.name)만 노출
+    function getSellerOrdersForCurrentUser() {
+      if (!currentUser) return [];
+      const role = currentUser.role || currentUser.type || 'PERSONAL';
+      if (role === 'ADMIN') {
+        return orders;
+      }
+      if (role === 'CORPORATE') {
+        return orders.filter(o => o.partner === currentUser.name);
+      }
+      return [];
     }
 
     // 3대 계정 역할(Role) 초기 시딩: [개인 회원], [기업/연구 회원], [관리자(jaturimarket)]
@@ -4611,9 +4647,18 @@
       const creds = getSupabaseCreds();
       if (!creds) return null;
       try {
-        const res = await fetch(`${creds.sbUrl}/rest/v1/users?id=eq.${encodeURIComponent(userId)}&select=*`, {
-          headers: { 'apikey': creds.sbKey, 'Authorization': `Bearer ${creds.sbKey}` }
-        });
+        if (supabaseClientInstance) {
+          const { data, error } = await supabaseClientInstance.from('users').select('*').eq('id', userId).maybeSingle();
+          if (!error && data) {
+            const u = mapDbUserToLocal(data);
+            u._syncedToCloud = true;
+            const idx = users.findIndex(x => x.id === u.id);
+            if (idx !== -1) users[idx] = u; else users.push(u);
+            saveStateToStorage();
+            return u;
+          }
+        }
+        const res = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/users?id=eq.${encodeURIComponent(userId)}&select=*`, {}, creds.sbKey);
         if (!res.ok) return null;
         const rows = await res.json();
         if (Array.isArray(rows) && rows.length > 0) {
@@ -4638,11 +4683,32 @@
       const cleanPw = String(pw || '').trim();
       const inputHash = sha256Hex(cleanPw);
 
-      // 1) 로컬 메모리/스토리지에 없거나 최신 승인 상태 확인이 필요한 경우 Supabase에서도 실시간 조회
+      // 1) 로컬 메모리 및 LocalStorage 백업 확인 후, Supabase 클라우드 최신 상태 조회/동기화
       let found = users.find(u => u.id === cleanId);
+      if (!found) {
+        try {
+          const backupUsers = JSON.parse(localStorage.getItem('jaturi_users_v9') || '[]');
+          const backupHit = backupUsers.find(u => u.id === cleanId);
+          if (backupHit) {
+            users.push(backupHit);
+            found = backupHit;
+          }
+        } catch (e) {}
+      }
       if (getSupabaseCreds()) {
         const cloudUser = await fetchLatestUserFromSupabase(cleanId);
-        if (cloudUser) found = cloudUser;
+        if (cloudUser) {
+          cloudUser._syncedToCloud = true;
+          found = cloudUser;
+        } else if (found) {
+          // 로컬에는 있으나 Supabase에 아직 저장되지 않은 계정이면 로그인 시 즉시 Supabase에 동기화 저장
+          syncUserToSupabase(found).then(ok => {
+            if (ok) {
+              found._syncedToCloud = true;
+              saveStateToStorage();
+            }
+          });
+        }
       }
 
       if (!found || (found.pwHash !== inputHash && found.pw !== cleanPw)) {
@@ -4771,11 +4837,16 @@
           approvalStatus: 'APPROVED',
           name, phone, addr, addrDetail, org: name, canIssueDocs: true
         };
+        newU._syncedToCloud = false;
         users.push(newU);
         currentUser = newU;
         loadActiveSessionCart(true);
         saveStateToStorage();
-        await syncUserToSupabase(newU);
+        const syncedOk = await syncUserToSupabase(newU);
+        if (syncedOk) {
+          newU._syncedToCloud = true;
+          saveStateToStorage();
+        }
         clearForm();
         renderPartnerBanners();
         updateAuthUI();
@@ -4805,12 +4876,15 @@
           name, phone, addr, addrDetail, org: name, region, items, equip,
           logoText: name.substring(0, 2), logoUrl: '', canIssueDocs: true
         };
+        newPartner._syncedToCloud = false;
+        newCorp._syncedToCloud = false;
         users.push(newCorp);
-
-        // 주의: 기업 회원은 승인 대기(PENDING)이므로 자동 로그인(currentUser = newCorp)하지 않음!
         saveStateToStorage();
-        await syncUserToSupabase(newCorp);
-        await syncPartnerToSupabase(newPartner);
+        const pOk = await syncPartnerToSupabase(newPartner);
+        const uOk = await syncUserToSupabase(newCorp);
+        if (pOk) newPartner._syncedToCloud = true;
+        if (uOk) newCorp._syncedToCloud = true;
+        saveStateToStorage();
         clearForm();
         renderPartnerBanners();
         updateAuthUI();
@@ -4994,7 +5068,7 @@
       // 공통 주문 내역 테이블 렌더링
       const oTbody = document.getElementById('mypage-orders-tbody');
       if (oTbody) {
-        oTbody.innerHTML = orders.map(o => `
+        oTbody.innerHTML = getVisibleOrdersForCurrentUser().map(o => `
           <tr>
             <td>
               <div style="font-family:var(--font-mono); font-weight:700;">${o.id}</div>
@@ -5945,10 +6019,11 @@
     }
 
     function renderOrdersPage() {
-      const totalCnt = orders.length;
-      const recCnt = orders.filter(o => o.status === 'RECEIVED' || o.status === 'CUT_DONE').length;
-      const shipCnt = orders.filter(o => o.status === 'SHIPPED').length;
-      const compCnt = orders.filter(o => o.status === 'COMPLETED').length;
+      const visibleOrders = getVisibleOrdersForCurrentUser();
+      const totalCnt = visibleOrders.length;
+      const recCnt = visibleOrders.filter(o => o.status === 'RECEIVED' || o.status === 'CUT_DONE').length;
+      const shipCnt = visibleOrders.filter(o => o.status === 'SHIPPED').length;
+      const compCnt = visibleOrders.filter(o => o.status === 'COMPLETED').length;
 
       const elTotal = document.getElementById('orders-kpi-total');
       const elRec = document.getElementById('orders-kpi-received');
@@ -5959,7 +6034,7 @@
       if (elShip) elShip.textContent = `${shipCnt}건`;
       if (elComp) elComp.textContent = `${compCnt}건`;
 
-      const filteredOrders = orders.filter(o => {
+      const filteredOrders = visibleOrders.filter(o => {
         if (activeOrderPageFilter === 'ALL') return true;
         if (activeOrderPageFilter === 'RECEIVED') return (o.status === 'RECEIVED' || o.status === 'CUT_DONE');
         return o.status === activeOrderPageFilter;
@@ -7203,6 +7278,8 @@
       };
 
       orders.unshift(newOrder);
+      if (!currentUser) guestSessionOrderIds.push(newOrder.id);
+      syncOrderToSupabase(newOrder);
       c.mat.stock = Math.max(1, c.mat.stock - c.platesNeeded);
       saveStateToStorage();
       syncOrderToSupabase(newOrder);
@@ -7644,10 +7721,21 @@
 
     function renderSellerDashboard() {
       document.getElementById('seller-fee-rate-label').textContent = commissionRate;
+      const headingEl = document.getElementById('seller-center-main-heading');
+      if (headingEl) {
+        if (currentUser && (currentUser.role === 'CORPORATE' || currentUser.type === 'CORPORATE')) {
+          headingEl.textContent = `공장 파트너 센터 — [${currentUser.name}] 주문 수주 및 정산 관리`;
+        } else if (currentUser && (currentUser.role === 'ADMIN' || currentUser.type === 'ADMIN')) {
+          headingEl.textContent = `공장 파트너 센터 — [관리자 전체 파트너 통합 보기]`;
+        } else {
+          headingEl.textContent = `공장 파트너 센터 — 수주·발주 및 정산 관리`;
+        }
+      }
 
-      const pendingCount = orders.filter(o => o.status === 'RECEIVED' || o.status === 'CUT_DONE').length;
-      const shippingCount = orders.filter(o => o.status === 'SHIPPED').length;
-      const totalGross = orders.reduce((acc, o) => acc + o.totalAmount, 0);
+      const sellerOrders = getSellerOrdersForCurrentUser();
+      const pendingCount = sellerOrders.filter(o => o.status === 'RECEIVED' || o.status === 'CUT_DONE').length;
+      const shippingCount = sellerOrders.filter(o => o.status === 'SHIPPED').length;
+      const totalGross = sellerOrders.reduce((acc, o) => acc + o.totalAmount, 0);
       const totalNet = Math.round(totalGross * (1 - commissionRate / 100));
 
       document.getElementById('seller-kpi-pending').textContent = `${pendingCount}건`;
@@ -7656,7 +7744,10 @@
       document.getElementById('seller-kpi-net').textContent = `${totalNet.toLocaleString()}원`;
 
       const listEl = document.getElementById('seller-order-list');
-      listEl.innerHTML = orders.map(o => {
+      if (sellerOrders.length === 0) {
+        listEl.innerHTML = `<div style="padding:28px; text-align:center; color:var(--text-secondary); border:1px dashed var(--border-color);">현재 귀사(${currentUser ? currentUser.name : '파트너'}) 앞으로 접수된 발주 내역이 없습니다.</div>`;
+      } else {
+        listEl.innerHTML = sellerOrders.map(o => {
         let statusBadge = '';
         let actionHtml = '';
 
@@ -7720,8 +7811,13 @@
         `;
       }).join('');
 
+      }
+
       const tbody = document.getElementById('seller-settlement-tbody');
-      tbody.innerHTML = orders.map(o => {
+      if (sellerOrders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:24px; color:var(--text-secondary);">정산 대상 거래 내역이 없습니다.</td></tr>`;
+      } else {
+        tbody.innerHTML = sellerOrders.map(o => {
         const fee = Math.round(o.totalAmount * (commissionRate / 100));
         const net = o.totalAmount - fee;
         return `
@@ -7739,6 +7835,7 @@
           </tr>
         `;
       }).join('');
+      }
     }
 
     function advanceOrderStatus(orderId, nextStatus) {
@@ -7777,8 +7874,8 @@
       showToast(`플랫폼 중개 수수료율이 ${commissionRate}%로 변경 적용되었습니다.`);
     }
 
-    function syncPartnerToSupabase(p) {
-      syncTableRowToSupabase('partners', {
+    async function syncPartnerToSupabase(p) {
+      const fullPayload = {
         id: p.id,
         user_id: p.userId || '',
         name: p.name,
@@ -7793,7 +7890,21 @@
         email: p.email || '',
         equip: p.equip || '',
         status: p.status || 'PENDING'
-      });
+      };
+      const basePayload = {
+        id: p.id,
+        name: p.name,
+        biz_no: p.bizNo || '-',
+        logo_text: p.logoText || p.name.substring(0, 2),
+        logo_url: p.logoUrl || '',
+        items: p.items || '',
+        addr: p.addr || '',
+        region: p.region || '',
+        phone: p.phone || '',
+        equip: p.equip || '',
+        status: p.status || 'PENDING'
+      };
+      return await syncTableRowToSupabase('partners', fullPayload, basePayload);
     }
 
     function syncMaterialToSupabase(m) {
@@ -7869,6 +7980,7 @@
       const idx = users.findIndex(u => u.id === userId);
       if (idx === -1) return;
       const removed = users.splice(idx, 1)[0];
+      if (!explicitlyDeletedUserIds.includes(userId)) explicitlyDeletedUserIds.push(userId);
       if (currentUser && currentUser.id === userId) {
         currentUser = null;
       }
@@ -7914,7 +8026,8 @@
     }
 
     async function syncUserToSupabase(u) {
-      await syncTableRowToSupabase('users', {
+      const isApproved = (u.approvalStatus !== 'PENDING');
+      const fullPayload = {
         id: u.id,
         email: u.email || '',
         pw_hash: u.pwHash || sha256Hex(u.pw || '1234'),
@@ -7931,8 +8044,26 @@
         equip: u.equip || '',
         logo_text: u.logoText || '',
         logo_url: u.logoUrl || '',
-        can_issue_docs: true
-      });
+        can_issue_docs: isApproved
+      };
+      const basePayload = {
+        id: u.id,
+        pw_hash: u.pwHash || sha256Hex(u.pw || '1234'),
+        role: u.role || u.type || 'PERSONAL',
+        name: u.name || '',
+        phone: u.phone || '',
+        addr: u.addr || '',
+        addr_detail: u.addrDetail || '',
+        org: u.org || u.name || '',
+        partner_id: u.partnerId || null,
+        region: u.region || '',
+        items: u.items || '',
+        equip: u.equip || '',
+        logo_text: u.logoText || '',
+        logo_url: u.logoUrl || '',
+        can_issue_docs: isApproved
+      };
+      return await syncTableRowToSupabase('users', fullPayload, basePayload);
     }
 
     function changeUserRoleByAdmin(userId, newRole) {
@@ -8203,14 +8334,16 @@
       document.getElementById('badge-catalog-count').textContent = `(${materials.length})`;
       document.getElementById('badge-admin-fee').textContent = `(${commissionRate}%)`;
 
-      // 진행 중 주문 건수만 카운트 ('RECEIVED': 결제완료/발주접수, 'CUT_DONE': 상품준비중/재단완료, 'SHIPPED': 배송중)
-      // 'COMPLETED'(배송완료) 상태는 카운트에서 제외하며, 진행 중 주문이 0건이면 주문내역 옆 숫자 뱃지를 완전히 숨김(미노출)
-      const inProgressCount = orders.filter(isOrderInProgress).length;
+      // 진행 중 주문 건수만 카운트하되, 반드시 현재 로그인한 회원의 주문만 카운트!
+      // (개인: 본인이 구매한 진행중 주문 / 기업: 본인 기업이 수주한 진행중 주문 / 관리자: 전체 진행중 주문)
+      const visibleOrders = getVisibleOrdersForCurrentUser();
+      const inProgressCount = visibleOrders.filter(isOrderInProgress).length;
+      const sellerInProgressCount = getSellerOrdersForCurrentUser().filter(isOrderInProgress).length;
 
       const sellerOrderBadge = document.getElementById('badge-seller-orders');
       if (sellerOrderBadge) {
-        if (inProgressCount > 0) {
-          sellerOrderBadge.textContent = `(${inProgressCount})`;
+        if (sellerInProgressCount > 0) {
+          sellerOrderBadge.textContent = `(${sellerInProgressCount})`;
           sellerOrderBadge.style.display = 'inline';
         } else {
           sellerOrderBadge.textContent = '';
@@ -8375,14 +8508,25 @@
 
         const cfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v1') || '{}');
         const defaultSbUrl = 'https://qyaexsrtplnsqwmujpfn.supabase.co';
-        document.getElementById('cfg-sb-url').value = cfg.sbUrl || defaultSbUrl;
-        if (cfg.sbKey) document.getElementById('cfg-sb-key').value = cfg.sbKey;
+        const defaultSbKey = 'sb_publishable_OZl7RqNjUz2sxstWZuVuRA_wZ27Lw2S';
+        const activeSbUrl = (cfg.sbUrl || defaultSbUrl).replace(/\/$/, '');
+        const activeSbKey = (cfg.sbKey || defaultSbKey).trim();
+        document.getElementById('cfg-sb-url').value = activeSbUrl;
+        document.getElementById('cfg-sb-key').value = activeSbKey;
         if (cfg.poStore) document.getElementById('cfg-po-store').value = cfg.poStore;
         if (cfg.poChannel) document.getElementById('cfg-po-channel').value = cfg.poChannel;
-        if (cfg.sbUrl && cfg.sbKey) {
+        if (!cfg.sbUrl || !cfg.sbKey) {
+          localStorage.setItem('jaturi_cloud_cfg_v1', JSON.stringify({
+            sbUrl: activeSbUrl,
+            sbKey: activeSbKey,
+            poStore: cfg.poStore || '',
+            poChannel: cfg.poChannel || ''
+          }));
+        }
+        if (activeSbUrl && activeSbKey) {
           document.getElementById('live-mode-indicator').textContent = 'Supabase 클라우드 DB + Realtime 실시간 반영 활성화됨';
-          pullFromSupabaseCloud(cfg.sbUrl, cfg.sbKey);
-          initSupabaseRealtime(cfg.sbUrl, cfg.sbKey);
+          initSupabaseRealtime(activeSbUrl, activeSbKey);
+          pullFromSupabaseCloud(activeSbUrl, activeSbKey);
         }
       } catch (err) {
         console.warn('Storage load skipped:', err);
@@ -8423,30 +8567,106 @@
       URL.revokeObjectURL(url);
     }
 
+    const DEFAULT_SUPABASE_URL = 'https://qyaexsrtplnsqwmujpfn.supabase.co';
+    const DEFAULT_SUPABASE_KEY = 'sb_publishable_OZl7RqNjUz2sxstWZuVuRA_wZ27Lw2S';
+
     function getSupabaseCreds() {
       try {
         const cfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v1') || '{}');
-        if (cfg.sbUrl && cfg.sbKey) return { sbUrl: cfg.sbUrl.replace(/\/$/, ''), sbKey: cfg.sbKey.trim() };
+        const sbUrl = (cfg.sbUrl || DEFAULT_SUPABASE_URL).replace(/\/$/, '');
+        const sbKey = (cfg.sbKey || DEFAULT_SUPABASE_KEY).trim();
+        if (sbUrl && sbKey) return { sbUrl, sbKey };
       } catch (e) {}
-      return null;
+      return { sbUrl: DEFAULT_SUPABASE_URL, sbKey: DEFAULT_SUPABASE_KEY };
     }
 
-    async function syncTableRowToSupabase(table, rowObj) {
+    // Supabase 신형 Publishable Key (sb_publishable_...) 및 구형 Anon JWT (eyJ...) 모두 완벽 호환되는 요청 헬퍼
+    function buildSupabaseHeaders(sbKey, extra = {}) {
+      const h = Object.assign({ 'apikey': sbKey }, extra);
+      if (sbKey && sbKey.startsWith('eyJ')) {
+        h['Authorization'] = `Bearer ${sbKey}`;
+      }
+      return h;
+    }
+
+    async function supabaseRestFetch(url, options = {}, sbKey = '') {
+      const key = sbKey || (getSupabaseCreds() ? getSupabaseCreds().sbKey : DEFAULT_SUPABASE_KEY);
+      const baseHeaders = buildSupabaseHeaders(key, options.headers || {});
+      let res = await fetch(url, Object.assign({}, options, { headers: baseHeaders }));
+      // 만약 게이트웨이 설정에 따라 Authorization 헤더 유무 전환이 필요한 경우(401) 즉시 상호 재시도
+      if (res.status === 401) {
+        const altHeaders = Object.assign({}, baseHeaders);
+        if (altHeaders['Authorization']) {
+          delete altHeaders['Authorization'];
+        } else {
+          altHeaders['Authorization'] = `Bearer ${key}`;
+        }
+        res = await fetch(url, Object.assign({}, options, { headers: altHeaders }));
+      }
+      return res;
+    }
+
+    async function syncTableRowToSupabase(table, rowObj, fallbackRowObj) {
       const creds = getSupabaseCreds();
-      if (!creds) return;
+      if (!creds) return false;
+      const endpoint = `${creds.sbUrl}/rest/v1/${table}?on_conflict=id`;
+      const extraHeaders = {
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      };
       try {
-        await fetch(`${creds.sbUrl}/rest/v1/${table}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': creds.sbKey,
-            'Authorization': `Bearer ${creds.sbKey}`,
-            'Prefer': 'resolution=merge-duplicates'
-          },
-          body: JSON.stringify(rowObj)
-        });
+        let payload = Object.assign({}, rowObj);
+
+        // 1) @supabase/supabase-js 클라이언트가 로드된 경우 공식 SDK로 우선 Upsert 시도 (Publishable Key 완벽 지원)
+        if (supabaseClientInstance) {
+          for (let attempt = 0; attempt < 8; attempt++) {
+            const { error } = await supabaseClientInstance.from(table).upsert(payload, { onConflict: 'id' });
+            if (!error) return true;
+            const msg = (error && error.message) ? error.message : '';
+            const colMatch = msg.match(/Could not find the '([^']+)' column/i) || msg.match(/column "([^"]+)" of relation/i);
+            if (colMatch && colMatch[1] && Object.prototype.hasOwnProperty.call(payload, colMatch[1])) {
+              delete payload[colMatch[1]];
+              continue;
+            }
+            break;
+          }
+          if (fallbackRowObj) {
+            const { error: fbErr } = await supabaseClientInstance.from(table).upsert(fallbackRowObj, { onConflict: 'id' });
+            if (!fbErr) return true;
+          }
+        }
+
+        // 2) REST API 직접 호출 (신형 sb_publishable_ 및 구형 eyJ_ 자동 호환 + 누락 컬럼 자동 복구)
+        payload = Object.assign({}, rowObj);
+        for (let attempt = 0; attempt < 8; attempt++) {
+          const res = await supabaseRestFetch(endpoint, {
+            method: 'POST',
+            headers: extraHeaders,
+            body: JSON.stringify(payload)
+          }, creds.sbKey);
+          if (res.ok) return true;
+
+          const errText = await res.text().catch(() => '');
+          const colMatch = errText.match(/Could not find the '([^']+)' column/i) || errText.match(/column "([^"]+)" of relation/i);
+          if (colMatch && colMatch[1] && Object.prototype.hasOwnProperty.call(payload, colMatch[1])) {
+            delete payload[colMatch[1]];
+            continue;
+          }
+          break;
+        }
+
+        if (fallbackRowObj) {
+          const retryRes = await supabaseRestFetch(endpoint, {
+            method: 'POST',
+            headers: extraHeaders,
+            body: JSON.stringify(fallbackRowObj)
+          }, creds.sbKey);
+          if (retryRes.ok) return true;
+        }
+        return false;
       } catch (err) {
         console.warn(`Supabase sync (${table}) skipped:`, err);
+        return false;
       }
     }
 
@@ -8454,13 +8674,13 @@
       const creds = getSupabaseCreds();
       if (!creds) return;
       try {
-        await fetch(`${creds.sbUrl}/rest/v1/${table}?id=eq.${encodeURIComponent(idVal)}`, {
-          method: 'DELETE',
-          headers: {
-            'apikey': creds.sbKey,
-            'Authorization': `Bearer ${creds.sbKey}`
-          }
-        });
+        if (supabaseClientInstance) {
+          const { error } = await supabaseClientInstance.from(table).delete().eq('id', idVal);
+          if (!error) return;
+        }
+        await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}?id=eq.${encodeURIComponent(idVal)}`, {
+          method: 'DELETE'
+        }, creds.sbKey);
       } catch (err) {
         console.warn(`Supabase delete (${table}) skipped:`, err);
       }
@@ -8495,13 +8715,16 @@
     let supabasePollTimer = null;
 
     function mapDbUserToLocal(u) {
+      const derivedApproval = u.approval_status
+        ? u.approval_status
+        : (u.role === 'CORPORATE' && u.can_issue_docs === false ? 'PENDING' : 'APPROVED');
       return {
         id: u.id,
         email: u.email || '',
         pwHash: u.pw_hash || '',
         type: u.role || 'PERSONAL',
         role: u.role || 'PERSONAL',
-        approvalStatus: u.approval_status || 'APPROVED',
+        approvalStatus: derivedApproval,
         name: u.name || u.id,
         phone: u.phone || '',
         addr: u.addr || '',
@@ -8535,33 +8758,51 @@
 
     async function pullFromSupabaseCloud(sbUrl, sbKey, isSilentRealtime) {
       try {
-        const headers = { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` };
-
         const [resUsers, resPartners, resMats, resOrders, resRevs, resPqna, resNotices, resAqna] = await Promise.all([
-          fetch(`${sbUrl}/rest/v1/users?select=*&order=created_at.asc`, { headers }).catch(() => null),
-          fetch(`${sbUrl}/rest/v1/partners?select=*&order=created_at.asc`, { headers }).catch(() => null),
-          fetch(`${sbUrl}/rest/v1/materials?select=*&order=created_at.asc`, { headers }).catch(() => null),
-          fetch(`${sbUrl}/rest/v1/orders?select=*&order=created_at.desc`, { headers }).catch(() => null),
-          fetch(`${sbUrl}/rest/v1/product_reviews?select=*&order=created_at.desc`, { headers }).catch(() => null),
-          fetch(`${sbUrl}/rest/v1/product_qna_posts?select=*&order=created_at.desc`, { headers }).catch(() => null),
-          fetch(`${sbUrl}/rest/v1/notices?select=*&order=created_at.desc`, { headers }).catch(() => null),
-          fetch(`${sbUrl}/rest/v1/admin_qna_posts?select=*&order=created_at.desc`, { headers }).catch(() => null)
+          supabaseRestFetch(`${sbUrl}/rest/v1/users?select=*&order=created_at.asc`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/partners?select=*&order=created_at.asc`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/materials?select=*&order=created_at.asc`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/orders?select=*&order=created_at.desc`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/product_reviews?select=*&order=created_at.desc`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/product_qna_posts?select=*&order=created_at.desc`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/notices?select=*&order=created_at.desc`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/admin_qna_posts?select=*&order=created_at.desc`, {}, sbKey).catch(() => null)
         ]);
 
         if (!resMats || !resMats.ok) return false;
 
-        // 1) Users 동기화 (Supabase에서 삭제/추가/승인변경된 계정 즉시 반영)
+        // 1) Users 동기화 (로컬 신규 가입 계정이 유실되지 않도록 안전 병합 + 미동기화 계정 자동 업로드)
         if (resUsers && resUsers.ok) {
           const dbUsers = await resUsers.json();
           if (Array.isArray(dbUsers)) {
+            const mappedDbUsers = dbUsers.map(u => mapDbUserToLocal(u));
+            const dbUserMap = new Map(mappedDbUsers.map(u => [u.id, u]));
+
+            // 로컬에서 가입했으나 아직 DB에 반영 전인 계정(_syncedToCloud !== true)은 절대 삭제하지 않고 보존 + 즉시 DB로 업로드
+            const localUnsyncedUsers = users.filter(
+              localU => !dbUserMap.has(localU.id) && !explicitlyDeletedUserIds.includes(localU.id) && localU._syncedToCloud !== true
+            );
+
             users.length = 0;
-            dbUsers.forEach(u => users.push(mapDbUserToLocal(u)));
+            mappedDbUsers.forEach(u => {
+              u._syncedToCloud = true;
+              users.push(u);
+            });
+            localUnsyncedUsers.forEach(localU => {
+              users.push(localU);
+              syncUserToSupabase(localU).then(ok => {
+                if (ok) {
+                  localU._syncedToCloud = true;
+                  saveStateToStorage();
+                }
+              });
+            });
+
             if (currentUser) {
               const latestMe = users.find(x => x.id === currentUser.id);
               if (!latestMe) {
-                // 현재 로그인된 계정이 DB에서 삭제된 경우 즉시 로그아웃 처리
                 currentUser = null;
-                showToast('계정 정보가 변경되었거나 삭제되어 로그아웃되었습니다.');
+                showToast('계정 정보가 삭제되어 로그아웃되었습니다.');
               } else if (latestMe.role === 'CORPORATE' && latestMe.approvalStatus === 'PENDING') {
                 currentUser = null;
                 showToast('기업 계정 승인 상태가 대기(PENDING)로 변경되어 로그아웃되었습니다.');
@@ -8572,10 +8813,13 @@
           }
         }
 
-        // 2) Partners 동기화
+        // 2) Partners 동기화 (로컬 신규 가입 파트너 보존 및 자동 업로드)
         if (resPartners && resPartners.ok) {
           const dbPartners = await resPartners.json();
           if (Array.isArray(dbPartners)) {
+            const dbPartnerIds = new Set(dbPartners.map(p => p.id));
+            const localUnsyncedPartners = partners.filter(lp => !dbPartnerIds.has(lp.id) && !lp._fromCloud);
+
             partners.length = 0;
             dbPartners.forEach(p => {
               partners.push({
@@ -8592,8 +8836,13 @@
                 phone: p.phone || '',
                 email: p.email || '',
                 equip: p.equip || '',
-                status: p.status || 'APPROVED'
+                status: p.status || 'APPROVED',
+                _fromCloud: true
               });
+            });
+            localUnsyncedPartners.forEach(lp => {
+              partners.push(lp);
+              syncPartnerToSupabase(lp);
             });
           }
         }
@@ -8751,6 +9000,14 @@
 
     function initSupabaseRealtime(sbUrl, sbKey) {
       if (!sbUrl || !sbKey) return;
+      if (!window.supabase && !document.getElementById('supabase-cdn-script') && window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') {
+        const sc = document.createElement('script');
+        sc.id = 'supabase-cdn-script';
+        sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        sc.async = true;
+        sc.onload = () => initSupabaseRealtime(sbUrl, sbKey);
+        document.head.appendChild(sc);
+      }
       try {
         if (window.supabase && typeof window.supabase.createClient === 'function') {
           if (supabaseRealtimeChannel && supabaseClientInstance) {
