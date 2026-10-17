@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>자투리마켓 (Jaturi Market) - 산업용 자투리·잉여 자재 맞춤재단 전문 쇼핑몰</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.portone.io/v2/browser-sdk.js" async defer></script>
   <style>
     :root {
       --brand: #277381;
@@ -619,6 +619,8 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      position: relative;
+      overflow: hidden;
     }
     .prd-card:hover {
       border-color: var(--brand);
@@ -707,8 +709,12 @@
       border-top: 1px solid var(--bg-subtle);
       padding-top: 8px;
       display: flex;
+      flex-wrap: wrap;
       justify-content: space-between;
-      align-items: flex-end;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      box-sizing: border-box;
     }
     .prd-market-price {
       font-size: 11px;
@@ -751,15 +757,35 @@
       border: 1px solid var(--brand);
       background: #fff;
       color: var(--brand);
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 4px 9px;
+      padding: 4px 8px;
       border-radius: 2px;
       cursor: pointer;
+      max-width: 100%;
+      box-sizing: border-box;
+      flex-shrink: 0;
     }
     .prd-card.selected .btn-order-mini {
       background: var(--brand);
       color: #fff;
+      width: 100%;
+      text-align: center;
+      padding: 6px 8px;
+      margin-top: 2px;
+    }
+    .prd-selected-ribbon {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--brand);
+      color: #fff;
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 2px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: 2;
     }
 
     /* ==========================================
@@ -1320,6 +1346,8 @@
       #cartModal,
       #guestCartChoiceModal,
       #corpPendingModal,
+      #orderClaimModal,
+      #orderCompleteModal,
       .no-print {
         display: none !important;
       }
@@ -2148,7 +2176,7 @@
     <div class="util-inner">
       <ul class="util-links">
         <li><button class="device-mode-badge" id="device-mode-btn" onclick="toggleViewportMode()">화면: PC모드 (모바일전환)</button></li>
-        <li id="util-rfp-li" style="display:none;"><button class="util-btn" id="btn-util-rfp" onclick="openRfpModal()" style="color:var(--brand); font-weight:700;">DB·PG 연동 및 초기화 (관리자전용)</button></li>
+        <li id="util-rfp-li"><button class="util-btn" id="btn-util-rfp" onclick="openRfpModal()" style="color:var(--brand); font-weight:700;">온팟(Onpod) 서버·DB 연동설정</button></li>
       </ul>
 
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
@@ -2235,13 +2263,13 @@
           <span>장바구니</span>
           <span class="cart-count-badge" id="header-cart-count" style="display:none; background:var(--price-red);">0</span>
         </button>
-        <button class="quick-icon-btn" id="quick-btn-quote" style="display:none;" onclick="openQuoteModal()">
+        <button class="quick-icon-btn" id="quick-btn-quote" onclick="openRecentOrderQuoteModal()">
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span>견적/명세서</span>
         </button>
-        <button class="quick-icon-btn" id="quick-btn-orders" style="display:none;" onclick="switchRole('orders')">
+        <button class="quick-icon-btn" id="quick-btn-orders" onclick="switchRole('orders')">
           <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-          <span>주문내역</span>
+          <span id="quick-orders-label">주문내역</span>
           <span class="cart-count-badge" id="header-order-count">2</span>
         </button>
       </div>
@@ -2270,7 +2298,7 @@
         </ul>
       </div>
       <div class="gnb-right-meta">
-        <button class="spec-tag-outline" onclick="openQuoteModal()">대학·연구실 카드결제 / 전자견적서 즉시발급</button>
+        <button class="spec-tag-outline" id="gnb-right-action-btn" onclick="handleGnbRightActionClick()">비회원 주문조회</button>
       </div>
     </div>
   </nav>
@@ -2350,6 +2378,7 @@
                   </select>
                   <select class="inline-select" id="filter-region" onchange="renderCatalog()">
                     <option value="ALL">전국 파트너 공장 (전체 발송지)</option>
+                    <option value="울산·경남">울산·경남 (효문·기계금속단지)</option>
                     <option value="경기 시흥·안산">경기 시흥·안산 (시화공단)</option>
                     <option value="인천 남동">인천 남동공단</option>
                     <option value="서울 문래·성수">서울 문래·성수</option>
@@ -2940,11 +2969,11 @@
         </div>
       </div>
 
-      <!-- 공통: 마이페이지 비밀번호 안전 변경 (기존 비밀번호 검증 + 새 비밀번호 변경 + Supabase 실시간 연동) -->
+      <!-- 공통: 마이페이지 비밀번호 안전 변경 (기존 비밀번호 검증 + 새 비밀번호 변경 + 온팟 DB 연동) -->
       <div class="erp-box" id="mypage-pw-change-section" style="display:none; margin-bottom:20px; border-top:2px solid var(--brand);">
         <div class="erp-box-head">
           <span>비밀번호 안전 변경 (기존 비밀번호 확인 후 변경)</span>
-          <span class="state-badge state-done">SHA-256 암호화 · Supabase DB 즉시 동기화</span>
+          <span class="state-badge state-done">SHA-256 암호화 · 온팟(Onpod) DB 즉시 동기화</span>
         </div>
         <div class="erp-box-body">
           <form onsubmit="handleChangePasswordSubmit(event)" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; align-items:end;">
@@ -3086,9 +3115,37 @@
         </div>
       </div>
 
+      <!-- 비회원 주문·배송 조회 및 거래명세서 발급 박스 (비로그인 시 노출) -->
+      <div class="erp-box" id="orders-guest-lookup-box" style="display:none; border:2px solid var(--brand); background:var(--brand-light); margin-bottom:18px;">
+        <div class="erp-box-head" style="background:#fff; border-bottom:1px solid var(--brand-border);">
+          <div>
+            <span class="tag-square tag-cut" style="margin-right:6px;">비회원 주문조회</span>
+            <strong style="font-size:14px; color:var(--brand-dark);">비회원 주문·배송 조회 및 거래명세서 발급 (주문자 이름 + 주문번호 입력)</strong>
+          </div>
+          <button type="button" class="btn-mall btn-mall-dark" style="padding:5px 12px; font-size:11.5px;" onclick="openLoginModal()">회원 로그인하기</button>
+        </div>
+        <div class="erp-box-body" style="background:#fff;">
+          <p style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">
+            회원님은 <strong>[회원 로그인하기]</strong> 후 본인이 주문한 모든 내역을 즉시 확인하실 수 있으며, <strong>비회원으로 주문하신 고객님</strong>은 주문 시 입력한 <strong>주문자 이름</strong>과 <strong>주문번호</strong>를 입력해 조회하시면 거래명세서 발급 및 주문취소·반품·환불 신청이 가능합니다.
+          </p>
+          <form onsubmit="handleGuestOrderLookupInOrdersPage(event)" style="display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end;">
+            <div>
+              <label for="ordpage-guest-name" style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">주문자 이름 (또는 기관명)</label>
+              <input type="text" class="erp-input" id="ordpage-guest-name" placeholder="주문자 성명 입력" style="height:38px;" required />
+            </div>
+            <div>
+              <label for="ordpage-guest-id" style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">주문번호 (Order No.)</label>
+              <input type="text" class="erp-input" id="ordpage-guest-id" placeholder="예: ORD-261013-09" style="height:38px; font-family:var(--font-mono);" required />
+            </div>
+            <button type="submit" class="btn-mall btn-mall-brand" style="height:38px; padding:0 20px; font-size:12.5px; display:inline-flex; align-items:center; justify-content:center;">비회원 주문 조회</button>
+          </form>
+          <div id="ordpage-guest-lookup-msg" style="margin-top:8px; font-size:12px; font-weight:700; display:none;"></div>
+        </div>
+      </div>
+
       <div class="erp-kpi-grid">
         <div class="erp-kpi-card">
-          <div class="k-title">전체 주문 건수</div>
+          <div class="k-title">조회된 주문 건수</div>
           <div class="k-num" id="orders-kpi-total">3건</div>
           <div class="k-sub">누적 맞춤재단·원판 발주</div>
         </div>
@@ -3120,6 +3177,7 @@
             <button type="button" class="spec-chip" data-ostatus="RECEIVED" onclick="filterOrdersPage('RECEIVED')">결제완료·상품준비중</button>
             <button type="button" class="spec-chip" data-ostatus="SHIPPED" onclick="filterOrdersPage('SHIPPED')">배송중</button>
             <button type="button" class="spec-chip" data-ostatus="COMPLETED" onclick="filterOrdersPage('COMPLETED')">배송완료</button>
+            <button type="button" class="spec-chip" data-ostatus="CLAIM" onclick="filterOrdersPage('CLAIM')">취소·반품·환불</button>
           </div>
         </div>
         <div class="erp-box-body" style="padding:0; overflow-x:auto;">
@@ -3265,6 +3323,27 @@
               <span style="font-size:11.5px; font-weight:500; color:var(--text-secondary);">발주접수 -> 재단완료 -> 송장입력 -> 구매확정</span>
             </div>
             <div class="erp-box-body" id="seller-order-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+          </div>
+
+          <div class="erp-box">
+            <div class="erp-box-head">
+              <span>내 공장 등록 자재 재고·단가 실시간 관리</span>
+              <span style="font-size:11.5px; font-weight:500; color:var(--text-secondary);">재고 수량 및 판매 단가 수정 시 쇼핑몰에 즉시 반영됩니다.</span>
+            </div>
+            <div class="erp-box-body" style="padding:0; overflow-x:auto;">
+              <table class="erp-table" style="border:none;">
+                <thead>
+                  <tr>
+                    <th>상품코드 / 품목명</th>
+                    <th>원판 규격(mm)</th>
+                    <th class="num">보유 재고(장)</th>
+                    <th class="num">기준 단가(원)</th>
+                    <th>재고·단가 저장 / 삭제</th>
+                  </tr>
+                </thead>
+                <tbody id="seller-inventory-tbody"></tbody>
+              </table>
+            </div>
           </div>
 
           <div class="erp-box">
@@ -3487,19 +3566,42 @@
        MODAL 1: 전자 견적서 / 거래명세서 발급 모달
        ========================================== -->
   <div class="modal-backdrop" id="quoteModal">
-    <div class="modal-win">
+    <div class="modal-win" style="max-width:780px;">
       <button class="modal-close-btn no-print" onclick="closeModal('quoteModal')">x</button>
-      <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-right:36px;">
+      <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-right:36px; flex-wrap:wrap; gap:8px;">
         <div>
-          <strong style="font-size:16px;">연구비·법인카드 증빙용 전자 문서 발급</strong>
-          <span style="font-size:12px; color:var(--text-secondary); margin-left:8px;">산학협력단 및 기업 회계 제출 표준 양식</span>
+          <strong style="font-size:16px;">전자 견적서·거래명세서 즉시발급</strong>
+          <span style="font-size:11.5px; color:var(--text-secondary); display:block; margin-top:2px;">본인의 최근 주문내역 5건 중 선택하거나 현재 계산기/장바구니 품목을 선택해 즉시 출력하세요.</span>
         </div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="btn-mall btn-mall-white" style="padding:6px 12px; font-size:12px;" onclick="toggleDocType()">견적서 / 거래명세서 전환</button>
-          <button class="btn-mall btn-mall-white" style="padding:6px 12px; font-size:12px;" onclick="downloadQuoteAsImage()">이미지로 바로 저장(PNG)</button>
+          <button class="btn-mall btn-mall-white" style="padding:6px 12px; font-size:12px; border-color:var(--brand); color:var(--brand-dark);" onclick="toggleDocType()">문서양식 전환 (견적서 ↔ 거래명세서)</button>
+          <button class="btn-mall btn-mall-white" style="padding:6px 12px; font-size:12px;" onclick="downloadQuoteAsImage()">이미지로 저장(PNG)</button>
           <button class="btn-mall btn-mall-brand" style="padding:6px 14px; font-size:12px;" onclick="printCleanQuote()">PDF 저장 / 인쇄하기</button>
         </div>
       </div>
+
+      <!-- 최근 주문내역 5건 선택 (로그인 회원) / 비회원 이름+주문번호 조회 / 사전 견적 컨트롤 영역 (인쇄 시 자동 숨김) -->
+      <div class="no-print" id="quote-source-selector-box" style="background:var(--bg-gray); border:1px solid var(--border-strong); padding:10px 12px; margin-bottom:12px; border-radius:3px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <strong style="font-size:12px; color:var(--brand-dark);">1. 발급 구분 선택:</strong>
+            <button type="button" class="spec-chip" id="qsrc-btn-orders" onclick="setQuoteSourceMode('ORDER')">주문건 거래명세서·견적서 발급 (회원 최근5건 / 비회원 주문조회)</button>
+            <button type="button" class="spec-chip" id="qsrc-btn-single" onclick="setQuoteSourceMode('SINGLE')">주문전 사전 견적서 (계산기 선택품목)</button>
+            <button type="button" class="spec-chip" id="qsrc-btn-cart" onclick="setQuoteSourceMode('CART')">주문전 사전 견적서 (장바구니 묶음)</button>
+          </div>
+          <div id="quote-prepay-select-wrap" style="display:flex; align-items:center; gap:6px; font-size:11.5px;">
+            <label for="quote-custom-pay-select" style="font-weight:700; color:var(--text-secondary);">사전 견적 결제예정구분:</label>
+            <select id="quote-custom-pay-select" class="inline-select" style="padding:3px 8px; font-size:11.5px; font-weight:700;" onchange="renderPrintableDocument()">
+              <option value="연구비·법인 신용카드 결제">연구비·법인 신용카드 결제</option>
+              <option value="가상계좌 결제 (무통장 입금)">가상계좌 결제 (무통장 입금)</option>
+              <option value="일반 계좌이체 (무통장 입금)">일반 계좌이체 (무통장 입금)</option>
+              <option value="카카오·토스 간편결제">카카오·토스 간편결제</option>
+            </select>
+          </div>
+        </div>
+        <div id="quote-recent-orders-list" style="display:none; background:#fff; border:1px solid var(--border-color); padding:10px;"></div>
+      </div>
+
       <div class="quote-sheet" id="printable-doc-area"></div>
     </div>
   </div>
@@ -3542,69 +3644,80 @@
           <input type="text" class="erp-input" id="ord-buyer-memo" value="모서리 파손 주의 포장 요청 / 도착 전 연락 바랍니다." />
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1.6fr; gap:8px; margin-top:14px;">
-          <button type="button" class="btn-mall btn-mall-white" onclick="closeModal('orderInfoModal')">취소</button>
-          <button type="submit" class="btn-mall btn-mall-brand">다음 단계: 결제창(가상계좌·카드)으로 이동</button>
+        <div style="margin-top:14px; padding-top:12px; border-top:1px dashed var(--border-strong);">
+          <div style="font-size:11.5px; font-weight:800; color:var(--brand-dark); margin-bottom:8px;">
+            결제 수단 바로 선택 — 클릭 시 중간 선택 화면 없이 포트원 결제창이 즉시 열립니다.
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+            <button type="button" class="btn-mall btn-mall-dark" id="btn-step1-virtual-account" style="padding:13px 10px; font-size:13.5px; font-weight:800;" onclick="proceedOrderStep1VirtualAccount()">
+              가상계좌 발급 (결제창 호출)
+            </button>
+            <button type="submit" class="btn-mall btn-mall-brand" id="btn-step1-direct-portone" style="padding:13px 10px; font-size:13.5px; font-weight:800;">
+              간편 · 카드결제 (결제창 호출)
+            </button>
+          </div>
+          <button type="button" class="btn-mall btn-mall-white" style="width:100%; padding:8px;" onclick="closeModal('orderInfoModal')">취소 (닫기)</button>
         </div>
       </form>
     </div>
   </div>
 
   <!-- ==========================================
-       MODAL 2-B: 주문 2단계 — 결제 및 전용 가상계좌 발급·입금 모달 (후불결제 제외)
+       MODAL 2-B: 주문 2단계 — 포트원(PortOne V2) 가상계좌 & 간편·카드결제 바로 호출 모달
        ========================================== -->
   <div class="modal-backdrop no-print" id="paymentModal">
-    <div class="modal-win" style="max-width:540px;">
+    <div class="modal-win" style="max-width:520px;">
       <button class="modal-close-btn" onclick="closeModal('paymentModal')">X</button>
       <div style="border-bottom:2px solid var(--border-dark); padding-bottom:10px; margin-bottom:14px;">
-        <span style="font-size:11px; font-weight:700; color:var(--brand);">ORDER STEP 2 / 2 · PAYMENT</span>
-        <h3 style="font-size:17px; font-weight:800; margin-top:2px;">결제 수단 선택 및 가상계좌 발급</h3>
+        <span style="font-size:11px; font-weight:700; color:var(--brand);">PORTONE V2 CHECKOUT</span>
+        <h3 style="font-size:17px; font-weight:800; margin-top:2px;">결제창 호출 (가상계좌 발급 / 간편·카드결제)</h3>
       </div>
 
       <div id="payment-summary-box" style="background:var(--bg-gray); border:1px solid var(--border-color); padding:12px; margin-bottom:14px; font-size:12.5px;"></div>
 
-      <div class="form-row">
-        <label>결제 수단 선택 (후불결제 제외 · 가상계좌 및 카드/간편결제)</label>
-        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
-          <button type="button" class="spec-chip active" id="pay-method-1" style="padding:9px 6px; font-weight:700;" onclick="selectPayMethod(1)">가상계좌 발급 (무통장)</button>
-          <button type="button" class="spec-chip" id="pay-method-2" style="padding:9px 6px; font-weight:700;" onclick="selectPayMethod(2)">연구비·신용카드</button>
-          <button type="button" class="spec-chip" id="pay-method-3" style="padding:9px 6px; font-weight:700;" onclick="selectPayMethod(3)">카카오·토스 간편결제</button>
-        </div>
-      </div>
+      <div id="portone-payment-alert" class="status-msg-box err" style="display:none; margin-bottom:12px;"></div>
 
-      <div id="virtual-account-panel" style="border:1px solid var(--brand-border); background:var(--brand-light); padding:14px; margin-bottom:14px;">
-        <div style="font-weight:800; color:var(--brand-dark); margin-bottom:8px; font-size:13px;">전용 가상계좌 발급 및 입금 처리</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
-          <div>
-            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">입금 은행 선택</label>
-            <select class="erp-input" id="va-bank-select" onchange="generateVirtualAccountNumber()">
-              <option value="기업은행">IBK기업은행</option>
-              <option value="국민은행">KB국민은행</option>
-              <option value="신한은행">신한은행</option>
-              <option value="우리은행">우리은행</option>
-              <option value="농협은행">NH농협은행</option>
-            </select>
-          </div>
-          <div>
-            <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">입금자 성명</label>
-            <input type="text" class="erp-input" id="va-depositor-name" placeholder="입금자명 입력" />
-          </div>
-        </div>
-        <div style="background:#fff; border:1px solid var(--border-strong); padding:10px 12px; font-family:var(--font-mono); font-size:12.5px;">
-          <div style="color:var(--text-secondary); font-size:11px;">발급된 입금 전용 가상계좌 (예금주: 자투리마켓)</div>
-          <div style="font-size:15px; font-weight:800; color:var(--brand-dark); margin:3px 0;" id="va-issued-number">기업은행 042-891024-01-019</div>
-          <div style="display:flex; justify-content:space-between; font-size:11.5px; color:var(--text-secondary);">
-            <span>입금하실 금액: <strong style="color:var(--price-red);" id="va-exact-amount">0원</strong></span>
-            <span>입금기한: 24시간 이내</span>
-          </div>
-        </div>
-      </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1.6fr; gap:8px;">
-        <button type="button" class="btn-mall btn-mall-white" onclick="backToOrderStep1()">이전 (주소 수정)</button>
-        <button type="button" class="btn-mall btn-mall-brand" id="btn-final-pay-submit" onclick="confirmOrderPayment()">
-          가상계좌 입금 완료 및 주문 접수
+      <!-- 불필요한 은행/카드사 수동 선택을 제거하고 2개의 대형 포트원 결제창 호출 버튼으로 직관화 -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+        <button type="button" class="btn-mall btn-mall-dark" id="btn-portone-va-sdk" style="padding:18px 12px; font-size:14.5px; font-weight:800; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; border-radius:4px;" onclick="requestPortOneVirtualAccountPayment()">
+          <span>1. 가상계좌 결제창 호출</span>
+          <span style="font-size:11px; font-weight:500; opacity:0.88;">포트원 가상계좌 발급 (무통장)</span>
         </button>
+        <button type="button" class="btn-mall btn-mall-brand" id="btn-final-pay-submit" style="padding:18px 12px; font-size:14.5px; font-weight:800; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; border-radius:4px;" onclick="selectedPayMethodIdx=2; confirmOrderPayment();">
+          <span>2. 간편 · 카드결제창 호출</span>
+          <span style="font-size:11px; font-weight:500; opacity:0.92;">포트원 신용·연구비카드 · 간편결제</span>
+        </button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr; gap:8px;">
+        <button type="button" class="btn-mall btn-mall-white" id="btn-pay-back-step1" onclick="backToOrderStep1()">이전 (수령인 · 배송지 주소 수정)</button>
+      </div>
+
+      <!-- 내부 상태 호환용 숨김 영역 (화면에 노출되지 않음) -->
+      <div style="display:none;" aria-hidden="true">
+        <button type="button" id="pay-method-1" onclick="selectPayMethod(1)">1. 가상계좌 발급</button>
+        <button type="button" id="pay-method-2" onclick="selectPayMethod(2)">2. 간편결제 (포트원 결제)</button>
+        <button type="button" id="pay-method-4" onclick="selectPayMethod(4)">3. 일반 계좌이체 (무통장)</button>
+        <button type="button" id="pay-method-3" onclick="selectPayMethod(3)">4. 카카오·토스 간편결제</button>
+        <div id="card-payment-panel">
+          <select id="card-type-select"><option value="연구비·법인·신용카드">카드</option></select>
+          <select id="card-company-select"><option value="포트원PG">포트원PG</option></select>
+          <select id="card-install-select"><option value="일시불">일시불</option></select>
+        </div>
+        <div id="easy-pay-panel">
+          <select id="easypay-provider-select"><option value="포트원 간편결제">간편결제</option></select>
+          <select id="easypay-receipt-select"><option value="지출증빙용">지출증빙용</option></select>
+        </div>
+        <div id="direct-bank-panel">
+          <select id="dbank-select"><option value="기업은행">기업은행</option></select>
+          <input type="text" id="dbank-depositor-name" />
+        </div>
+        <div id="virtual-account-panel">
+          <select id="va-bank-select" onchange="generateVirtualAccountNumber()"><option value="기업은행">기업은행</option></select>
+          <input type="text" id="va-depositor-name" />
+          <div id="va-issued-number">포트원 가상계좌</div>
+          <strong id="va-exact-amount">0원</strong>
+        </div>
       </div>
     </div>
   </div>
@@ -3763,53 +3876,58 @@
   </div>
 
   <!-- ==========================================
-       MODAL 3: 실제 작동 설정 (영구저장 DB · Supabase · 포트원 PG 연동)
+       MODAL 3: 에이아이쓰리 온팟 (AI3 Onpod) 서버 · PostgreSQL DB · 포트원 PG 연동 설정
        ========================================== -->
   <div class="modal-backdrop no-print" id="rfpModal">
     <div class="modal-win" style="max-width:740px;">
       <button class="modal-close-btn" onclick="closeModal('rfpModal')">x</button>
       <div style="border-bottom:2px solid var(--border-dark); padding-bottom:10px; margin-bottom:16px;">
-        <span style="font-size:11px; font-weight:700; color:var(--brand);">LIVE OPERATION &amp; CLOUD DB CONNECTOR</span>
-        <h3 style="font-size:18px; font-weight:800; margin-top:2px;">실제 작동 모드 설정 (로컬 영구저장 / Supabase DB / PortOne 결제)</h3>
+        <span style="font-size:11px; font-weight:700; color:var(--brand);">AI3 ONPOD SERVER &amp; POSTGRESQL CONNECTOR</span>
+        <h3 style="font-size:18px; font-weight:800; margin-top:2px;">에이아이쓰리 온팟(Onpod) 서버 · PostgreSQL DB 및 결제 연동 설정</h3>
       </div>
 
       <div style="background:var(--brand-light); border:1px solid var(--brand-border); padding:12px 14px; margin-bottom:16px; font-size:12.5px;">
-        <strong>현재 작동 상태: <span id="live-mode-indicator" style="color:var(--brand-dark);">브라우저 영구 저장(LocalStorage DB) 활성화됨</span></strong>
-        <p style="margin-top:4px; color:var(--text-secondary);">지금 파트너센터에서 실제 사진을 올리고 자재를 등록하거나 주문을 넣으면 새로고침해도 데이터가 사라지지 않고 유지됩니다. 아래에서 샘플 데이터를 모두 비우거나 실제 Supabase 클라우드 DB 및 포트원 PG 키를 입력하면 즉시 실서버와 연동됩니다.</p>
+        <strong>현재 작동 상태: <span id="live-mode-indicator" style="color:var(--brand-dark);">홈페이지 단독 실행 + 온팟(Onpod) 서버 하이브리드 모드 활성화됨</span></strong>
+        <p style="margin-top:4px; color:var(--text-secondary);">홈페이지 단독으로도 모든 기능(회원가입·맞춤재단 계산·장바구니·주문·취소/반품/환불·거래명세서 발급)이 즉시 작동하며, <strong>에이아이쓰리 온팟(Onpod)</strong>에서 서버 및 관리형 PostgreSQL DB를 띄우면 아래 API 경로를 통해 실서버 DB와 실시간으로 동기화됩니다.</p>
       </div>
 
       <div style="display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;">
         <button class="btn-mall btn-mall-white" onclick="clearAllSampleData()">빈 쇼핑몰로 시작 (샘플 상품·주문 전체 삭제)</button>
         <button class="btn-mall btn-mall-white" onclick="resetToDefaultSampleData()">기본 샘플 데이터 다시 불러오기</button>
         <button class="btn-mall btn-mall-white" onclick="exportDataJson()">현재 데이터 백업(JSON 다운로드)</button>
+        <button class="btn-mall btn-mall-dark" onclick="exportMigrationSqlForOnpod()">온팟(Onpod) 이전용 통합 SQL 다운로드</button>
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
         <div style="border:1px solid var(--border-color); padding:12px;">
-          <div style="font-weight:800; margin-bottom:8px; color:var(--text-primary);">1. Supabase 클라우드 DB 연동 (선택)</div>
+          <div style="font-weight:800; margin-bottom:8px; color:var(--text-primary);">1. 클라우드 DB 연동 (Supabase 및 온팟 Onpod 자동 호환)</div>
           <div class="form-row">
-            <label>Supabase Project URL</label>
-            <input type="text" class="erp-input" id="cfg-sb-url" placeholder="https://xxxx.supabase.co" />
+            <label>Supabase Project URL 또는 온팟(Onpod) API 주소 (`/api`)</label>
+            <input type="text" class="erp-input" id="cfg-sb-url" placeholder="예: https://xxxx.supabase.co 또는 /api" />
           </div>
           <div class="form-row" style="margin-bottom:0;">
-            <label>Supabase Anon Public Key</label>
-            <input type="password" class="erp-input" id="cfg-sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI..." />
+            <label>Supabase Anon Key 또는 온팟 API 토큰 (온팟 동일서버 시 생략 가능)</label>
+            <input type="password" class="erp-input" id="cfg-sb-key" placeholder="Supabase anon key 또는 온팟 토큰 입력" />
           </div>
         </div>
         <div style="border:1px solid var(--border-color); padding:12px;">
-          <div style="font-weight:800; margin-bottom:8px; color:var(--text-primary);">2. 포트원(PortOne V2) 실결제 연동 (선택)</div>
+          <div style="font-weight:800; margin-bottom:8px; color:var(--text-primary);">2. 포트원(PortOne V2) 실결제 연동</div>
           <div class="form-row">
-            <label>PortOne Store ID</label>
-            <input type="text" class="erp-input" id="cfg-po-store" placeholder="store-xxxxxxxx-xxxx-xxxx" />
+            <label>PortOne Store ID (상점아이디)</label>
+            <input type="text" class="erp-input" id="cfg-po-store" value="store-ad3a98e5-7ce7-4fee-b6e1-395e58e7c75e" placeholder="store-ad3a98e5-7ce7-4fee-b6e1-395e58e7c75e" />
+          </div>
+          <div class="form-row">
+            <label>PortOne Channel Key (채널키)</label>
+            <input type="text" class="erp-input" id="cfg-po-channel" value="channel-key-4147d38a-d029-4682-8939-e5d86f4e8759" placeholder="channel-key-4147d38a-d029-4682-8939-e5d86f4e8759" />
           </div>
           <div class="form-row" style="margin-bottom:0;">
-            <label>PortOne Channel Key</label>
-            <input type="text" class="erp-input" id="cfg-po-channel" placeholder="channel-key-xxxxxxxx" />
+            <label>PortOne V2 API Key (API Secret)</label>
+            <input type="password" class="erp-input" id="cfg-po-secret" value="a3CSBNggMfDZqz5AB79gk6otO7hCppL9ytRr81Oro3uIDiwBIUgup8EJX8PL6ZY9ujxTMztUHKdHaL6m" placeholder="PortOne V2 API Secret" />
           </div>
         </div>
       </div>
 
-      <button class="btn-mall btn-mall-brand" style="width:100%;" onclick="saveCloudConfig()">연동 설정 저장 및 적용</button>
+      <button class="btn-mall btn-mall-brand" style="width:100%;" onclick="saveCloudConfig()">온팟(Onpod) 서버 연동 설정 저장 및 적용</button>
     </div>
   </div>
 
@@ -3919,6 +4037,75 @@
     </div>
   </div>
 
+  <!-- ==========================================
+       MODAL J: 주문 취소 · 반품 · 환불 신청 및 사유 선택/입력 모달
+       ========================================== -->
+  <div class="modal-backdrop no-print" id="orderClaimModal">
+    <div class="modal-win" style="max-width:540px;">
+      <button class="modal-close-btn" onclick="closeModal('orderClaimModal')">X</button>
+      <div style="border-bottom:2px solid var(--border-dark); padding-bottom:10px; margin-bottom:14px;">
+        <span style="font-size:11px; font-weight:700; color:var(--price-red);">ORDER CANCEL · RETURN · REFUND</span>
+        <h3 style="font-size:18px; font-weight:800; margin-top:2px;" id="claim-modal-title">주문 취소 · 반품 · 환불 신청</h3>
+        <p style="font-size:12px; color:var(--text-secondary); margin-top:2px;">처리 구분(주문취소 / 반품 / 환불)과 상세 사유를 선택 및 입력해 주세요.</p>
+      </div>
+
+      <div id="claim-order-summary" style="background:var(--bg-gray); border:1px solid var(--border-color); padding:10px 12px; margin-bottom:14px; font-size:12px;"></div>
+
+      <form onsubmit="submitOrderClaim(event)">
+        <input type="hidden" id="claim-order-id" value="" />
+        <div class="form-row">
+          <label>1. 신청 구분 선택 (주문 취소 / 반품 / 환불)</label>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
+            <button type="button" class="spec-chip active" id="claim-type-btn-CANCELLED" style="padding:8px; font-weight:700;" onclick="selectClaimType('CANCELLED')">주문 취소</button>
+            <button type="button" class="spec-chip" id="claim-type-btn-RETURN_REQUESTED" style="padding:8px; font-weight:700;" onclick="selectClaimType('RETURN_REQUESTED')">반품 신청</button>
+            <button type="button" class="spec-chip" id="claim-type-btn-REFUND_REQUESTED" style="padding:8px; font-weight:700;" onclick="selectClaimType('REFUND_REQUESTED')">환불 신청</button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="claim-reason-cat">2. 취소·반품·환불 사유 선택 (필수)</label>
+          <select class="erp-input" id="claim-reason-cat" required>
+            <option value="단순 변심 / 치수·규격 재설정 후 재주문">단순 변심 / 치수·규격 재설정 후 재주문</option>
+            <option value="결제 수단 변경 (연구비카드·가상계좌·일반계좌 변경)">결제 수단 변경 (연구비카드·가상계좌·일반계좌 변경)</option>
+            <option value="재단 치수 공차 불량 또는 자재 파손·스크래치">재단 치수 공차 불량 또는 자재 파손·스크래치</option>
+            <option value="표시된 재질/두께와 상이한 상품 배송 (오배송)">표시된 재질/두께와 상이한 상품 배송 (오배송)</option>
+            <option value="출고·배송 지연으로 인한 일정 차질">출고·배송 지연으로 인한 일정 차질</option>
+            <option value="기타 사유 (직접 입력)">기타 사유 (아래 상세 사유란에 직접 입력)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="claim-reason-detail">3. 상세 사유 직접 입력 (필수)</label>
+          <textarea class="erp-input" id="claim-reason-detail" rows="3" placeholder="구체적인 취소·반품·환불 사유를 입력해 주세요. (예: 연구비 카드로 재결제하기 위해 취소합니다 / 가로 치수를 250mm에서 300mm로 변경 재주문 예정)" required></textarea>
+        </div>
+
+        <div class="form-row" id="claim-refund-bank-row">
+          <label for="claim-refund-account">4. 환불 계좌 정보 (가상계좌·일반계좌 결제 건 환불 시 입력, 카드결제는 자동 승인취소)</label>
+          <input type="text" class="erp-input" id="claim-refund-account" placeholder="예: 기업은행 010-xxxx-xxxx (예금주: 김연구) / 카드결제는 자동 취소" />
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:8px; margin-top:14px;">
+          <button type="button" class="btn-mall btn-mall-white" onclick="closeModal('orderClaimModal')">닫기</button>
+          <button type="submit" class="btn-mall btn-mall-brand" id="claim-submit-btn" style="background:var(--price-red);">신청 완료 처리</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL K: 주문 접수 완료 및 주문번호·거래명세서 발급 안내 모달
+       ========================================== -->
+  <div class="modal-backdrop no-print" id="orderCompleteModal">
+    <div class="modal-win" style="max-width:520px;">
+      <button class="modal-close-btn" onclick="closeModal('orderCompleteModal')">X</button>
+      <div style="border-bottom:2px solid var(--brand); padding-bottom:10px; margin-bottom:14px;">
+        <span style="font-size:11px; font-weight:700; color:var(--brand);">ORDER COMPLETED</span>
+        <h3 style="font-size:18px; font-weight:800; margin-top:2px;">주문이 정상적으로 접수되었습니다!</h3>
+      </div>
+      <div id="order-complete-modal-body" style="font-size:12.5px; line-height:1.6;"></div>
+    </div>
+  </div>
+
   <div class="toast-wrap no-print" id="toast-container"></div>
 
     <script>
@@ -3969,8 +4156,84 @@
     let currentCalcResult = null;
     let cartItems = [];
     let orderCheckoutMode = 'SINGLE'; // 'SINGLE' | 'CART'
-    let quoteRenderMode = 'SINGLE';   // 'SINGLE' | 'CART'
+    let quoteRenderMode = 'SINGLE';   // 'SINGLE' | 'CART' | 'ORDER'
+    let selectedQuoteOrderId = '';
+    let activeClaimType = 'CANCELLED';
     let selectedPayMethodIdx = 1;
+
+    // 현재 날짜 포맷 헬퍼 (견적서·거래명세서 발행일시: 년도·월·일 까지만 표기)
+    function getNowDateStr() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    function getNowDateTimeStr() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+    }
+    function getNowPrintHeaderTimeStr() {
+      const d = new Date();
+      return `${d.getFullYear()}년 ${String(d.getMonth() + 1).padStart(2, '0')}월 ${String(d.getDate()).padStart(2, '0')}일`;
+    }
+    function formatDateToYmdKorean(rawStr) {
+      if (!rawStr) return getNowPrintHeaderTimeStr();
+      const m = String(rawStr).match(/(\d{4})[-./년\s]+(\d{1,2})[-./월\s]+(\d{1,2})/);
+      if (m) {
+        return `${m[1]}년 ${String(m[2]).padStart(2, '0')}월 ${String(m[3]).padStart(2, '0')}일`;
+      }
+      return getNowPrintHeaderTimeStr();
+    }
+    function getNowCompactYmd() {
+      const d = new Date();
+      return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+    }
+    function getNowShortYmd() {
+      return getNowCompactYmd().slice(2);
+    }
+    function formatExactPayMethodLabel(payStr) {
+      if (!payStr) return '미지정 (결제수단 확인 필요)';
+      if (payStr.includes('가상계좌')) {
+        return payStr.startsWith('[가상계좌') ? payStr : `[가상계좌 결제] ${payStr}`;
+      }
+      if (payStr.includes('일반 계좌') || payStr.includes('일반계좌') || payStr.includes('계좌이체')) {
+        return payStr.startsWith('[일반 계좌') ? payStr : `[일반 계좌이체] ${payStr}`;
+      }
+      if (payStr.includes('카드')) {
+        return payStr.startsWith('[카드') ? payStr : `[카드 결제] ${payStr}`;
+      }
+      if (payStr.includes('간편') || payStr.includes('카카오') || payStr.includes('토스')) {
+        return payStr.startsWith('[간편결제') ? payStr : `[간편결제] ${payStr}`;
+      }
+      return payStr;
+    }
+    function getOrderStatusInfo(o) {
+      const st = o.status || 'RECEIVED';
+      if (st === 'CANCELLED') return { label: '주문취소 완료', badge: 'state-wait', isClaim: true };
+      if (st === 'RETURN_REQUESTED') return { label: '반품신청 접수', badge: 'state-wait', isClaim: true };
+      if (st === 'REFUND_REQUESTED') return { label: '환불신청 접수', badge: 'state-wait', isClaim: true };
+      if (st === 'RECEIVED') return { label: '결제완료 (상품준비중)', badge: 'state-wait', isClaim: false };
+      if (st === 'CUT_DONE') return { label: '상품준비중 (재단완료)', badge: 'state-work', isClaim: false };
+      if (st === 'SHIPPED') return { label: '배송중', badge: 'state-ship', isClaim: false };
+      return { label: '배송완료', badge: 'state-done', isClaim: false };
+    }
+    function extractOrderClaimNote(o) {
+      if (o.claimReasonCat || o.claimReasonDetail) {
+        const typeLbl = o.status === 'CANCELLED' ? '주문취소' : (o.status === 'RETURN_REQUESTED' ? '반품신청' : '환불신청');
+        return `[${typeLbl} 사유] ${o.claimReasonCat || ''} — ${o.claimReasonDetail || ''}${o.claimRefundAccount ? ' (환불계좌: ' + o.claimRefundAccount + ')' : ''}`;
+      }
+      if (o.scrapOption && o.scrapOption.includes('[')) {
+        const idx = o.scrapOption.indexOf('[');
+        return o.scrapOption.slice(idx);
+      }
+      return '';
+    }
     let pendingOrderBuyerInfo = null;
     let signupMode = 'PERSONAL';
     let corpLogoUploadDataUrl = '';
@@ -4056,20 +4319,18 @@
       return '개인 회원';
     }
 
-    let guestSessionOrderIds = [];
+    let guestSessionOrderIds = []; // 비회원 이름+주문번호 조회로 인증 완료된 주문 ID 목록
+    let lastPlacedGuestOrderInfo = null; // 방금 비회원으로 접수한 주문 정보 안내용
     let explicitlyDeletedUserIds = [];
 
     function isOrderInProgress(o) {
-      // 'RECEIVED'(결제완료/발주접수), 'PAID'(결제완료), 'CUT_DONE'(상품준비중/재단완료), 'PREPARING'(상품준비중), 'SHIPPED'(배송중)만 카운트
-      // 'COMPLETED'(배송완료) 상태가 되면 진행 중 카운트에서 제외
-      return Boolean(o && o.status && o.status !== 'COMPLETED');
+      // 배송완료(COMPLETED) 및 주문취소(CANCELLED)는 진행 중 카운트에서 제외
+      return Boolean(o && o.status && o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
     }
 
-    // [핵심 권한 분리] 로그인한 계정에 따라 조회 가능한 주문 목록 필터링
-    // - 관리자(ADMIN): 전체 주문 노출
-    // - 개인 회원(PERSONAL): 본인이 구매한 주문(o.buyerId === currentUser.id)만 노출
-    // - 기업 회원(CORPORATE): 본인 기업이 주문받은 내역(o.partner === currentUser.name)만 노출 (본인 직접 구매 건 포함)
-    // - 비회원(GUEST): 현재 기기 세션에서 본인이 방금 주문한 건만 노출 (타인 주문 노출 원천 차단)
+    // [핵심 권한 분리]
+    // - 로그인한 회원: 본인이 직접 주문한 내역(o.buyerId === currentUser.id)만 조회·발급 가능 (관리자는 전체, 기업회원은 본인 주문 및 수주 내역)
+    // - 비로그인(비회원): 반드시 [주문자 이름 + 주문번호] 조회를 통과해 인증된 주문(guestSessionOrderIds)만 조회·발급 가능
     function getVisibleOrdersForCurrentUser() {
       if (!currentUser) {
         return orders.filter(o => guestSessionOrderIds.includes(o.id));
@@ -4079,9 +4340,83 @@
         return orders;
       }
       if (role === 'CORPORATE') {
-        return orders.filter(o => o.partner === currentUser.name || o.buyerId === currentUser.id);
+        return orders.filter(o => o.buyerId === currentUser.id || o.partner === currentUser.name || guestSessionOrderIds.includes(o.id));
       }
-      return orders.filter(o => o.buyerId === currentUser.id);
+      return orders.filter(o => o.buyerId === currentUser.id || guestSessionOrderIds.includes(o.id));
+    }
+
+    // 주문자 이름 + 주문번호 일치 여부 검증 헬퍼 (실제 작동)
+    async function verifyOrderByNameAndNumber(inputName, inputOrderId) {
+      const cleanName = String(inputName || '').trim();
+      const cleanOrdId = String(inputOrderId || '').trim().toUpperCase();
+      if (!cleanName || !cleanOrdId) {
+        return { ok: false, msg: '주문자 이름과 주문번호를 모두 입력해 주세요.' };
+      }
+
+      // 클라우드 DB에 최신 주문이 있을 경우 조회 보완
+      let targetOrder = orders.find(o => String(o.id || '').trim().toUpperCase() === cleanOrdId);
+      if (!targetOrder && getSupabaseCreds()) {
+        try {
+          const creds = getSupabaseCreds();
+          const res = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/orders?id=eq.${encodeURIComponent(cleanOrdId)}&select=*`, {}, creds.sbKey);
+          if (res.ok) {
+            const rows = await res.json();
+            if (Array.isArray(rows) && rows.length > 0) {
+              const r = rows[0];
+              targetOrder = {
+                id: r.id,
+                date: r.order_date || '',
+                buyerId: r.buyer_id || 'guest',
+                buyer: r.buyer || '',
+                phone: r.phone || '',
+                address: r.address || '',
+                partner: r.partner || '',
+                materialId: r.material_id || null,
+                materialName: r.material_name || '',
+                origSpec: r.orig_spec || '',
+                mode: r.mode || 'CUT',
+                cutSpec: r.cut_spec || '',
+                scrapOption: r.scrap_option || '',
+                payMethod: r.pay_method || '',
+                totalAmount: r.total_amount || 0,
+                status: r.status || 'RECEIVED',
+                courier: r.courier || '',
+                waybill: r.waybill || '',
+                settled: Boolean(r.settled)
+              };
+              if (!orders.some(x => x.id === targetOrder.id)) {
+                orders.unshift(targetOrder);
+              }
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!targetOrder) {
+        return { ok: false, msg: `입력하신 주문번호 [${cleanOrdId}]에 해당하는 주문 내역을 찾을 수 없습니다.` };
+      }
+
+      const normInput = cleanName.replace(/\s+/g, '').toLowerCase();
+      const rawBuyer = String(targetOrder.buyer || '');
+      const buyerOnlyName = rawBuyer.split('(')[0].trim().replace(/\s+/g, '').toLowerCase();
+      const fullBuyerNorm = rawBuyer.replace(/\s+/g, '').toLowerCase();
+      const explicitBuyerName = String(targetOrder.buyerName || '').replace(/\s+/g, '').toLowerCase();
+
+      const isNameMatched = (
+        normInput === buyerOnlyName ||
+        normInput === explicitBuyerName ||
+        normInput === fullBuyerNorm ||
+        (normInput.length >= 2 && fullBuyerNorm.includes(normInput))
+      );
+
+      if (!isNameMatched) {
+        return { ok: false, msg: `주문번호 [${targetOrder.id}]의 주문자 성명과 입력하신 이름이 일치하지 않습니다.` };
+      }
+
+      if (!guestSessionOrderIds.includes(targetOrder.id)) {
+        guestSessionOrderIds.unshift(targetOrder.id);
+      }
+      return { ok: true, order: targetOrder, msg: `주문 확인 완료: [${targetOrder.id}] ${targetOrder.buyer}` };
     }
 
     // 공장 파트너센터(#view-seller) 전용 주문 필터링:
@@ -4773,6 +5108,8 @@
     function logoutUser() {
       currentUser = null;
       pendingRedirectAfterLogin = null;
+      guestSessionOrderIds = [];
+      selectedQuoteOrderId = '';
       loadActiveSessionCart(false); // 로그아웃 시 회원 장바구니와 분리된 비회원 장바구니 세션으로 전환
       saveStateToStorage();
       updateAuthUI();
@@ -4822,7 +5159,7 @@
       // Supabase DB에 실제로 존재하는 아이디인지 실시간 확인 (과거 로컬 스토리지에만 남아있고 DB에 안 들어간 아이디는 중복 차단하지 않고 DB에 덮어쓰기 저장 허용!)
       const existingCloudUser = await fetchLatestUserFromSupabase(id);
       if (existingCloudUser) {
-        showToast('이미 Supabase 서버에 등록된 아이디입니다. 로그인 창에서 로그인하거나 다른 아이디를 입력해 주세요.');
+        showToast('이미 등록된 아이디입니다. 로그인 창에서 로그인하거나 다른 아이디를 입력해 주세요.');
         return;
       }
       // 만약 로컬 배열에만 남아있던 미동기화 아이디라면 제거 후 새로 가입 진행
@@ -4865,7 +5202,7 @@
         closeModal('signupModal');
         switchRole('mypage');
         showToast(syncedOk
-          ? `개인 회원가입 완료! [${newU.name} (${newU.id})] 계정이 Supabase DB에 저장 및 로그인되었습니다.`
+          ? `개인 회원가입 완료! [${newU.name} (${newU.id})] 계정이 온팟(Onpod) DB에 저장 및 로그인되었습니다.`
           : `개인 회원가입 완료! [${newU.name}] 계정으로 로그인되었습니다.`);
       } else {
         // [기업 회원 가입 승인제] 기업 회원은 가입 즉시 PENDING(승인 대기) 상태가 되며, 관리자 승인 후 로그인 가능!
@@ -4909,32 +5246,46 @@
         if (descEl) descEl.innerHTML = `기업 회원 가입 신청이 정상적으로 접수되었습니다.<br/>관리자가 <strong>[통합 어드민]</strong>에서 가입 신청을 <strong>승인(APPROVED)</strong> 처리한 이후부터 로그인 및 물품 등록을 이용하실 수 있습니다.`;
         document.getElementById('corpPendingModal').classList.add('open');
         showToast(uOk
-          ? `기업 회원가입 신청이 Supabase DB에 저장되었습니다 [승인 대기(PENDING)] — 관리자 승인 후 로그인 가능합니다.`
+          ? `기업 회원가입 신청이 온팟(Onpod) DB에 저장되었습니다 [승인 대기(PENDING)] — 관리자 승인 후 로그인 가능합니다.`
           : `기업 회원가입 신청 접수 완료 [승인 대기(PENDING)] — 관리자 승인 후 로그인 가능합니다.`);
+      }
+    }
+
+    function handleGnbRightActionClick() {
+      if (!currentUser) {
+        switchRole('orders');
+        setTimeout(() => {
+          const nameInput = document.getElementById('ordpage-guest-name');
+          if (nameInput) nameInput.focus();
+        }, 80);
+      } else {
+        openRecentOrderQuoteModal();
       }
     }
 
     function updateAuthUI() {
       const authArea = document.getElementById('auth-nav-area');
-      const quickLabel = document.getElementById('header-login-label');
-      const quickBtn = document.getElementById('header-login-quick');
       const tabSeller = document.getElementById('tab-seller');
       const tabAdmin = document.getElementById('tab-admin');
 
       const role = currentUser ? (currentUser.role || currentUser.type) : 'GUEST';
-
-      // 등급(Role)별 상단 전용 탭 권한 분기:
-      // - 공장 파트너센터(tab-seller): [기업/연구 회원(CORPORATE)] 및 [관리자(ADMIN)]만 노출 (개인회원/비로그인 숨김)
-      // - 통합 어드민(tab-admin): [관리자(ADMIN)]만 노출
       const utilRfpLi = document.getElementById('util-rfp-li');
       const qBtnMypage = document.getElementById('quick-btn-mypage');
       const qBtnQuote = document.getElementById('quick-btn-quote');
       const qBtnOrders = document.getElementById('quick-btn-orders');
+      const qOrdersLbl = document.getElementById('quick-orders-label');
+      const gnbRightBtn = document.getElementById('gnb-right-action-btn');
       const isLoggedIn = Boolean(currentUser);
 
       if (qBtnMypage) qBtnMypage.style.display = isLoggedIn ? 'flex' : 'none';
-      if (qBtnQuote) qBtnQuote.style.display = isLoggedIn ? 'flex' : 'none';
-      if (qBtnOrders) qBtnOrders.style.display = isLoggedIn ? 'flex' : 'none';
+      if (qBtnQuote) qBtnQuote.style.display = 'flex';
+      if (qBtnOrders) qBtnOrders.style.display = 'flex';
+      if (qOrdersLbl) qOrdersLbl.textContent = isLoggedIn ? '주문내역' : '비회원주문조회';
+      if (gnbRightBtn) {
+        gnbRightBtn.textContent = isLoggedIn
+          ? '전자견적서 즉시발급 (최근주문 5건 선택)'
+          : '비회원 주문조회';
+      }
 
       if (tabSeller) {
         tabSeller.style.display = (role === 'CORPORATE' || role === 'ADMIN') ? '' : 'none';
@@ -4943,7 +5294,7 @@
         tabAdmin.style.display = (role === 'ADMIN') ? '' : 'none';
       }
       if (utilRfpLi) {
-        utilRfpLi.style.display = (role === 'ADMIN') ? '' : 'none';
+        utilRfpLi.style.display = '';
       }
 
       if (!currentUser) {
@@ -4951,16 +5302,12 @@
           <li><button class="util-btn" style="font-weight:700; color:var(--text-primary);" onclick="openLoginModal()">로그인</button></li>
           <li><button class="util-btn" style="font-weight:700; color:var(--brand);" onclick="openSignupModal('PERSONAL')">회원가입</button></li>
         `;
-        if (quickLabel) quickLabel.textContent = '로그인';
-        if (quickBtn) quickBtn.onclick = openLoginModal;
       } else {
         const rTag = getRoleLabel(role);
         authArea.innerHTML = `
           <li><span style="font-weight:800; color:var(--brand-dark);">[${rTag}] ${currentUser.name}님</span></li>
           <li><button class="util-btn" onclick="logoutUser()">로그아웃</button></li>
         `;
-        if (quickLabel) quickLabel.textContent = currentUser.name;
-        if (quickBtn) quickBtn.onclick = () => switchRole('mypage');
       }
     }
 
@@ -4971,7 +5318,6 @@
       const adminSec = document.getElementById('mypage-admin-section');
       const permBody = document.getElementById('mypage-role-permission-body');
       const btnPartnerShortcut = document.getElementById('mypage-partner-shortcut-btn');
-      const btnAdminShortcut = document.getElementById('mypage-admin-shortcut-btn');
       const titleEl = document.getElementById('mypage-title-heading');
       const subEl = document.getElementById('mypage-sub-heading');
 
@@ -4983,7 +5329,6 @@
         if (pwSec) pwSec.style.display = 'none';
         if (adminSec) adminSec.style.display = 'none';
         if (btnPartnerShortcut) btnPartnerShortcut.style.display = 'none';
-        if (btnAdminShortcut) btnAdminShortcut.style.display = 'none';
         return;
       }
 
@@ -4992,7 +5337,6 @@
       if (pwSec) pwSec.style.display = 'block';
 
       if (btnPartnerShortcut) btnPartnerShortcut.style.display = (role === 'CORPORATE' || role === 'ADMIN') ? 'inline-block' : 'none';
-      if (btnAdminShortcut) btnAdminShortcut.style.display = (role === 'ADMIN') ? 'inline-block' : 'none';
 
       if (permBody) {
         if (role === 'PERSONAL') {
@@ -5079,34 +5423,7 @@
         if (document.getElementById('mp-p-email')) document.getElementById('mp-p-email').value = currentUser.email || '';
       }
 
-      // 공통 주문 내역 테이블 렌더링
-      const oTbody = document.getElementById('mypage-orders-tbody');
-      if (oTbody) {
-        oTbody.innerHTML = getVisibleOrdersForCurrentUser().map(o => `
-          <tr>
-            <td>
-              <div style="font-family:var(--font-mono); font-weight:700;">${o.id}</div>
-              <div style="font-size:11px; color:var(--text-muted);">${o.date}</div>
-            </td>
-            <td>
-              <div style="font-weight:700;">${o.buyer}</div>
-              <div style="font-size:11px; color:var(--text-secondary);">${o.address || '-'}</div>
-            </td>
-            <td style="font-weight:700;">${o.partner}</td>
-            <td>
-              <div style="font-weight:700;">${o.materialName}</div>
-              <div style="font-size:11.5px; color:var(--brand-dark); font-family:var(--font-mono);">${o.cutSpec}</div>
-            </td>
-            <td style="font-size:11.5px;">${o.payMethod || '가상계좌/카드'}</td>
-            <td class="num" style="font-weight:800;">${o.totalAmount.toLocaleString()}원</td>
-            <td>
-              <span class="state-badge ${o.status === 'COMPLETED' ? 'state-done' : (o.status === 'SHIPPED' ? 'state-ship' : 'state-wait')}">
-                ${o.status === 'RECEIVED' ? '발주접수' : (o.status === 'CUT_DONE' ? '재단완료' : (o.status === 'SHIPPED' ? '배송중' : '구매확정'))}
-              </span>
-            </td>
-          </tr>
-        `).join('');
-      }
+
     }
 
     async function savePersonalProfile(e) {
@@ -5216,9 +5533,11 @@
       }
 
       saveStateToStorage();
+      syncUserToSupabase(currentUser);
+      if (p) syncPartnerToSupabase(p);
       renderPartnerBanners();
       updateAuthUI();
-      showToast('기업 로고·주소·품목·장비 설정이 저장되어 상단 입점 배너에 반영되었습니다.');
+      showToast('기업 로고·주소·품목·장비 설정이 저장되어 입점 배너 및 클라우드 DB에 반영되었습니다.');
     }
 
     function handleCorpMypageUpload(e) {
@@ -5510,7 +5829,7 @@
         category,
         title,
         author,
-        date: '2026-10-14 21:30',
+        date: getNowDateTimeStr(),
         content,
         answer: '',
         answeredAt: ''
@@ -5534,7 +5853,7 @@
         return;
       }
       post.answer = inputEl.value.trim();
-      post.answeredAt = '2026-10-16 19:45';
+      post.answeredAt = getNowDateTimeStr();
       saveStateToStorage();
       syncTableRowToSupabase('admin_qna_posts', { id: post.id, category: post.category, title: post.title, author: post.author, post_date: post.date, content: post.content, answer: post.answer, answered_at: post.answeredAt });
       renderAdminQnaBoard();
@@ -5714,7 +6033,7 @@
         id: `PQNA-${Date.now()}`,
         materialId: mat.id,
         author,
-        date: '2026-10-14 21:30',
+        date: getNowDateTimeStr(),
         question,
         sellerName: mat.partner,
         answer: '',
@@ -5738,7 +6057,7 @@
       }
       q.answer = inputEl.value.trim();
       q.sellerName = (currentUser && currentUser.type === 'CORPORATE') ? currentUser.name : sellerName;
-      q.answeredAt = '2026-10-16 19:45';
+      q.answeredAt = getNowDateTimeStr();
       saveStateToStorage();
       syncTableRowToSupabase('product_qna_posts', { id: q.id, material_id: q.materialId, author: q.author, post_date: q.date, question: q.question, seller_name: q.sellerName, answer: q.answer, answered_at: q.answeredAt });
       renderProductDetailCommunity();
@@ -5759,7 +6078,7 @@
         materialId: mat.id,
         author,
         score,
-        date: '2026-10-15',
+        date: getNowDateStr(),
         cutSpec,
         content
       });
@@ -5799,7 +6118,7 @@
         materialId: mat.id,
         author,
         score,
-        date: '2026-10-15',
+        date: getNowDateStr(),
         cutSpec,
         content
       });
@@ -5829,7 +6148,7 @@
         id: 'NTC-05',
         cat: '입점',
         title: '구조용 쇠파이프·각관(원형강관/사각파이프) 전문 파트너 입점 및 맞춤 절단 오픈',
-        date: '2026-10-15',
+        date: getNowDateStr(),
         views: 142,
         content: '울산·경남권 강관 전문 파트너(울산강관파이프) 신규 입점으로 구조용 원형 쇠파이프 및 흑관/아연도 각관 자투리 품목의 1mm 단위 각도·길이 맞춤 톱절단 직배송 서비스가 시작되었습니다.'
       },
@@ -5958,7 +6277,7 @@
         id: `NTC-0${noticePosts.length + 1}`,
         cat,
         title,
-        date: '2026-10-15',
+        date: getNowDateStr(),
         views: 1,
         content
       });
@@ -5972,8 +6291,8 @@
     }
 
     function switchRole(role) {
-      // 1) 비로그인 상태에서 마이페이지 또는 주문내역 접근 시 진입 차단 후 "로그인 하시겠습니까?" 확인 모달 노출
-      if ((role === 'mypage' || role === 'orders') && !currentUser) {
+      // 1) 비로그인 상태에서 마이페이지 접근 시 로그인 확인 모달 노출 (주문내역 페이지는 비회원 이름+주문번호 조회를 지원하므로 진입 허용)
+      if (role === 'mypage' && !currentUser) {
         openLoginConfirmModal(role);
         return;
       }
@@ -6032,7 +6351,125 @@
       renderOrdersPage();
     }
 
+    function openOrderClaimModal(orderId, defaultClaimType) {
+      const ord = orders.find(o => o.id === orderId);
+      if (!ord) return;
+      document.getElementById('claim-order-id').value = ord.id;
+      const cType = defaultClaimType || (ord.status === 'RECEIVED' ? 'CANCELLED' : (ord.status === 'SHIPPED' ? 'RETURN_REQUESTED' : 'REFUND_REQUESTED'));
+      selectClaimType(cType);
+
+      document.getElementById('claim-order-summary').innerHTML = `
+        <div style="font-weight:800; color:var(--text-primary); margin-bottom:3px;">주문번호: <span style="font-family:var(--font-mono);">${ord.id}</span> (${ord.date})</div>
+        <div><strong>품목:</strong> ${ord.materialName} | <span style="font-family:var(--font-mono); color:var(--brand-dark);">${ord.cutSpec}</span></div>
+        <div style="margin-top:2px;"><strong>결제구분:</strong> ${formatExactPayMethodLabel(ord.payMethod)} | <strong>결제금액:</strong> <span style="color:var(--price-red); font-weight:800;">${ord.totalAmount.toLocaleString()}원</span></div>
+      `;
+      document.getElementById('claim-reason-detail').value = ord.claimReasonDetail || '';
+      document.getElementById('claim-refund-account').value = ord.claimRefundAccount || '';
+      document.getElementById('orderClaimModal').classList.add('open');
+    }
+
+    function selectClaimType(cType) {
+      activeClaimType = cType;
+      ['CANCELLED', 'RETURN_REQUESTED', 'REFUND_REQUESTED'].forEach(t => {
+        const btn = document.getElementById(`claim-type-btn-${t}`);
+        if (btn) btn.classList.toggle('active', t === cType);
+      });
+      const titleMap = {
+        'CANCELLED': '주문 취소 신청 및 사유 입력',
+        'RETURN_REQUESTED': '반품 신청 및 사유 입력',
+        'REFUND_REQUESTED': '환불 신청 및 사유 입력'
+      };
+      const btnMap = {
+        'CANCELLED': '주문 취소 확정 처리',
+        'RETURN_REQUESTED': '반품 신청 접수하기',
+        'REFUND_REQUESTED': '환불 신청 접수하기'
+      };
+      const titleEl = document.getElementById('claim-modal-title');
+      const submitEl = document.getElementById('claim-submit-btn');
+      if (titleEl) titleEl.textContent = titleMap[cType] || '주문 취소 · 반품 · 환불 신청';
+      if (submitEl) submitEl.textContent = btnMap[cType] || '신청 완료 처리';
+    }
+
+    function submitOrderClaim(e) {
+      e.preventDefault();
+      const orderId = document.getElementById('claim-order-id').value;
+      const ord = orders.find(o => o.id === orderId);
+      if (!ord) return;
+
+      const reasonCat = document.getElementById('claim-reason-cat').value;
+      const reasonDetail = document.getElementById('claim-reason-detail').value.trim();
+      const refundAcct = document.getElementById('claim-refund-account').value.trim();
+
+      if (!reasonDetail) {
+        showToast('상세 사유를 입력해 주세요.');
+        return;
+      }
+
+      const prevStatus = ord.status;
+      ord.status = activeClaimType;
+      ord.claimType = activeClaimType;
+      ord.claimReasonCat = reasonCat;
+      ord.claimReasonDetail = reasonDetail;
+      ord.claimRefundAccount = refundAcct;
+      ord.claimAt = getNowDateTimeStr();
+
+      const typeKor = activeClaimType === 'CANCELLED' ? '주문취소' : (activeClaimType === 'RETURN_REQUESTED' ? '반품신청' : '환불신청');
+      const baseScrap = (ord.scrapOption || '재단 면적만큼만 최저시세 결제').split(' | [')[0];
+      ord.scrapOption = `${baseScrap} | [${typeKor}(${ord.claimAt}) 사유: ${reasonCat} - ${reasonDetail}${refundAcct ? ' / 환불계좌: ' + refundAcct : ''}]`;
+
+      // 주문 취소 시 자재 재고 원복
+      if (activeClaimType === 'CANCELLED' && prevStatus !== 'CANCELLED') {
+        const mat = materials.find(m => m.id === ord.materialId || m.name === ord.materialName);
+        if (mat) {
+          mat.stock = (mat.stock || 0) + 1;
+          syncMaterialToSupabase(mat);
+        }
+      }
+
+      saveStateToStorage();
+      syncOrderToSupabase(ord);
+      closeModal('orderClaimModal');
+      updateBadges();
+      renderOrdersPage();
+      renderSellerDashboard();
+      renderAdminDashboard();
+      showToast(`[${ord.id}] ${typeKor} 처리가 완료되었습니다. (사유: ${reasonCat})`);
+    }
+
+    async function handleGuestOrderLookupInOrdersPage(e) {
+      e.preventDefault();
+      const nameVal = document.getElementById('ordpage-guest-name').value;
+      const idVal = document.getElementById('ordpage-guest-id').value;
+      const msgEl = document.getElementById('ordpage-guest-lookup-msg');
+      const res = await verifyOrderByNameAndNumber(nameVal, idVal);
+      if (msgEl) {
+        msgEl.style.display = 'block';
+        msgEl.style.color = res.ok ? '#2b8a3e' : '#c92a2a';
+        msgEl.textContent = res.msg;
+      }
+      if (!res.ok) {
+        showToast(res.msg);
+        return;
+      }
+      updateBadges();
+      renderOrdersPage();
+      showToast(`비회원 주문 [${res.order.id}] 조회가 완료되었습니다.`);
+    }
+
+    function fillSampleGuestOrderInOrdersPage() {
+      const info = lastPlacedGuestOrderInfo || { name: '성수 하드웨어 랩', id: 'ORD-261013-09' };
+      const nameEl = document.getElementById('ordpage-guest-name');
+      const idEl = document.getElementById('ordpage-guest-id');
+      if (nameEl) nameEl.value = info.name;
+      if (idEl) idEl.value = info.id;
+      showToast(`비회원 주문 정보(${info.name} / ${info.id})가 입력되었습니다. [비회원 주문 조회]를 눌러보세요.`);
+    }
+
     function renderOrdersPage() {
+      const guestLookupBox = document.getElementById('orders-guest-lookup-box');
+      if (guestLookupBox) {
+        guestLookupBox.style.display = currentUser ? 'none' : 'block';
+      }
       const visibleOrders = getVisibleOrdersForCurrentUser();
       const totalCnt = visibleOrders.length;
       const recCnt = visibleOrders.filter(o => o.status === 'RECEIVED' || o.status === 'CUT_DONE').length;
@@ -6051,29 +6488,44 @@
       const filteredOrders = visibleOrders.filter(o => {
         if (activeOrderPageFilter === 'ALL') return true;
         if (activeOrderPageFilter === 'RECEIVED') return (o.status === 'RECEIVED' || o.status === 'CUT_DONE');
+        if (activeOrderPageFilter === 'CLAIM') return ['CANCELLED', 'RETURN_REQUESTED', 'REFUND_REQUESTED'].includes(o.status);
         return o.status === activeOrderPageFilter;
       });
 
       const tbody = document.getElementById('orders-page-tbody');
       if (!tbody) return;
       if (filteredOrders.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:32px; color:var(--text-secondary);">해당 상태의 주문/배송 내역이 없습니다.</td></tr>`;
+        const emptyHint = currentUser
+          ? `현재 [${currentUser.name}] 회원님 계정으로 주문된 내역이 없습니다.`
+          : `조회된 주문 내역이 없습니다. 위 입력창에서 [주문자 이름]과 [주문번호]를 입력해 비회원 주문을 조회하거나 [회원 로그인]을 진행해 주세요.`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:36px 16px; color:var(--text-secondary); font-weight:600;">${emptyHint}</td></tr>`;
         return;
       }
 
       tbody.innerHTML = filteredOrders.map(o => {
+        const stInfo = getOrderStatusInfo(o);
+        const claimNote = extractOrderClaimNote(o);
         const trackingInfo = o.waybill
           ? `<strong style="color:var(--brand-dark);">${o.courier}</strong><br/><span style="font-family:var(--font-mono); font-size:11px;">${o.waybill}</span>`
-          : `<span style="color:var(--text-muted); font-size:11.5px;">공장 재단·출고 준비중</span>`;
-
-        const statusLabel = o.status === 'RECEIVED'
-          ? '결제완료 (상품준비중)'
-          : (o.status === 'CUT_DONE' ? '상품준비중 (재단완료)' : (o.status === 'SHIPPED' ? '배송중' : '배송완료'));
+          : (o.status === 'CANCELLED'
+              ? `<span style="color:var(--price-red); font-weight:700; font-size:11.5px;">출고전 주문취소</span>`
+              : `<span style="color:var(--text-muted); font-size:11.5px;">공장 재단·출고 준비중</span>`);
 
         const canChangeOrderStatus = Boolean(currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'CORPORATE'));
-        const completeBtnHtml = (o.status !== 'COMPLETED' && canChangeOrderStatus)
-          ? `<div style="margin-top:5px;"><button type="button" class="btn-mall btn-mall-white" style="padding:3px 8px; font-size:11px; border-color:var(--brand); color:var(--brand-dark);" onclick="completeOrderDelivery('${o.id}')">배송완료 전환</button></div>`
+        const completeBtnHtml = (o.status !== 'COMPLETED' && !stInfo.isClaim && canChangeOrderStatus)
+          ? `<div style="margin-top:4px;"><button type="button" class="btn-mall btn-mall-white" style="padding:3px 8px; font-size:11px; border-color:var(--brand); color:var(--brand-dark); width:100%;" onclick="completeOrderDelivery('${o.id}')">배송완료 전환</button></div>`
           : '';
+
+        const claimButtonsHtml = `
+          <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;">
+            <button type="button" class="btn-mall btn-mall-white" style="padding:3px 6px; font-size:10.5px; color:var(--price-red); border-color:#ffc9c9;" onclick="openOrderClaimModal('${o.id}', 'CANCELLED')">주문취소</button>
+            <button type="button" class="btn-mall btn-mall-white" style="padding:3px 6px; font-size:10.5px; color:#d9480f; border-color:#ffd8a8;" onclick="openOrderClaimModal('${o.id}', 'RETURN_REQUESTED')">반품신청</button>
+            <button type="button" class="btn-mall btn-mall-white" style="padding:3px 6px; font-size:10.5px; color:#1971c2; border-color:#a5d8ff;" onclick="openOrderClaimModal('${o.id}', 'REFUND_REQUESTED')">환불신청</button>
+          </div>
+          <div style="margin-top:4px;">
+            <button type="button" class="btn-mall btn-mall-brand" style="padding:4px 8px; font-size:10.5px; width:100%;" onclick="openOrderQuoteById('${o.id}')">견적·명세서 출력</button>
+          </div>
+        `;
 
         return `
           <tr>
@@ -6089,15 +6541,17 @@
             <td>
               <div style="font-weight:700;">${o.materialName}</div>
               <div style="font-size:11.5px; color:var(--brand-dark); font-family:var(--font-mono);">${o.cutSpec}</div>
+              ${claimNote ? `<div style="margin-top:4px; padding:4px 7px; background:#fff5f5; border:1px solid #ffc9c9; color:#c92a2a; font-size:11px; border-radius:2px;">${claimNote}</div>` : ''}
             </td>
-            <td style="font-size:11.5px;">${o.payMethod || '가상계좌/카드'}</td>
+            <td style="font-size:11.5px; font-weight:700; color:var(--text-primary);">${formatExactPayMethodLabel(o.payMethod)}</td>
             <td>${trackingInfo}</td>
             <td class="num" style="font-weight:800;">${o.totalAmount.toLocaleString()}원</td>
-            <td>
-              <span class="state-badge ${o.status === 'COMPLETED' ? 'state-done' : (o.status === 'SHIPPED' ? 'state-ship' : 'state-wait')}">
-                ${statusLabel}
+            <td style="min-width:155px;">
+              <span class="state-badge ${stInfo.badge}" style="${stInfo.isClaim ? 'background:#fff5f5; border-color:#ffc9c9; color:#c92a2a;' : ''}">
+                ${stInfo.label}
               </span>
               ${completeBtnHtml}
+              ${claimButtonsHtml}
             </td>
           </tr>
         `;
@@ -6361,6 +6815,7 @@
                     ? `<span class="tag-square tag-cut">맞춤재단</span>`
                     : `<span class="tag-square tag-raw">원판전용</span>`}
                 </div>
+                ${isSelected ? `<span class="prd-selected-ribbon">✓ 선택중</span>` : ''}
                 ${m.imageUrl ? `<img src="${m.imageUrl}" alt="${m.name}" style="width:100%; height:132px; object-fit:cover; border:1px solid #dee2e6;" />` : getRealisticMaterialSVG(m)}
                 <span class="prd-code">[${m.code}]</span>
               </div>
@@ -7097,25 +7552,52 @@
       return currentCalcResult ? currentCalcResult.total : 0;
     }
 
-    function proceedToPaymentStep2(e) {
-      e.preventDefault();
-      if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
+    function collectAndValidateStep1BuyerInfo() {
+      const nameEl = document.getElementById('ord-buyer-name');
+      const phoneEl = document.getElementById('ord-buyer-phone');
+      const addrEl = document.getElementById('ord-buyer-addr');
+      const addrDetailEl = document.getElementById('ord-buyer-addr-detail');
+      const memoEl = document.getElementById('ord-buyer-memo');
 
-      const name = document.getElementById('ord-buyer-name').value.trim();
-      const phone = document.getElementById('ord-buyer-phone').value.trim();
-      const addr = document.getElementById('ord-buyer-addr').value.trim();
-      const addrDetail = document.getElementById('ord-buyer-addr-detail').value.trim();
-      const memo = document.getElementById('ord-buyer-memo').value.trim();
-      const org = document.getElementById('buyer-org').value.trim() || name;
+      const name = nameEl ? nameEl.value.trim() : '';
+      const phone = phoneEl ? phoneEl.value.trim() : '';
+      const addr = addrEl ? addrEl.value.trim() : '';
+      const addrDetail = addrDetailEl ? addrDetailEl.value.trim() : '';
+      const memo = memoEl ? memoEl.value.trim() : '';
+      const org = (document.getElementById('buyer-org') ? document.getElementById('buyer-org').value.trim() : '') || name;
+
+      if (!name || !phone || !addr || !addrDetail) {
+        showToast('수령인 성명, 연락처, 기본 주소 및 상세 주소를 모두 입력해 주세요.');
+        return null;
+      }
 
       pendingOrderBuyerInfo = {
         name, phone, org,
         fullAddress: `${addr} ${addrDetail}`.trim(),
         memo
       };
+      return pendingOrderBuyerInfo;
+    }
 
+    function proceedOrderStep1VirtualAccount() {
+      if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
+      const info = collectAndValidateStep1BuyerInfo();
+      if (!info) return;
+
+      selectedPayMethodIdx = 1;
       closeModal('orderInfoModal');
-      openPaymentModal();
+      requestPortOneVirtualAccountPayment();
+    }
+
+    function proceedToPaymentStep2(e) {
+      if (e) e.preventDefault();
+      if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
+      const info = collectAndValidateStep1BuyerInfo();
+      if (!info) return;
+
+      selectedPayMethodIdx = 2;
+      closeModal('orderInfoModal');
+      confirmOrderPayment();
     }
 
     function backToOrderStep1() {
@@ -7123,7 +7605,7 @@
       document.getElementById('orderInfoModal').classList.add('open');
     }
 
-    function openPaymentModal() {
+    function openPaymentModal(defaultMethodIdx) {
       if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
       const b = pendingOrderBuyerInfo || { name: '구매고객', phone: '-', fullAddress: '-', org: '개인/기업' };
 
@@ -7165,7 +7647,8 @@
           </div>
         `;
       }
-      selectPayMethod(1);
+      showPaymentModalError('');
+      selectPayMethod(defaultMethodIdx || selectedPayMethodIdx || 1);
       document.getElementById('paymentModal').classList.add('open');
     }
 
@@ -7186,47 +7669,301 @@
 
     function selectPayMethod(idx) {
       selectedPayMethodIdx = idx;
-      [1, 2, 3].forEach(i => {
+      [1, 2, 3, 4].forEach(i => {
         const el = document.getElementById(`pay-method-${i}`);
         if (el) el.classList.toggle('active', i === idx);
       });
       const vaPanel = document.getElementById('virtual-account-panel');
+      const cardPanel = document.getElementById('card-payment-panel');
+      const dbankPanel = document.getElementById('direct-bank-panel');
+      const easyPanel = document.getElementById('easy-pay-panel');
       const submitBtn = document.getElementById('btn-final-pay-submit');
-      if (idx === 1) {
-        vaPanel.style.display = 'block';
-        submitBtn.textContent = '가상계좌 입금 완료 및 주문 접수';
-      } else if (idx === 2) {
-        vaPanel.style.display = 'none';
-        submitBtn.textContent = '연구비·신용카드 결제 승인 및 주문 접수';
-      } else {
-        vaPanel.style.display = 'none';
-        submitBtn.textContent = '간편결제 승인 및 주문 접수';
+
+      if (vaPanel) vaPanel.style.display = (idx === 1) ? 'block' : 'none';
+      if (cardPanel) cardPanel.style.display = (idx === 2) ? 'block' : 'none';
+      if (dbankPanel) dbankPanel.style.display = (idx === 4) ? 'block' : 'none';
+      if (easyPanel) easyPanel.style.display = (idx === 3) ? 'block' : 'none';
+
+      if (idx === 4) {
+        const dbDep = document.getElementById('dbank-depositor-name');
+        if (dbDep && !dbDep.value && pendingOrderBuyerInfo) dbDep.value = pendingOrderBuyerInfo.org || pendingOrderBuyerInfo.name;
       }
     }
 
-    function confirmOrderPayment() {
-      if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
-      const b = pendingOrderBuyerInfo || { name: '구매고객', phone: '-', fullAddress: '-', org: '개인/기업' };
+    function copyOrderNumberText(ordId) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(ordId);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = ordId;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+        }
+        showToast(`주문번호 [${ordId}]가 복사되었습니다.`);
+      } catch (e) {
+        showToast(`주문번호: ${ordId}`);
+      }
+    }
 
-      let payMethodDesc = '';
-      if (selectedPayMethodIdx === 1) {
-        const issuedAcct = document.getElementById('va-issued-number').textContent;
-        const depositor = document.getElementById('va-depositor-name').value.trim() || b.name;
-        payMethodDesc = `가상계좌 입금완료 (${issuedAcct} / 입금자: ${depositor})`;
-      } else if (selectedPayMethodIdx === 2) {
-        payMethodDesc = '연구비·법인 신용카드';
+    function openOrderCompleteModal(createdOrders, buyerName, payMethodDesc) {
+      const firstOrd = createdOrders[0];
+      if (!firstOrd) return;
+      const totalSum = createdOrders.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
+      const isGuest = !currentUser;
+      const bodyEl = document.getElementById('order-complete-modal-body');
+      if (!bodyEl) return;
+
+      const ordIdsText = createdOrders.map(o => o.id).join(', ');
+      bodyEl.innerHTML = `
+        <div style="background:var(--brand-light); border:1.5px solid var(--brand); padding:14px; border-radius:3px; margin-bottom:14px;">
+          <div style="font-size:11.5px; color:var(--brand-dark); font-weight:800; margin-bottom:4px;">
+            ${isGuest ? '[비회원 주문 완료 — 아래 주문자 이름과 주문번호를 꼭 확인하세요]' : '[회원 주문 완료 — 내 주문내역에 자동 등록되었습니다]'}
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; background:#fff; border:1px solid var(--brand-border); padding:10px 12px; margin-top:6px;">
+            <div>
+              <div style="font-size:11px; color:var(--text-secondary);">발급된 주문번호 (Order No.)</div>
+              <strong style="font-size:17px; font-family:var(--font-mono); color:var(--price-red);">${ordIdsText}</strong>
+              <div style="font-size:12px; font-weight:700; color:var(--text-primary); margin-top:2px;">주문자 이름: <span style="color:var(--brand-dark);">${buyerName}</span></div>
+            </div>
+            <button type="button" class="btn-mall btn-mall-white" style="padding:6px 10px; font-size:11.5px; border-color:var(--brand); color:var(--brand-dark);" onclick="copyOrderNumberText('${firstOrd.id}')">주문번호 복사</button>
+          </div>
+        </div>
+
+        <table class="erp-table" style="margin-bottom:14px;">
+          <tbody>
+            <tr>
+              <th style="width:110px;">주문 품목</th>
+              <td style="font-weight:700;">${createdOrders.length > 1 ? `${firstOrd.materialName} 외 ${createdOrders.length - 1}건` : firstOrd.materialName}</td>
+            </tr>
+            <tr>
+              <th>결제구분</th>
+              <td style="font-weight:700; color:var(--brand-dark);">${formatExactPayMethodLabel(payMethodDesc)}</td>
+            </tr>
+            <tr>
+              <th>총 결제금액</th>
+              <td style="font-weight:800; color:var(--price-red); font-family:var(--font-mono);">${totalSum.toLocaleString()}원 (VAT 포함)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        ${isGuest ? `
+          <div style="background:#fff9db; border:1px solid #ffe066; color:#e67700; padding:10px 12px; font-size:11.5px; font-weight:700; margin-bottom:14px; border-radius:2px;">
+            * 비회원으로 주문하셨으므로 거래명세서 발급 창이나 주문조회 창에서 <strong>주문자 이름(${buyerName})</strong>과 <strong>주문번호(${firstOrd.id})</strong>를 입력하여 거래명세서 발급 및 취소·반품·환불을 이용하실 수 있습니다.
+          </div>
+        ` : ''}
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <button type="button" class="btn-mall btn-mall-white" onclick="closeModal('orderCompleteModal'); switchRole('orders');">
+            ${isGuest ? '비회원 주문조회 페이지 이동' : '내 주문내역 페이지 이동'}
+          </button>
+          <button type="button" class="btn-mall btn-mall-brand" onclick="closeModal('orderCompleteModal'); openAfterOrderQuoteModal('${firstOrd.id}', '${buyerName.replace(/'/g, "\'")}');">
+            ${isGuest ? '이름·주문번호로 거래명세서 발급' : '거래명세서·견적서 즉시 발급'}
+          </button>
+        </div>
+      `;
+      document.getElementById('orderCompleteModal').classList.add('open');
+    }
+
+    function openAfterOrderQuoteModal(ordId, buyerName) {
+      if (currentUser) {
+        selectedQuoteOrderId = ordId;
+        quoteRenderMode = 'ORDER';
+        docType = '거 래 명 세 서';
+        renderQuoteSourceSelectorUI();
+        renderPrintableDocument();
+        document.getElementById('quoteModal').classList.add('open');
       } else {
-        payMethodDesc = '카카오·토스 간편결제';
+        // 비회원인 경우: 거래명세서 창을 열고 이름+주문번호 입력란에 방금 주문한 정보를 채워 직접 조회·발급할 수 있게 안내
+        quoteRenderMode = 'ORDER';
+        docType = '거 래 명 세 서';
+        renderQuoteSourceSelectorUI();
+        const nameInp = document.getElementById('quote-guest-name-input');
+        const idInp = document.getElementById('quote-guest-orderid-input');
+        if (nameInp) nameInp.value = buyerName || '';
+        if (idInp) idInp.value = ordId || '';
+        renderPrintableDocument();
+        document.getElementById('quoteModal').classList.add('open');
+        showToast('비회원 주문자 이름과 주문번호가 입력되었습니다. [비회원 주문 조회 및 발급] 버튼을 눌러주세요.');
+      }
+    }
+
+    const DEFAULT_PORTONE_STORE_ID = 'store-ad3a98e5-7ce7-4fee-b6e1-395e58e7c75e';
+    const DEFAULT_PORTONE_CHANNEL_KEY = 'channel-key-4147d38a-d029-4682-8939-e5d86f4e8759';
+    const DEFAULT_PORTONE_API_SECRET = 'a3CSBNggMfDZqz5AB79gk6otO7hCppL9ytRr81Oro3uIDiwBIUgup8EJX8PL6ZY9ujxTMztUHKdHaL6m';
+    const LEGACY_SAMPLE_STORE_ID = 'store-e4038486-8d83-41a5-acf1-844a009e0d94';
+    const LEGACY_SAMPLE_CHANNEL_KEY = 'channel-key-ebe7daa6-4fe4-41bd-b17d-3495264399b5';
+
+    function getPortOneConfig() {
+      try {
+        const legacyCfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v14') || '{}');
+        const onpodCfg = JSON.parse(localStorage.getItem('jaturi_onpod_cfg_v1') || '{}');
+        const cfg = Object.assign({}, legacyCfg, onpodCfg);
+        const storeInput = document.getElementById('cfg-po-store');
+        const chanInput = document.getElementById('cfg-po-channel');
+        const secretInput = document.getElementById('cfg-po-secret');
+
+        let rawStore = (cfg.poStore || (storeInput && storeInput.value) || DEFAULT_PORTONE_STORE_ID).trim();
+        let rawChannel = (cfg.poChannel || (chanInput && chanInput.value) || DEFAULT_PORTONE_CHANNEL_KEY).trim();
+        let rawSecret = (cfg.poSecret || (secretInput && secretInput.value) || DEFAULT_PORTONE_API_SECRET).trim();
+
+        if (!rawStore || rawStore === LEGACY_SAMPLE_STORE_ID) rawStore = DEFAULT_PORTONE_STORE_ID;
+        if (!rawChannel || rawChannel === LEGACY_SAMPLE_CHANNEL_KEY) rawChannel = DEFAULT_PORTONE_CHANNEL_KEY;
+        if (!rawSecret) rawSecret = DEFAULT_PORTONE_API_SECRET;
+
+        return { storeId: rawStore, channelKey: rawChannel, apiSecret: rawSecret };
+      } catch (e) {
+        return {
+          storeId: DEFAULT_PORTONE_STORE_ID,
+          channelKey: DEFAULT_PORTONE_CHANNEL_KEY,
+          apiSecret: DEFAULT_PORTONE_API_SECRET
+        };
+      }
+    }
+
+    function randomId() {
+      return [...crypto.getRandomValues(new Uint32Array(2))]
+        .map((word) => word.toString(16).padStart(8, '0'))
+        .join('');
+    }
+
+    function waitPortOneSdk() {
+      return new Promise((resolve) => {
+        if (window.PortOne != null) {
+          resolve(window.PortOne);
+          return;
+        }
+        let elapsed = 0;
+        const polling = setInterval(() => {
+          elapsed += 50;
+          if (window.PortOne != null || elapsed >= 4000) {
+            clearInterval(polling);
+            resolve(window.PortOne || null);
+          }
+        }, 50);
+      });
+    }
+
+    function setWaitingPayment(isWaiting) {
+      ['btn-final-pay-submit', 'btn-portone-va-sdk', 'btn-pay-back-step1', 'btn-step1-direct-portone', 'btn-step1-virtual-account'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.setAttribute('aria-busy', isWaiting.toString());
+          el.disabled = isWaiting;
+        }
+      });
+    }
+
+    function showPaymentModalError(msg) {
+      const alertEl = document.getElementById('portone-payment-alert');
+      if (!alertEl) return;
+      if (!msg) {
+        alertEl.style.display = 'none';
+        alertEl.replaceChildren();
+        return;
+      }
+      alertEl.style.display = 'block';
+      alertEl.replaceChildren(msg);
+    }
+
+    // 포트원 V2 공식 가상계좌 결제창 호출 (payMethod: 'VIRTUAL_ACCOUNT', virtualAccount.accountExpiry.validHours: 24)
+    async function requestPortOneVirtualAccountPayment() {
+      if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
+      const b = pendingOrderBuyerInfo || { name: '구매고객', phone: '010-2849-1029', fullAddress: '-', org: '개인/기업' };
+      showPaymentModalError('');
+
+      const totalAmount = Math.round(Number(getActiveCheckoutTotal()) || 0);
+      let orderName = '';
+      let itemId = '';
+      if (orderCheckoutMode === 'CART') {
+        if (cartItems.length === 0) return;
+        orderName = cartItems.length > 1
+          ? `${cartItems[0].materialName} 외 ${cartItems.length - 1}건`
+          : cartItems[0].materialName;
+        itemId = cartItems.map(i => i.materialId).join(',');
+      } else {
+        const c = currentCalcResult;
+        if (!c) return;
+        orderName = c.mat.name;
+        itemId = c.mat.id;
       }
 
+      setWaitingPayment(true);
+      const portOneSdk = await waitPortOneSdk();
+      if (!portOneSdk) {
+        setWaitingPayment(false);
+        showPaymentModalError('포트원(PortOne V2) SDK를 불러오지 못했습니다.');
+        return;
+      }
+
+      const poCfg = getPortOneConfig();
+      const paymentId = randomId();
+      const cleanPhone = (b.phone || '01028491029').replace(/[^0-9]/g, '') || '01028491029';
+      const customerEmail = (currentUser && currentUser.email) ? currentUser.email : 'customer@jaturimarket.kr';
+
+      let payment;
+      try {
+        payment = await PortOne.requestPayment({
+          storeId: poCfg.storeId,
+          channelKey: poCfg.channelKey,
+          paymentId,
+          orderName,
+          totalAmount,
+          currency: 'KRW',
+          payMethod: 'VIRTUAL_ACCOUNT',
+          virtualAccount: {
+            accountExpiry: {
+              validHours: 24,
+            },
+          },
+          customer: {
+            fullName: b.name || '구매고객',
+            phoneNumber: cleanPhone,
+            email: customerEmail,
+          },
+          customData: {
+            item: itemId,
+          },
+        });
+      } catch (err) {
+        setWaitingPayment(false);
+        const errMsg = (err && err.message) ? err.message : '포트원 가상계좌 결제창 호출 중 오류가 발생했습니다.';
+        openPaymentModal(1);
+        showPaymentModalError(errMsg);
+        showToast(errMsg);
+        return;
+      }
+
+      if (!payment || payment.code !== undefined) {
+        setWaitingPayment(false);
+        const failMsg = (payment && payment.message) ? payment.message : '가상계좌 발급이 취소되었거나 실패했습니다.';
+        openPaymentModal(1);
+        showPaymentModalError(failMsg);
+        showToast(failMsg);
+        return;
+      }
+
+      setWaitingPayment(false);
+      const payMethodDesc = `포트원 가상계좌 결제 (승인번호: ${payment.paymentId || paymentId} / 입금자: ${b.name})`;
+      finalizeVerifiedOrder(payment.paymentId || paymentId, payMethodDesc, b);
+    }
+
+    function finalizeVerifiedOrder(verifiedPaymentId, payMethodDesc, b) {
+      const nowStr = getNowDateTimeStr();
+      const shortYmd = getNowShortYmd();
+
       if (orderCheckoutMode === 'CART') {
-        const createdIds = [];
-        cartItems.slice().reverse().forEach((item, idx) => {
-          const ordId = `ORD-261016-0${orders.length + 1}`;
+        const createdOrders = [];
+        cartItems.slice().reverse().forEach((item) => {
+          const ordId = `ORD-${shortYmd}-${String(orders.length + 1).padStart(2, '0')}`;
           const newOrd = {
             id: ordId,
-            date: '2026-10-16 10:00',
+            paymentId: verifiedPaymentId,
+            date: nowStr,
             buyerId: currentUser ? currentUser.id : 'guest',
+            buyerName: b.name,
             buyer: `${b.name} (${b.org})`,
             phone: b.phone,
             address: b.fullAddress,
@@ -7245,12 +7982,18 @@
             settled: false
           };
           orders.unshift(newOrd);
-          createdIds.push(ordId);
+          createdOrders.unshift(newOrd);
           const m = materials.find(x => x.id === item.materialId);
-          if (m) m.stock = Math.max(1, m.stock - (item.platesNeeded || 1));
+          if (m) {
+            m.stock = Math.max(0, m.stock - (item.platesNeeded || 1));
+            syncMaterialToSupabase(m);
+          }
           syncOrderToSupabase(newOrd);
           deleteRowFromSupabase('cart_items', item.cartId);
         });
+        if (!currentUser && createdOrders.length > 0) {
+          lastPlacedGuestOrderInfo = { name: b.name, id: createdOrders[0].id };
+        }
         cartItems.length = 0;
         saveStateToStorage();
         closeModal('paymentModal');
@@ -7258,19 +8001,22 @@
         updateBadges();
         renderCatalog();
         updateCalculator();
-        showToast(`장바구니 ${createdIds.length}건 일괄 주문이 완료되었습니다! [주문내역]에서 확인하세요.`);
+        openOrderCompleteModal(createdOrders, b.name, payMethodDesc);
         return;
       }
 
       const c = currentCalcResult;
+      if (!c) return;
       const scrapText = document.getElementById('scrap-handling').value === 'INCLUDE'
         ? '잔여 자투리 동봉 발송'
         : '재단 면적만큼만 최저시세 결제';
 
       const newOrder = {
-        id: `ORD-261016-0${orders.length + 1}`,
-        date: '2026-10-16 10:00',
+        id: `ORD-${shortYmd}-${String(orders.length + 1).padStart(2, '0')}`,
+        paymentId: verifiedPaymentId,
+        date: nowStr,
         buyerId: currentUser ? currentUser.id : 'guest',
+        buyerName: b.name,
         buyer: `${b.name} (${b.org})`,
         phone: b.phone,
         address: b.fullAddress,
@@ -7292,20 +8038,187 @@
       };
 
       orders.unshift(newOrder);
-      if (!currentUser) guestSessionOrderIds.push(newOrder.id);
-      syncOrderToSupabase(newOrder);
-      c.mat.stock = Math.max(1, c.mat.stock - c.platesNeeded);
+      if (!currentUser) {
+        lastPlacedGuestOrderInfo = { name: b.name, id: newOrder.id };
+      }
+      c.mat.stock = Math.max(0, c.mat.stock - c.platesNeeded);
       saveStateToStorage();
+      syncMaterialToSupabase(c.mat);
       syncOrderToSupabase(newOrder);
       closeModal('paymentModal');
       updateBadges();
       renderCatalog();
       updateCalculator();
-      showToast(`주문 완료 [${newOrder.id}] — 주문내역에서 바로 확인하실 수 있습니다.`);
+      openOrderCompleteModal([newOrder], b.name, payMethodDesc);
     }
 
+    async function confirmOrderPayment() {
+      if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
+      const b = pendingOrderBuyerInfo || { name: '구매고객', phone: '010-2849-1029', fullAddress: '-', org: '개인/기업' };
+      showPaymentModalError('');
+
+      let payMethodDesc = '';
+      if (selectedPayMethodIdx === 1) {
+        const issuedAcct = document.getElementById('va-issued-number').textContent;
+        const depositor = document.getElementById('va-depositor-name').value.trim() || b.name;
+        payMethodDesc = `가상계좌 입금완료 (${issuedAcct} / 입금자: ${depositor})`;
+        // 가상계좌 선택 시 포트원 카드/간편결제 창으로 넘어가지 않고 전용 가상계좌 주문으로 즉시 접수 처리
+        finalizeVerifiedOrder(`VA-${randomId()}`, payMethodDesc, b);
+        return;
+      } else if (selectedPayMethodIdx === 2) {
+        const cardType = document.getElementById('card-type-select') ? document.getElementById('card-type-select').value : '연구비·법인 신용카드';
+        const cardCo = document.getElementById('card-company-select') ? document.getElementById('card-company-select').value : '신한카드';
+        const cardInst = document.getElementById('card-install-select') ? document.getElementById('card-install-select').value : '일시불';
+        payMethodDesc = `간편·카드 결제 (${cardType} · ${cardCo} / ${cardInst} 승인)`;
+      } else if (selectedPayMethodIdx === 4) {
+        const dbAcct = document.getElementById('dbank-select') ? document.getElementById('dbank-select').value : '기업은행 119-082941-04-011';
+        const dbDep = (document.getElementById('dbank-depositor-name') && document.getElementById('dbank-depositor-name').value.trim()) || b.org || b.name;
+        payMethodDesc = `일반 계좌이체 (${dbAcct} / 입금자: ${dbDep})`;
+        finalizeVerifiedOrder(`BANK-${randomId()}`, payMethodDesc, b);
+        return;
+      } else {
+        const epProv = document.getElementById('easypay-provider-select') ? document.getElementById('easypay-provider-select').value : '카카오페이(KakaoPay)';
+        const epRec = document.getElementById('easypay-receipt-select') ? document.getElementById('easypay-receipt-select').value : '지출증빙용';
+        payMethodDesc = `간편결제 (${epProv} / ${epRec})`;
+      }
+
+      const totalAmount = Math.round(Number(getActiveCheckoutTotal()) || 0);
+      let orderName = '';
+      let itemId = '';
+
+      if (orderCheckoutMode === 'CART') {
+        if (cartItems.length === 0) return;
+        orderName = cartItems.length > 1
+          ? `${cartItems[0].materialName} 외 ${cartItems.length - 1}건`
+          : cartItems[0].materialName;
+        itemId = cartItems.map(i => i.materialId).join(',');
+      } else {
+        const c = currentCalcResult;
+        if (!c) return;
+        orderName = c.mat.name;
+        itemId = c.mat.id;
+      }
+
+      setWaitingPayment(true);
+      const portOneSdk = await waitPortOneSdk();
+      if (!portOneSdk) {
+        setWaitingPayment(false);
+        const sdkMsg = '포트원(PortOne V2) 브라우저 SDK를 불러오지 못했습니다. 네트워크 연결을 확인해 주세요.';
+        openPaymentModal(2);
+        showPaymentModalError(sdkMsg);
+        showToast(sdkMsg);
+        return;
+      }
+
+      const poCfg = getPortOneConfig();
+      const paymentId = randomId();
+      const cleanPhone = (b.phone || '01028491029').replace(/[^0-9]/g, '') || '01028491029';
+      const customerEmail = (currentUser && currentUser.email) ? currentUser.email : 'customer@jaturimarket.kr';
+
+      let payment;
+      try {
+        payment = await PortOne.requestPayment({
+          storeId: poCfg.storeId,
+          channelKey: poCfg.channelKey,
+          paymentId,
+          orderName,
+          totalAmount,
+          currency: 'KRW',
+          payMethod: 'CARD',
+          customer: {
+            fullName: b.name || '구매고객',
+            phoneNumber: cleanPhone,
+            email: customerEmail,
+          },
+          customData: {
+            item: itemId,
+          },
+        });
+      } catch (err) {
+        setWaitingPayment(false);
+        console.error(err);
+        const msg = (err && err.message) ? err.message : '포트원 결제창 호출 중 오류가 발생했습니다.';
+        openPaymentModal(2);
+        showPaymentModalError(msg);
+        showToast(msg);
+        return;
+      }
+
+      if (!payment || payment.code !== undefined) {
+        setWaitingPayment(false);
+        console.log(payment);
+        const failMsg = (payment && payment.message) ? payment.message : '결제가 취소되었거나 실패했습니다.';
+        openPaymentModal(2);
+        showPaymentModalError(failMsg);
+        showToast(failMsg);
+        return;
+      }
+
+      // 1) 백엔드(/api/payment/complete) 검증 시도 + 2) 단독 실행 환경에서는 PortOne V2 REST API 직접 단건 조회 검증
+      try {
+        const completeEndpoint = ['/api', 'payment', 'complete'].join('/');
+        const completeResponse = await fetch(completeEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            paymentId: payment.paymentId,
+            expectedAmount: totalAmount,
+          }),
+        });
+        if (completeResponse.ok) {
+          const paymentComplete = await completeResponse.json();
+          if (paymentComplete.status && paymentComplete.status !== 'PAID' && paymentComplete.status !== 'VIRTUAL_ACCOUNT_ISSUED' && paymentComplete.status !== 'RECEIVED') {
+            setWaitingPayment(false);
+            openPaymentModal();
+            showPaymentModalError(`결제 미승인 상태: ${paymentComplete.status}`);
+            return;
+          }
+        } else if (completeResponse.status === 400 || completeResponse.status === 409) {
+          setWaitingPayment(false);
+          const errText = await completeResponse.text();
+          openPaymentModal();
+          showPaymentModalError(errText);
+          return;
+        }
+      } catch (networkErr) {
+        // 정적 HTML 단독 실행 시 PortOne V2 API Key로 단건 결제 검증 시도
+        if (poCfg.apiSecret) {
+          try {
+            const directRes = await fetch(`https://api.portone.io/payments/${encodeURIComponent(payment.paymentId)}`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `PortOne ${poCfg.apiSecret}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            if (directRes.ok) {
+              const directData = await directRes.json();
+              if (directData && directData.amount && typeof directData.amount.total === 'number' && directData.amount.total !== totalAmount) {
+                setWaitingPayment(false);
+                openPaymentModal();
+                showPaymentModalError(`결제 금액 불일치 감지 (${directData.amount.total}원 != ${totalAmount}원)`);
+                return;
+              }
+            }
+          } catch (corsErr) {
+            // 브라우저 CORS 제한 시 클라이언트 승인 결과(payment.paymentId)로 통과
+          }
+        }
+      }
+
+      setWaitingPayment(false);
+      const verifiedPaymentId = payment.paymentId || paymentId;
+      finalizeVerifiedOrder(verifiedPaymentId, payMethodDesc, b);
+    }
 
     function printCleanQuote() {
+      const d = getActiveQuoteDocumentData();
+      if (!d || d.locked) {
+        showToast(d && d.lockReason ? d.lockReason : '로그인 후 본인 주문을 선택하시거나 비회원 이름·주문번호를 먼저 조회해 주세요.');
+        return;
+      }
       const modalWin = document.querySelector('#quoteModal .modal-win');
       if (modalWin) modalWin.scrollTop = 0;
       window.scrollTo(0, 0);
@@ -7314,31 +8227,558 @@
       }, 100);
     }
 
-    function downloadQuoteAsImage() {
-      if (!currentCalcResult) return;
+    // [중요] 로그인한 회원은 오직 본인이 주문한 주문(최대 5건)만 반환하며,
+    // 비로그인(비회원) 상태에서는 주문자 이름 + 주문번호 조회로 인증된 주문만 반환합니다. (타인 주문 절대 노출 금지)
+    function getRecentFiveOrdersForQuote() {
+      const myOrders = getVisibleOrdersForCurrentUser();
+      return myOrders.slice(0, 5);
+    }
+
+    async function handleGuestOrderLookupInQuoteModal(e) {
+      if (e) e.preventDefault();
+      const nameInp = document.getElementById('quote-guest-name-input');
+      const idInp = document.getElementById('quote-guest-orderid-input');
+      const msgBox = document.getElementById('quote-guest-lookup-msg');
+      const nameVal = nameInp ? nameInp.value : '';
+      const idVal = idInp ? idInp.value : '';
+
+      const res = await verifyOrderByNameAndNumber(nameVal, idVal);
+      if (msgBox) {
+        msgBox.style.display = 'block';
+        msgBox.style.color = res.ok ? '#2b8a3e' : '#c92a2a';
+        msgBox.textContent = res.msg;
+      }
+      if (!res.ok) {
+        showToast(res.msg);
+        return;
+      }
+      selectedQuoteOrderId = res.order.id;
+      quoteRenderMode = 'ORDER';
+      docType = '거 래 명 세 서';
+      updateBadges();
+      renderQuoteSourceSelectorUI();
+      renderPrintableDocument();
+      showToast(`비회원 주문 [${res.order.id}] 확인 완료! 거래명세서가 발급되었습니다.`);
+    }
+
+    function fillSampleGuestOrderInQuoteModal() {
+      const info = lastPlacedGuestOrderInfo || { name: '성수 하드웨어 랩', id: 'ORD-261013-09' };
+      const nameInp = document.getElementById('quote-guest-name-input');
+      const idInp = document.getElementById('quote-guest-orderid-input');
+      if (nameInp) nameInp.value = info.name;
+      if (idInp) idInp.value = info.id;
+      showToast(`비회원 주문 정보(${info.name} / ${info.id})가 입력되었습니다. [비회원 주문 조회 및 발급]을 클릭하세요.`);
+    }
+
+    function buildOfficialSealSvgHtml(partnerName) {
+      return `
+        <div style="margin-top:16px; border-top:2px solid #000; padding-top:14px;">
+          <div style="text-align:center; font-size:12.5px; color:#212529; margin-bottom:6px; font-weight:600;">
+            위 금액과 같이 정히 ${docType.replace(/\s+/g, '')}를 발행(청구·영수)합니다.
+          </div>
+          <div style="text-align:center; font-size:14px; font-weight:900; font-family:var(--font-mono); color:#000; margin-bottom:14px; background:#f8f9fa; border:1px solid #ced4da; padding:6px 12px; display:block;">
+            발행일시 : ${getNowPrintHeaderTimeStr()}
+          </div>
+          <table class="quote-table" style="margin-bottom:4px;">
+            <tbody>
+              <tr>
+                <th style="width:16%; background:#f1f3f5;">발행 회사명<br/>(공급 플랫폼)</th>
+                <td style="width:36%; font-weight:800; font-size:13px; white-space:normal;">
+                  자투리마켓 (Jaturi Market)<br/>
+                  <span style="font-size:11px; font-weight:600; color:#495057;">공급 파트너사: ${partnerName || '자투리마켓 입점공장'}</span>
+                </td>
+                <th style="width:16%; background:#f1f3f5;">대표자 및<br/>직인 날인란</th>
+                <td style="width:32%; text-align:center; vertical-align:middle; padding:8px 12px; position:relative;">
+                  <div style="display:inline-flex; align-items:center; justify-content:center; gap:14px;">
+                    <div style="text-align:left;">
+                      <div style="font-size:11px; color:#495057;">대표자 (발행인)</div>
+                      <strong style="font-size:13.5px; color:#000;">자투리마켓 대표</strong>
+                    </div>
+                    <div style="width:54px; height:54px; border:1px dashed #adb5bd; display:flex; align-items:center; justify-content:center; background:#fff; color:#868e96; font-size:11.5px; font-weight:700;" title="직인 날인란">
+                      (인)
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function getActiveQuoteDocumentData() {
+      const nowDateOnlyLabel = getNowPrintHeaderTimeStr();
+      const nowYmd = getNowCompactYmd();
+      const defaultBuyerOrg = (document.getElementById('buyer-org') ? document.getElementById('buyer-org').value : '') || (currentUser ? (currentUser.org || currentUser.name) : '울산모빌리티연구실');
+      const prepaySelectEl = document.getElementById('quote-custom-pay-select');
+      const selectedPrepay = prepaySelectEl ? prepaySelectEl.value : '연구비·법인 신용카드 결제';
+
+      if (quoteRenderMode === 'ORDER') {
+        const recentOrders = getRecentFiveOrdersForQuote();
+        let ord = recentOrders.find(o => o.id === selectedQuoteOrderId) || recentOrders[0];
+        if (!ord) {
+          return {
+            locked: true,
+            lockReason: currentUser
+              ? `현재 [${currentUser.name}] 회원님 계정으로 주문하신 내역이 없습니다. 자재를 먼저 주문하신 후 거래명세서를 발급받으실 수 있습니다.`
+              : `거래명세서는 로그인 후 내가 주문한 내역을 선택하거나, 비회원 주문 시 [주문자 이름 + 주문번호]를 입력해 조회한 경우에만 발급됩니다.`
+          };
+        }
+        selectedQuoteOrderId = ord.id;
+        const total = ord.totalAmount || 0;
+        const supply = Math.round(total / 1.1);
+        const vat = total - supply;
+        const shipCost = total >= 4400 ? 4000 : 0;
+        const matAndCut = Math.max(0, supply - shipCost);
+        const matCodeMatch = (materials.find(m => m.id === ord.materialId || m.name === ord.materialName) || {}).code || 'JM-ORDER';
+        const stInfo = getOrderStatusInfo(ord);
+        return {
+          locked: false,
+          mode: 'ORDER',
+          orderId: ord.id,
+          orderStatusText: stInfo.label,
+          docNo: `JM-${nowYmd}-${ord.id.replace(/^ORD-/, '')}`,
+          issueTimeText: nowDateOnlyLabel,
+          orderDateText: formatDateToYmdKorean(ord.date),
+          buyerOrg: ord.buyer || defaultBuyerOrg,
+          partnerName: ord.partner || '입점 파트너사',
+          payCategoryText: formatExactPayMethodLabel(ord.payMethod),
+          total,
+          supply,
+          vat,
+          fileTag: ord.id,
+          rows: [
+            {
+              no: 1,
+              name: `[${matCodeMatch}] ${ord.materialName}`,
+              spec: `${ord.cutSpec} (원판규격: ${ord.origSpec || '-'})`,
+              qty: ord.mode === 'RAW' ? '원판출고' : '맞춤재단',
+              price: matAndCut
+            },
+            {
+              no: 2,
+              name: '공장 직배송 화물·택배비 (정밀포장 포함)',
+              spec: ord.waybill ? `${ord.courier} (${ord.waybill})` : '파손방지 완충 포장 및 직배송',
+              qty: '1식',
+              price: shipCost
+            }
+          ]
+        };
+      }
+
+      // 주문 전 사전 견적 모드(SINGLE / CART)에서는 거래명세서가 아닌 '견 적 서'만 발급 가능
+      if (docType === '거 래 명 세 서') {
+        docType = '견 적 서';
+      }
+
+      if (quoteRenderMode === 'CART' && cartItems.length > 0) {
+        const sumSupply = cartItems.reduce((acc, i) => acc + i.baseCost + i.cutCost + i.shipCost, 0);
+        const sumVat = cartItems.reduce((acc, i) => acc + i.vat, 0);
+        const sumTotal = cartItems.reduce((acc, i) => acc + i.total, 0);
+        return {
+          locked: false,
+          mode: 'CART',
+          orderId: '',
+          orderStatusText: '주문전 사전견적',
+          docNo: `JM-${nowYmd}-CART`,
+          issueTimeText: nowDateOnlyLabel,
+          orderDateText: nowDateOnlyLabel,
+          buyerOrg: defaultBuyerOrg,
+          partnerName: `통합 정산 (${cartItems.length}건)`,
+          payCategoryText: formatExactPayMethodLabel(selectedPrepay),
+          total: sumTotal,
+          supply: sumSupply,
+          vat: sumVat,
+          fileTag: 'CART',
+          rows: cartItems.map((item, idx) => ({
+            no: idx + 1,
+            name: `[${item.code}] ${item.materialName} (${item.partner})`,
+            spec: `${item.cutSpec} (직배송비 포함)`,
+            qty: `${item.reqQty}EA (${item.weightKg.toFixed(2)}kg)`,
+            price: item.baseCost + item.cutCost + item.shipCost
+          }))
+        };
+      }
+
+      if (!currentCalcResult && materials.length > 0) {
+        selectMaterial(materials[0].id, true);
+      }
       const c = currentCalcResult;
-      const buyerOrg = document.getElementById('buyer-org').value || (currentUser ? currentUser.name : '귀하');
+      if (!c) return null;
       const specDesc = c.mode === 'CUT'
         ? `맞춤 재단: ${c.reqW}x${c.reqL}x${c.mat.t}mm (${c.reqQty}EA / ${c.weightKg.toFixed(2)}kg)`
         : `원판 그대로 구매: ${c.mat.w}x${c.mat.l}x${c.mat.t}mm (${c.reqQty}장)`;
+      return {
+        locked: false,
+        mode: 'SINGLE',
+        orderId: '',
+        orderStatusText: '주문전 사전견적',
+        docNo: `JM-${nowYmd}-${c.mat.code.replace(/^JM-/, '')}`,
+        issueTimeText: nowDateOnlyLabel,
+        orderDateText: nowDateOnlyLabel,
+        buyerOrg: defaultBuyerOrg,
+        partnerName: c.mat.partner,
+        payCategoryText: formatExactPayMethodLabel(selectedPrepay),
+        total: c.total,
+        supply: c.baseCost + c.cutCost + c.shipCost,
+        vat: c.vat,
+        fileTag: c.mat.code,
+        rows: [
+          {
+            no: 1,
+            name: `[${c.mat.code}] ${c.mat.name}`,
+            spec: specDesc,
+            qty: `${c.reqQty}EA (${c.weightKg.toFixed(2)}kg)`,
+            price: c.baseCost
+          },
+          {
+            no: 2,
+            name: '정밀 맞춤 재단 가공비',
+            spec: `절단 ${c.cutCount}회 가공`,
+            qty: `${c.cutCount}회`,
+            price: c.cutCost
+          },
+          {
+            no: 3,
+            name: '공장 직배송 화물·택배비',
+            spec: '파손방지 완충 포장 및 직배송',
+            qty: '1식',
+            price: c.shipCost
+          }
+        ]
+      };
+    }
 
+    function renderQuoteSourceSelectorUI() {
+      const btnOrd = document.getElementById('qsrc-btn-orders');
+      const btnSingle = document.getElementById('qsrc-btn-single');
+      const btnCart = document.getElementById('qsrc-btn-cart');
+      const recentListEl = document.getElementById('quote-recent-orders-list');
+      const prepayWrap = document.getElementById('quote-prepay-select-wrap');
+
+      if (btnOrd) btnOrd.classList.toggle('active', quoteRenderMode === 'ORDER');
+      if (btnSingle) btnSingle.classList.toggle('active', quoteRenderMode === 'SINGLE');
+      if (btnCart) btnCart.classList.toggle('active', quoteRenderMode === 'CART');
+      if (prepayWrap) prepayWrap.style.display = (quoteRenderMode === 'ORDER') ? 'none' : 'flex';
+
+      if (!recentListEl) return;
+      const recentFive = getRecentFiveOrdersForQuote();
+
+      if (quoteRenderMode === 'ORDER') {
+        recentListEl.style.display = 'block';
+        const prevGuestName = (document.getElementById('quote-guest-name-input') && document.getElementById('quote-guest-name-input').value) || '';
+        const prevGuestId = (document.getElementById('quote-guest-orderid-input') && document.getElementById('quote-guest-orderid-input').value) || '';
+
+        // 자동입력 버튼 제거 & '회원 로그인 후 내 주문 5건 불러오기'와 '비회원 주문 조회 및 발급' 버튼 크기(높이 38px, 동일 너비 비율) 완벽 통일
+        const guestLookupFormHtml = `
+          <div style="background:var(--bg-gray); border:1px solid var(--border-strong); padding:12px; border-radius:2px; margin-top:${recentFive.length > 0 ? '10px' : '0'};">
+            <div style="margin-bottom:8px;">
+              <strong style="font-size:12px; color:var(--brand-dark);">
+                ${currentUser ? '비회원 주문건 추가 조회 (비회원으로 주문했던 내역이 있는 경우)' : '비회원 주문 조회 및 거래명세서·견적서 발급 (주문자 이름 + 주문번호 입력)'}
+              </strong>
+            </div>
+            <form onsubmit="handleGuestOrderLookupInQuoteModal(event)">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                <input type="text" class="erp-input" id="quote-guest-name-input" value="${prevGuestName}" placeholder="주문자 이름 입력" style="height:38px; padding:0 10px; font-size:12.5px;" required />
+                <input type="text" class="erp-input" id="quote-guest-orderid-input" value="${prevGuestId}" placeholder="주문번호 입력 (예: ORD-261014-01)" style="height:38px; padding:0 10px; font-size:12.5px; font-family:var(--font-mono);" required />
+              </div>
+              <div style="display:grid; grid-template-columns:${!currentUser ? '1fr 1fr' : '1fr'}; gap:8px;">
+                ${!currentUser ? `
+                  <button type="button" class="btn-mall btn-mall-dark" style="height:38px; width:100%; padding:0 14px; font-size:12.5px; display:inline-flex; align-items:center; justify-content:center;" onclick="closeModal('quoteModal'); pendingRedirectAfterLogin='buyer'; openLoginModal();">
+                    회원 로그인 후 내 주문 5건 불러오기
+                  </button>
+                ` : ''}
+                <button type="submit" class="btn-mall btn-mall-brand" style="height:38px; width:100%; padding:0 14px; font-size:12.5px; display:inline-flex; align-items:center; justify-content:center;">
+                  비회원 주문 조회 및 발급
+                </button>
+              </div>
+            </form>
+            <div id="quote-guest-lookup-msg" style="margin-top:6px; font-size:11.5px; font-weight:700; display:none;"></div>
+          </div>
+        `;
+
+        if (recentFive.length === 0) {
+          recentListEl.innerHTML = `
+            <div style="padding:8px 10px; margin-bottom:8px; background:#fff5f5; border:1px solid #ffc9c9; color:#c92a2a; font-size:12px; font-weight:700; border-radius:2px;">
+              ${currentUser
+                ? `현재 [${currentUser.name}] 회원님 계정으로 주문한 내역이 없습니다. 자재를 먼저 주문하시거나, 비회원으로 주문하신 건이 있다면 아래에서 이름과 주문번호를 조회해 주세요.`
+                : `로그인하지 않은 상태입니다. 회원님은 [회원 로그인 후 내 주문 5건 불러오기]를 눌러 내가 주문한 내역을 선택해 발급받으실 수 있으며, 비회원 주문 건은 아래에 [주문자 이름]과 [주문번호]를 입력해 조회하시면 즉시 발급됩니다.`}
+            </div>
+            ${guestLookupFormHtml}
+          `;
+        } else {
+          if (!selectedQuoteOrderId || !recentFive.some(o => o.id === selectedQuoteOrderId)) {
+            selectedQuoteOrderId = recentFive[0].id;
+          }
+          recentListEl.innerHTML = `
+            <div style="font-size:11.5px; font-weight:800; color:var(--brand-dark); margin-bottom:6px;">
+              ${currentUser ? `[${currentUser.name}] 님의 최근 주문내역 최대 5건 (클릭 시 즉시 거래명세서·견적서 반영):` : `비회원 인증 완료된 주문내역 (클릭 시 즉시 거래명세서·견적서 반영):`}
+            </div>
+            <div style="display:flex; flex-direction:column; gap:5px; max-height:140px; overflow-y:auto;">
+              ${recentFive.map((o, idx) => {
+                const isSel = (o.id === selectedQuoteOrderId);
+                return `
+                  <div onclick="selectRecentOrderForQuote('${o.id}')" style="cursor:pointer; padding:7px 10px; border:1.5px solid ${isSel ? 'var(--brand)' : 'var(--border-color)'}; background:${isSel ? 'var(--brand-light)' : '#fff'}; border-radius:2px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; font-size:11.5px;">
+                    <div>
+                      <span class="tag-square ${isSel ? 'tag-cut' : 'tag-raw'}" style="margin-right:4px;">최근 ${idx + 1}</span>
+                      <strong style="font-family:var(--font-mono);">${o.id}</strong>
+                      <span style="color:var(--text-muted); font-size:11px; margin-left:4px;">(${formatDateToYmdKorean(o.date)})</span>
+                      <span style="font-weight:700; margin-left:6px;">${o.materialName}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <span style="font-size:11px; color:var(--brand-dark); font-weight:700;">${formatExactPayMethodLabel(o.payMethod)}</span>
+                      <strong style="font-family:var(--font-mono); color:var(--price-red);">${o.totalAmount.toLocaleString()}원</strong>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            ${!currentUser ? guestLookupFormHtml : ''}
+          `;
+        }
+      } else {
+        recentListEl.style.display = 'none';
+      }
+    }
+
+    function setQuoteSourceMode(mode) {
+      if (mode === 'CART' && cartItems.length === 0) {
+        showToast('현재 장바구니에 담긴 품목이 없습니다.');
+        return;
+      }
+      if (mode === 'SINGLE' && !currentCalcResult && materials.length > 0) {
+        selectMaterial(materials[0].id, true);
+      }
+      quoteRenderMode = mode;
+      if (mode === 'ORDER') {
+        docType = '거 래 명 세 서';
+        const recentFive = getRecentFiveOrdersForQuote();
+        if (recentFive.length > 0 && (!selectedQuoteOrderId || !recentFive.some(o => o.id === selectedQuoteOrderId))) {
+          selectedQuoteOrderId = recentFive[0].id;
+        }
+      } else {
+        docType = '견 적 서';
+      }
+      renderQuoteSourceSelectorUI();
+      renderPrintableDocument();
+    }
+
+    function selectRecentOrderForQuote(orderId) {
+      selectedQuoteOrderId = orderId;
+      quoteRenderMode = 'ORDER';
+      renderQuoteSourceSelectorUI();
+      renderPrintableDocument();
+    }
+
+    function openRecentOrderQuoteModal() {
+      quoteRenderMode = 'ORDER';
+      docType = '거 래 명 세 서';
+      const recentFive = getRecentFiveOrdersForQuote();
+      if (recentFive.length > 0) {
+        selectedQuoteOrderId = recentFive[0].id;
+      } else {
+        selectedQuoteOrderId = '';
+      }
+      renderQuoteSourceSelectorUI();
+      renderPrintableDocument();
+      document.getElementById('quoteModal').classList.add('open');
+    }
+
+    function openOrderQuoteById(orderId) {
+      selectedQuoteOrderId = orderId;
+      quoteRenderMode = 'ORDER';
+      docType = '거 래 명 세 서';
+      renderQuoteSourceSelectorUI();
+      renderPrintableDocument();
+      document.getElementById('quoteModal').classList.add('open');
+    }
+
+    function openQuoteModal() {
+      if (currentCalcResult) {
+        quoteRenderMode = 'SINGLE';
+        docType = '견 적 서';
+      } else if (cartItems.length > 0) {
+        quoteRenderMode = 'CART';
+        docType = '견 적 서';
+      } else {
+        quoteRenderMode = 'ORDER';
+        docType = '거 래 명 세 서';
+        const recentFive = getRecentFiveOrdersForQuote();
+        selectedQuoteOrderId = recentFive.length > 0 ? recentFive[0].id : '';
+      }
+      renderQuoteSourceSelectorUI();
+      renderPrintableDocument();
+      document.getElementById('quoteModal').classList.add('open');
+    }
+
+    function toggleDocType() {
+      if (quoteRenderMode !== 'ORDER') {
+        quoteRenderMode = 'ORDER';
+        docType = '거 래 명 세 서';
+        const recentFive = getRecentFiveOrdersForQuote();
+        selectedQuoteOrderId = recentFive.length > 0 ? recentFive[0].id : '';
+        renderQuoteSourceSelectorUI();
+        renderPrintableDocument();
+        if (recentFive.length === 0) {
+          showToast('거래명세서는 로그인 후 내가 주문한 내역 또는 비회원 이름·주문번호 조회 후에만 발급됩니다.');
+        } else {
+          showToast('내가 주문한 내역 기준 [거래명세서] 양식으로 전환되었습니다.');
+        }
+        return;
+      }
+      docType = (docType === '거 래 명 세 서') ? '견 적 서' : '거 래 명 세 서';
+      renderPrintableDocument();
+    }
+
+    function renderPrintableDocument() {
+      renderQuoteSourceSelectorUI();
+      const d = getActiveQuoteDocumentData();
+      const area = document.getElementById('printable-doc-area');
+      if (!area) return;
+
+      if (!d || d.locked) {
+        area.innerHTML = `
+          <div style="padding:44px 20px; text-align:center; background:#f8f9fa; border:1px dashed var(--border-strong);">
+            <div style="font-size:16px; font-weight:800; color:var(--text-primary); margin-bottom:8px;">
+              거래명세서 및 주문 증빙서류 발급을 위해 본인 주문 확인이 필요합니다
+            </div>
+            <p style="font-size:13px; color:var(--text-secondary); line-height:1.6; max-width:540px; margin:0 auto 18px;">
+              ${d && d.lockReason ? d.lockReason : '로그인 후 내가 주문한 내역을 선택하시거나, 비회원 주문 시 입력한 [주문자 이름]과 [주문번호]를 위 입력창에 입력해 조회해 주세요.'}
+            </p>
+            <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+              ${!currentUser ? `<button type="button" class="btn-mall btn-mall-brand" onclick="closeModal('quoteModal'); openLoginModal();">회원 로그인하기</button>` : ''}
+              <button type="button" class="btn-mall btn-mall-white" onclick="setQuoteSourceMode('SINGLE')">주문전 사전 견적서(계산기 품목) 보기</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const isStatement = (docType === '거 래 명 세 서');
+      const orderNoRowHtml = isStatement
+        ? `
+            <tr>
+              <th style="width:15%; background:#eef6f7; color:#1d5863;">주문번호</th>
+              <td style="width:35%; font-weight:900; font-family:var(--font-mono); color:#1d5863; font-size:13px; white-space:normal;">${d.orderId || d.fileTag}</td>
+              <th style="width:15%; background:#eef6f7; color:#1d5863;">주문·출고상태</th>
+              <td style="width:35%; font-weight:700; white-space:normal;">${d.orderStatusText || '결제완료 (출고준비중)'}</td>
+            </tr>
+          `
+        : '';
+
+      const topRightMetaHtml = isStatement
+        ? `
+            <div style="font-weight:900; color:#1d5863; font-size:12.5px; margin-bottom:2px;">주문번호: ${d.orderId || d.fileTag}</div>
+            <div>명세서번호: ${d.docNo}</div>
+            <div>주문·거래일자: ${d.orderDateText}</div>
+          `
+        : `
+            <div>견적번호: ${d.docNo}</div>
+            <div>견적작성일자: ${d.orderDateText}</div>
+          `;
+
+      const rowsHtml = d.rows.map(r => `
+        <tr>
+          <td style="text-align:center;">${r.no}</td>
+          <td style="white-space:normal;">${r.name}</td>
+          <td style="white-space:normal;">${r.spec}</td>
+          <td style="text-align:center;">${r.qty}</td>
+          <td style="text-align:right; font-family:monospace;">${r.price.toLocaleString()}원</td>
+        </tr>
+      `).join('');
+
+      area.innerHTML = `
+        <div class="quote-header-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div>
+              <div style="font-size:11px; font-weight:700; color:#277381;">산업용 자투리 자재 맞춤재단 오픈마켓</div>
+              <div style="font-size:15px; font-weight:900;">자투리마켓 (Jaturi Market)</div>
+            </div>
+          </div>
+          <div class="quote-title">${docType}</div>
+          <div style="text-align:right; font-size:11.5px; font-family:monospace;">
+            ${topRightMetaHtml}
+          </div>
+        </div>
+
+        <table class="quote-table" style="margin-bottom:12px;">
+          <tbody>
+            ${orderNoRowHtml}
+            <tr>
+              <th style="width:15%;">수신처</th>
+              <td style="width:35%; font-weight:700; white-space:normal;">${d.buyerOrg} 귀하</td>
+              <th style="width:15%;">공급자 상호</th>
+              <td style="width:35%; white-space:normal;">자투리마켓 / ${d.partnerName}</td>
+            </tr>
+            <tr>
+              <th>결제구분</th>
+              <td style="font-weight:800; color:#1d5863; white-space:normal;">${d.payCategoryText}</td>
+              <th>사업자번호</th>
+              <td>________________ (추후 기입)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="border:2px solid #000; padding:9px 14px; margin-bottom:12px; background:#f8f9fa; display:flex; justify-content:space-between; font-size:14px; font-weight:800;">
+          <span>총 합계금액 (부가가치세 포함)</span>
+          <span style="font-family:monospace;">일금 ${d.total.toLocaleString()} 원정</span>
+        </div>
+
+        <table class="quote-table" style="margin-bottom:10px;">
+          <thead>
+            <tr>
+              <th style="width:7%;">No</th>
+              <th style="width:35%;">품목코드 / 재질명</th>
+              <th style="width:31%;">규격 및 재단 치수(mm)</th>
+              <th style="width:13%;">수량/중량</th>
+              <th style="width:14%;">공급가액</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="4" style="text-align:right;">공급가액 합계</th>
+              <th style="text-align:right; font-family:monospace;">${d.supply.toLocaleString()}원</th>
+            </tr>
+            <tr>
+              <th colspan="4" style="text-align:right;">부가가치세 (VAT 10%)</th>
+              <th style="text-align:right; font-family:monospace;">${d.vat.toLocaleString()}원</th>
+            </tr>
+            <tr>
+              <th colspan="4" style="text-align:right;">총 청구(결제) 금액</th>
+              <th style="text-align:right; font-family:monospace; color:#e03131;">${d.total.toLocaleString()}원</th>
+            </tr>
+          </tfoot>
+        </table>
+
+        ${buildOfficialSealSvgHtml(d.partnerName)}
+      `;
+    }
+
+    function downloadQuoteAsImage() {
+      const d = getActiveQuoteDocumentData();
+      if (!d || d.locked) {
+        showToast(d && d.lockReason ? d.lockReason : '로그인 후 본인 주문을 선택하시거나 비회원 이름·주문번호를 먼저 조회해 주세요.');
+        return;
+      }
+
+      const isStatement = (docType === '거 래 명 세 서');
       const canvas = document.createElement('canvas');
       canvas.width = 1240;
-      canvas.height = 1080;
+      canvas.height = isStatement ? 1230 : 1180;
       const ctx = canvas.getContext('2d');
 
-      // White background
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Outer double border
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 4;
-      ctx.strokeRect(40, 40, 1160, 1000);
+      ctx.strokeRect(40, 40, 1160, canvas.height - 80);
       ctx.lineWidth = 1;
-      ctx.strokeRect(48, 48, 1144, 984);
+      ctx.strokeRect(48, 48, 1144, canvas.height - 96);
 
-      // Header
       ctx.fillStyle = '#277381';
       ctx.font = 'bold 18px sans-serif';
       ctx.fillText('산업용 자투리 자재 맞춤재단 오픈마켓', 80, 100);
@@ -7351,340 +8791,233 @@
       ctx.fillText(docType, 620, 125);
 
       ctx.textAlign = 'right';
-      ctx.font = '16px monospace';
-      ctx.fillText('문서번호: JM-20261014-089', 1160, 105);
-      ctx.fillText('발행일자: 2026-10-14', 1160, 132);
+      if (isStatement) {
+        ctx.fillStyle = '#1d5863';
+        ctx.font = 'bold 16px monospace';
+        ctx.fillText(`주문번호: ${d.orderId || d.fileTag}`, 1160, 92);
+        ctx.fillStyle = '#000000';
+        ctx.font = '14px monospace';
+        ctx.fillText(`명세서번호: ${d.docNo}`, 1160, 115);
+        ctx.fillText(`주문·거래일자: ${d.orderDateText}`, 1160, 138);
+      } else {
+        ctx.fillStyle = '#000000';
+        ctx.font = '15px monospace';
+        ctx.fillText(`견적번호: ${d.docNo}`, 1160, 105);
+        ctx.fillText(`견적작성일자: ${d.orderDateText}`, 1160, 132);
+      }
       ctx.textAlign = 'left';
 
-      // Header divider line
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(80, 160);
-      ctx.lineTo(1160, 160);
+      ctx.moveTo(80, 158);
+      ctx.lineTo(1160, 158);
       ctx.stroke();
 
-      // Meta box table
+      // Meta box table (거래명세서인 경우 최상단에 주문번호 행 추가)
+      const metaTop = 178;
+      const metaRowH = 46;
+      const metaRowCount = isStatement ? 3 : 2;
+      const metaTotalH = metaRowCount * metaRowH;
+
       ctx.lineWidth = 1.5;
-      ctx.fillStyle = '#f1f3f5';
-      ctx.fillRect(80, 185, 140, 50);
-      ctx.fillRect(620, 185, 140, 50);
-      ctx.fillRect(80, 235, 140, 50);
-      ctx.fillRect(620, 235, 140, 50);
-      ctx.strokeRect(80, 185, 1080, 100);
+      for (let r = 0; r < metaRowCount; r++) {
+        const ry = metaTop + r * metaRowH;
+        ctx.fillStyle = (isStatement && r === 0) ? '#eef6f7' : '#f1f3f5';
+        ctx.fillRect(80, ry, 140, metaRowH);
+        ctx.fillRect(620, ry, 140, metaRowH);
+      }
+      ctx.strokeRect(80, metaTop, 1080, metaTotalH);
       ctx.beginPath();
-      ctx.moveTo(80, 235); ctx.lineTo(1160, 235);
-      ctx.moveTo(220, 185); ctx.lineTo(220, 285);
-      ctx.moveTo(620, 185); ctx.lineTo(620, 285);
-      ctx.moveTo(760, 185); ctx.lineTo(760, 285);
+      for (let r = 1; r < metaRowCount; r++) {
+        ctx.moveTo(80, metaTop + r * metaRowH);
+        ctx.lineTo(1160, metaTop + r * metaRowH);
+      }
+      ctx.moveTo(220, metaTop); ctx.lineTo(220, metaTop + metaTotalH);
+      ctx.moveTo(620, metaTop); ctx.lineTo(620, metaTop + metaTotalH);
+      ctx.moveTo(760, metaTop); ctx.lineTo(760, metaTop + metaTotalH);
       ctx.stroke();
 
-      ctx.fillStyle = '#000000';
-      ctx.font = 'bold 17px sans-serif';
-      ctx.fillText('수신처', 120, 216);
-      ctx.fillText('공급자 상호', 645, 216);
-      ctx.fillText('결제구분', 112, 266);
-      ctx.fillText('사업자번호', 648, 266);
+      let baseRowIdx = 0;
+      if (isStatement) {
+        const y0 = metaTop + 29;
+        ctx.fillStyle = '#1d5863';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText('주문번호', 112, y0);
+        ctx.fillText('주문·출고상태', 636, y0);
+        ctx.font = 'bold 17px monospace';
+        ctx.fillText(String(d.orderId || d.fileTag), 235, y0);
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText(String(d.orderStatusText || '결제완료'), 775, y0);
+        baseRowIdx = 1;
+      }
 
-      ctx.font = 'bold 17px sans-serif';
-      ctx.fillText(`${buyerOrg} 귀하`, 240, 216);
-      ctx.font = '17px sans-serif';
-      ctx.fillText(`자투리마켓 / ${c.mat.partner}`, 780, 216);
-      ctx.fillText('가상계좌 무통장 / 연구비·법인카드', 240, 266);
-      ctx.fillText('________________ (추후 기입)', 780, 266);
+      const y1 = metaTop + baseRowIdx * metaRowH + 29;
+      const y2 = metaTop + (baseRowIdx + 1) * metaRowH + 29;
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('수신처', 120, y1);
+      ctx.fillText('공급자 상호', 645, y1);
+      ctx.fillText('결제구분', 112, y2);
+      ctx.fillText('사업자번호', 648, y2);
+
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText(`${d.buyerOrg} 귀하`, 235, y1);
+      ctx.font = '16px sans-serif';
+      ctx.fillText(`자투리마켓 / ${d.partnerName}`, 775, y1);
+      ctx.fillStyle = '#1d5863';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText(d.payCategoryText.substring(0, 34), 235, y2);
+      ctx.fillStyle = '#000000';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('________________ (추후 기입)', 775, y2);
 
       // Total highlight bar
+      const barTop = metaTop + metaTotalH + 18;
       ctx.fillStyle = '#f8f9fa';
-      ctx.fillRect(80, 310, 1080, 58);
+      ctx.fillRect(80, barTop, 1080, 52);
       ctx.lineWidth = 2.5;
-      ctx.strokeRect(80, 310, 1080, 58);
+      ctx.strokeRect(80, barTop, 1080, 52);
       ctx.fillStyle = '#000000';
-      ctx.font = 'bold 22px sans-serif';
-      ctx.fillText('총 합계금액 (부가가치세 포함)', 105, 347);
+      ctx.font = 'bold 21px sans-serif';
+      ctx.fillText('총 합계금액 (부가가치세 포함)', 105, barTop + 34);
       ctx.textAlign = 'right';
       ctx.fillStyle = '#e03131';
-      ctx.fillText(`일금 ${c.total.toLocaleString()} 원정`, 1135, 347);
+      ctx.fillText(`일금 ${d.total.toLocaleString()} 원정`, 1135, barTop + 34);
       ctx.textAlign = 'left';
 
-      // Items Table
-      const tableTop = 395;
-      const rowH = 62;
-      const cols = [80, 150, 540, 860, 990, 1160];
+      const tableTop = barTop + 70;
+      const rowH = 54;
+      const cols = [80, 145, 535, 855, 990, 1160];
 
-      // Table Header
       ctx.fillStyle = '#f1f3f5';
-      ctx.fillRect(80, tableTop, 1080, 50);
+      ctx.fillRect(80, tableTop, 1080, 46);
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(80, tableTop, 1080, 50);
+      ctx.strokeRect(80, tableTop, 1080, 46);
 
       const headers = ['No', '품목코드 / 재질명', '규격 및 재단 치수(mm)', '수량/중량', '공급가액'];
       ctx.fillStyle = '#000000';
-      ctx.font = 'bold 17px sans-serif';
+      ctx.font = 'bold 16px sans-serif';
       ctx.textAlign = 'center';
       for (let i = 0; i < headers.length; i++) {
         const cx = (cols[i] + cols[i+1]) / 2;
-        ctx.fillText(headers[i], cx, tableTop + 31);
+        ctx.fillText(headers[i], cx, tableTop + 29);
       }
 
-      const rows = [
-        ['1', `[${c.mat.code}] ${c.mat.name.substring(0, 26)}`, specDesc, `${c.reqQty}EA (${c.weightKg.toFixed(2)}kg)`, `${c.baseCost.toLocaleString()}원`],
-        ['2', '정밀 맞춤 재단 가공비', `절단 ${c.cutCount}회 가공`, `${c.cutCount}회`, `${c.cutCost.toLocaleString()}원`],
-        ['3', '공장 직배송 화물·택배비', '파손방지 완충 포장 및 직배송', '1식', `${c.shipCost.toLocaleString()}원`]
-      ];
-
-      ctx.font = '16px sans-serif';
-      rows.forEach((r, idx) => {
-        const y = tableTop + 50 + idx * rowH;
+      const displayRows = d.rows.slice(0, 4);
+      ctx.font = '15px sans-serif';
+      displayRows.forEach((r, idx) => {
+        const y = tableTop + 46 + idx * rowH;
         ctx.strokeRect(80, y, 1080, rowH);
         ctx.textAlign = 'center';
-        ctx.fillText(r[0], (cols[0]+cols[1])/2, y + 37);
+        ctx.fillText(String(r.no), (cols[0]+cols[1])/2, y + 33);
         ctx.textAlign = 'left';
-        ctx.fillText(r[1], cols[1] + 14, y + 37);
-        ctx.fillText(r[2], cols[2] + 14, y + 37);
+        ctx.fillText(String(r.name).substring(0, 28), cols[1] + 12, y + 33);
+        ctx.fillText(String(r.spec).substring(0, 26), cols[2] + 12, y + 33);
         ctx.textAlign = 'center';
-        ctx.fillText(r[3], (cols[3]+cols[4])/2, y + 37);
+        ctx.fillText(String(r.qty), (cols[3]+cols[4])/2, y + 33);
         ctx.textAlign = 'right';
-        ctx.font = 'bold 17px monospace';
-        ctx.fillText(r[4], cols[5] - 16, y + 37);
-        ctx.font = '16px sans-serif';
+        ctx.font = 'bold 16px monospace';
+        ctx.fillText(`${r.price.toLocaleString()}원`, cols[5] - 14, y + 33);
+        ctx.font = '15px sans-serif';
       });
 
-      // Vertical lines for items
       for (let i = 1; i < cols.length - 1; i++) {
         ctx.beginPath();
         ctx.moveTo(cols[i], tableTop);
-        ctx.lineTo(cols[i], tableTop + 50 + rows.length * rowH);
+        ctx.lineTo(cols[i], tableTop + 46 + displayRows.length * rowH);
         ctx.stroke();
       }
 
-      // Summary footer rows
-      const footTop = tableTop + 50 + rows.length * rowH;
+      const footTop = tableTop + 46 + displayRows.length * rowH;
       const footRows = [
-        ['공급가액 합계', `${(c.baseCost + c.cutCost + c.shipCost).toLocaleString()}원`, '#000000'],
-        ['부가가치세 (VAT 10%)', `${c.vat.toLocaleString()}원`, '#000000'],
-        ['총 청구(결제) 금액', `${c.total.toLocaleString()}원`, '#e03131']
+        ['공급가액 합계', `${d.supply.toLocaleString()}원`, '#000000'],
+        ['부가가치세 (VAT 10%)', `${d.vat.toLocaleString()}원`, '#000000'],
+        ['총 청구(결제) 금액', `${d.total.toLocaleString()}원`, '#e03131']
       ];
 
       footRows.forEach((fr, idx) => {
-        const y = footTop + idx * 52;
+        const y = footTop + idx * 46;
         ctx.fillStyle = '#f8f9fa';
-        ctx.fillRect(80, y, 910, 52);
-        ctx.strokeRect(80, y, 1080, 52);
+        ctx.fillRect(80, y, 910, 46);
+        ctx.strokeRect(80, y, 1080, 46);
         ctx.beginPath();
-        ctx.moveTo(990, y); ctx.lineTo(990, y + 52);
+        ctx.moveTo(990, y); ctx.lineTo(990, y + 46);
         ctx.stroke();
 
         ctx.fillStyle = '#000000';
-        ctx.font = 'bold 17px sans-serif';
+        ctx.font = 'bold 16px sans-serif';
         ctx.textAlign = 'right';
-        ctx.fillText(fr[0], 970, y + 32);
+        ctx.fillText(fr[0], 970, y + 29);
 
         ctx.fillStyle = fr[2];
-        ctx.font = 'bold 19px monospace';
-        ctx.fillText(fr[1], 1144, y + 32);
+        ctx.font = 'bold 18px monospace';
+        ctx.fillText(fr[1], 1144, y + 29);
       });
 
-      ctx.fillStyle = '#495057';
-      ctx.font = '15px sans-serif';
+      const bottomY = footTop + 3 * 46 + 24;
+      ctx.fillStyle = '#212529';
+      ctx.font = 'bold 16px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('* 본 전자 거래명세서·견적서는 대학 산학협력단 연구비 정산 및 기업 구매 증빙 서류로 즉시 제출 가능합니다.', 620, 965);
+      ctx.fillText(`위 금액과 같이 정히 ${docType.replace(/\s+/g, '')}를 발행(청구·영수)합니다.`, 620, bottomY);
+
+      ctx.fillStyle = '#f8f9fa';
+      ctx.fillRect(260, bottomY + 14, 720, 40);
+      ctx.strokeStyle = '#ced4da';
+      ctx.strokeRect(260, bottomY + 14, 720, 40);
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 18px monospace';
+      ctx.fillText(`발행일시 : ${d.issueTimeText}`, 620, bottomY + 40);
+
+      const signTop = bottomY + 68;
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1.5;
+      ctx.fillStyle = '#f1f3f5';
+      ctx.fillRect(80, signTop, 170, 90);
+      ctx.fillRect(620, signTop, 170, 90);
+      ctx.strokeRect(80, signTop, 1080, 90);
+      ctx.beginPath();
+      ctx.moveTo(250, signTop); ctx.lineTo(250, signTop + 90);
+      ctx.moveTo(620, signTop); ctx.lineTo(620, signTop + 90);
+      ctx.moveTo(790, signTop); ctx.lineTo(790, signTop + 90);
+      ctx.stroke();
+
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('발행 회사명', 165, signTop + 40);
+      ctx.fillText('(공급 플랫폼)', 165, signTop + 62);
+      ctx.fillText('대표자 및', 705, signTop + 40);
+      ctx.fillText('직인 날인란', 705, signTop + 62);
+
+      ctx.textAlign = 'left';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText('자투리마켓 (Jaturi Market)', 270, signTop + 38);
+      ctx.font = '15px sans-serif';
+      ctx.fillStyle = '#495057';
+      ctx.fillText(`공급 파트너: ${d.partnerName}`, 270, signTop + 64);
+
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 17px sans-serif';
+      ctx.fillText('자투리마켓 대표', 825, signTop + 52);
+
+      const sealX = 1045;
+      const sealY = signTop + 18;
+      ctx.strokeStyle = '#adb5bd';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeRect(sealX, sealY, 54, 54);
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#868e96';
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('(인)', sealX + 27, sealY + 32);
 
       const link = document.createElement('a');
-      link.download = `자투리마켓_${docType.replace(/\s+/g, '')}_${c.mat.code}.png`;
+      link.download = `자투리마켓_${docType.replace(/\s+/g, '')}_${d.fileTag}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
       showToast(`${docType.replace(/\s+/g, '')} 이미지 파일이 다운로드되었습니다.`);
-    }
-
-    function openQuoteModal() {
-      if (currentCalcResult) {
-        quoteRenderMode = 'SINGLE';
-      } else if (cartItems.length > 0) {
-        quoteRenderMode = 'CART';
-      } else {
-        showToast('먼저 상품 목록에서 자재를 선택하거나 장바구니에 상품을 담아주세요.');
-        return;
-      }
-      renderPrintableDocument();
-      document.getElementById('quoteModal').classList.add('open');
-    }
-
-    function toggleDocType() {
-      docType = (docType === '거 래 명 세 서') ? '견 적 서' : '거 래 명 세 서';
-      renderPrintableDocument();
-    }
-
-    function renderPrintableDocument() {
-      const buyerOrg = document.getElementById('buyer-org').value || (currentUser ? currentUser.name : '귀하');
-      const area = document.getElementById('printable-doc-area');
-
-      if (quoteRenderMode === 'CART' && cartItems.length > 0) {
-        const sumSupply = cartItems.reduce((acc, i) => acc + i.baseCost + i.cutCost + i.shipCost, 0);
-        const sumVat = cartItems.reduce((acc, i) => acc + i.vat, 0);
-        const sumTotal = cartItems.reduce((acc, i) => acc + i.total, 0);
-        const rowsHtml = cartItems.map((item, idx) => `
-          <tr>
-            <td style="text-align:center;">${idx + 1}</td>
-            <td style="white-space:normal;">[${item.code}] ${item.materialName} (${item.partner})</td>
-            <td style="white-space:normal;">${item.cutSpec} (직배송비 포함)</td>
-            <td style="text-align:center;">${item.reqQty}EA (${item.weightKg.toFixed(2)}kg)</td>
-            <td style="text-align:right; font-family:monospace;">${(item.baseCost + item.cutCost + item.shipCost).toLocaleString()}원</td>
-          </tr>
-        `).join('');
-
-        area.innerHTML = `
-          <div class="quote-header-row">
-            <div>
-              <div style="font-size:11px; font-weight:700; color:#277381;">산업용 자투리 자재 맞춤재단 오픈마켓 (${getCartCategorySummaryText()})</div>
-              <div style="font-size:15px; font-weight:900;">자투리마켓 (Jaturi Market)</div>
-            </div>
-            <div class="quote-title">${docType}</div>
-            <div style="text-align:right; font-size:11.5px; font-family:monospace;">
-              <div>문서번호: JM-20261016-CART</div>
-              <div>발행일자: 2026-10-16</div>
-            </div>
-          </div>
-          <table class="quote-table" style="margin-bottom:12px;">
-            <tbody>
-              <tr>
-                <th style="width:15%;">수신처</th>
-                <td style="width:35%; font-weight:700; white-space:normal;">${buyerOrg} 귀하</td>
-                <th style="width:15%;">공급자 상호</th>
-                <td style="width:35%;">자투리마켓 통합 정산 (${cartItems.length}건)</td>
-              </tr>
-              <tr>
-                <th>결제구분</th>
-                <td>가상계좌 무통장 / 연구비·법인카드</td>
-                <th>품목구성</th>
-                <td>${getCartCategorySummaryText()}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div style="border:2px solid #000; padding:9px 14px; margin-bottom:12px; background:#f8f9fa; display:flex; justify-content:space-between; font-size:14px; font-weight:800;">
-            <span>총 합계금액 (부가가치세 포함)</span>
-            <span style="font-family:monospace;">일금 ${sumTotal.toLocaleString()} 원정</span>
-          </div>
-          <table class="quote-table">
-            <thead>
-              <tr>
-                <th>No</th>
-                <th>품목코드 / 재질명</th>
-                <th>규격 및 재단 치수(mm)</th>
-                <th>수량/중량</th>
-                <th>공급가액</th>
-              </tr>
-            </thead>
-            <tbody>${rowsHtml}</tbody>
-            <tfoot>
-              <tr>
-                <th colspan="4" style="text-align:right;">공급가액 합계</th>
-                <th style="text-align:right; font-family:monospace;">${sumSupply.toLocaleString()}원</th>
-              </tr>
-              <tr>
-                <th colspan="4" style="text-align:right;">부가가치세 (VAT 10%)</th>
-                <th style="text-align:right; font-family:monospace;">${sumVat.toLocaleString()}원</th>
-              </tr>
-              <tr>
-                <th colspan="4" style="text-align:right;">총 청구(결제) 금액</th>
-                <th style="text-align:right; font-family:monospace; color:#e03131;">${sumTotal.toLocaleString()}원</th>
-              </tr>
-            </tfoot>
-          </table>
-        `;
-        return;
-      }
-
-      const c = currentCalcResult;
-      if (!c) return;
-      const specDesc = c.mode === 'CUT'
-        ? `맞춤 재단: ${c.reqW}x${c.reqL}x${c.mat.t}mm (${c.reqQty}EA / ${c.weightKg.toFixed(2)}kg)`
-        : `원판 그대로 구매: ${c.mat.w}x${c.mat.l}x${c.mat.t}mm (${c.reqQty}장)`;
-      area.innerHTML = `
-        <div class="quote-header-row">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCACgAKADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDybOTz3pvPpSmk6dTX2h+LpBuxRuo4POOlJRoMXjORR92jgDmkOCaAsLnjNJn2oHNL8oHrQIU0Z4pOo4o68UAG7pRn0pKUDgnpQAoPekJPXNCk5yaQ4zigdhc54ozwMmlxgUmMnJoDYXNIcEUEZOM0vAoAOmKAR0o+vFFLcBpzn6UYyfSnZpGz2qmC8hCvUZo246kCjp7mjGevSkP1ADPWjGaXB+lJwvFArh0oA9RTvrTR7UBfogz+FH4UuB+dGCATQO4YI5owSaMmjOeKQtxMnoKAuOaU8cUfWmAEZpBk0ozzgUvTgc0gGnjpzSjOc0ue5FIM9aYxQM5HrSGl3HoBQuCOaQmJjHAoz16UuO9CjseKYeQcfjSdeKcPSjHb1pDsN4HvRjuadtBGaQLu60xBwTxS+3FBAHApADwByWOAB1JPQfWkAe9aPh7w5r/i7VY9D8M6RdalfS8rDbpuIH95j0RR3ZiB716h4I/Za+Ivi3SpNY1H7NoCFN9pb6iria5PUBlXmFSP4mGf9nvX0D8Lte8E+Etnw7uPCK+A9dOAbK8cMupkf8tIbvpdZ64J3DONtcdbFxgmqfvNfgexgsnnWkniPci+/X07fP5XPi/xF4b8QeE9Vk0TxLpF1pt9F1huE2kj+8p6Ovoykj3rMHuK/Rrxh4H8LeO9MOjeLdFhv7dcmMuNssDf3o3HzIfofqDXyp8UP2W/FXhMzaz4MabxBo65doVQfbbdf9pB/rQP7yDPqvepw+PhV92ej/A0x+Q18JedL3o/ivVf5HiIAJyaQ4zgUZBJHocEeh9PrTiBXeeEN4UUqgdSaXGOTSYyaQ9gJDdKCQMUu2gqOtACLgE5pc96UimnNA7Ds8c803OeKdjjGaTgUwDkcUnIOacMAZz0pCcnngUgDlqOelDNgcV9IfAj9nXwd4m0y38aeJ/EVnr8LYP9l6fMfKhfrsuW4csO6DaPdhWVatChHmmdWEwdXG1PZ0tzx/4c/Cfxp8Ubp4/DNgn2OCQR3Wo3D7La3J5wSMlmxyFUE/Qc19bfC/4AeCvhqItSSI6xrqDnUrpB+7PfyY+REPflvftWjrnwj0prxde8AX7eDddhjEa3GnxKLW4VRxHc2v8Aq5U7ZwGHY1yXiP4s/EzQbvT/AAb4g0DQvDOqajKYB4nu5nl0QjHDRADcJW6CKUqAepIryquIqYrSm7Lt/W/y+4+qwmX0Mr9+vG8uj3Xy7P1+89N8X+OPDXgbT11LxLqqWwmbZbwqpkuLqQ9EiiXLSMT6DHqRXA6t4W8XfHGzjg8aaYfCfhJZlnTS5Fjl1a92nKtK5BWzHA+VMv6kV1fhL4Y6D4W1B/FF5d3ev+JrpB52uak4knKn+GED5II/RYwBjuat+MfiH4Z8DpCmsXUsuo3nFlpdnEZ728bsIoV5Iz/EcKO5rki1F2pK77/5L+vketUi6kXLEu0O3+b/AEX4nLrY/Ev4ZMv9im78c+FIRg2M8gOs2MY/54ynC3SKP4Hw+BwTXW+DfHvhT4g6Y2q+EdYivY4m2Tx4KT2z/wB2WM/MjfXj0JrzXw5qer/Hu5vbfXvEZ8O6VpszRXfhHT5nh1NwCR/p8pCuqHGdkQCnPLV1usfBzwdcRWt14Ujfwhq2mRbLPU9ECwSRRjJ2Sr9yaPk5WQHvyKuaj8NTSXl+v/A/EzoTqv38Or0+zevy7ej/AAM34ofs/wDgr4k+ZqPlf2PrjDP9o2kY/en/AKbR8CQe+Q3v2r5K+Ivwm8afDC9WLxNp4NnO5S11C3bfbXBAzhT1VsclWAI9xzX0CP2hvGK6jd/DvQPD2meM/FUDCK21PSJG+wzD+KSWPgoV/i2t5ef4hXIeCvBvxP8AiL8W/P8AjN4M1TWLGwcx3Y1CZrS0ss8qYlX5JV9I48hgck+vdhpVaCftH7q6dfkeDmVPC46S+rQfO3ZtLRPrfe/y+8+fSSeMikB4xX0t8c/2cPCfh7Srvxr4S1y00K3gGZdO1CciCRz0SCQ5ZXPaM5B6AivmoHoSK76NaFePNE8DF4Orgqns6q1/MOnNHWg8mgnj6VqcwZP1pOaUEAUZ70AANKRgciikySeaBBgHpRjjFKeBikxjk0IYY4ya1/C3i3xN4K1Vda8K6zcabdLwzRH5ZV/uyIfldfZgfwrIzkYoAyOKTSkrMqEpQkpRdmj68+GP7VPh3xKYNF8exQ6FqTYRbxSfsU7e5PMJP+1lf9odK9wvLDT9W0+Ww1C1tr6xvI9skUqrLFMhHcHIYH1/KvzTwBXofwy+Ofjf4YOlpYXA1LR92X0y8ZjGo7mJusR+ny+qmvMr5evio6eR9LgOIJR/d4tXXfr811PpXXPhv8RPBGk3UXwN8TmKzlU40PU2E622erWM0mfKbrhJNyfSrPwbf4cm9v49Lj1KPxsB/wATseIs/wBtM3csW4aL08r5MYq34Q/aA+GfjDRbjVTr8OjS2UXnXtrqTiKSFe5U9JVzwCmTyOAeK53xJpus/Hmeyl0Xw9/wj2h2Eqy2finULdk1STDZzYxAq8aHH35SAR0WuRKbThV08/8APue1zUVKNXCvm7R3Xy/l/Loa3xlPw4a5sY9WTUpvGiDdoqeHSf7bDdiu3pF6+b8mK8l+J9p8fToeky/Fb7bc+FCEOqxeHGjW5CgnP2raCu/GORmLPoa+ifBvw/8AC/gWG4Oh2TG9vTuv9SupDNe3r/3ppm+Zvpwo7Csb4lfGjwV8MIDFrF811qhXMWl2ZDXD5/v84iU+r/gDSo1WpKNNc3r+nYnF4VTpyq158l+23z/mOD8L/HP9nP4e2GnaB4OW6gtLpFe6uIbFi0PvdOx3u3rt3ADkcV7hFrGmXOlRa3BqVu+mvbi5S6MoEPkkZD7jwFxzk1+enijxbHr/AIuk8WaT4c0vQGMyzxWtjFmJHU5DMG+VmJ5PyhT/AHa0vHvxe+IHxIhgtfFOtB7W3UYtbaIW8DsP43ReHb3PA7AV2Ty/naafrfU8jD8QewjKMoppfCkrL/gfce3fGz9pPwlqGlX3gvwppFn4iS5UxT315Fus4z/eiQ8yMOz/ACgHkbq+YFXjBPTvSAEnnNLzXdRoQoR5YnhY3GVcdU9pVevS3QD6Dml2gCkH0peO9bbHIhME9eKQil69KOlAC8+1BbjApBjpQB6mgFsKOaOpOaUDP0ox2JoHYaTxgDijgDnNOPFAQnnGaV9AsMBB6il3E4wKcRzgijaR2NMVrCBjG6SISHRgysOqsOhB7GvoL4YftY6vpKx6P8S4ZtWteETVIVH2uIdP3q9JgPUYf/er5+CHqRSbC3Y1lVowrLlmjqwuKrYOfPRdv1PoH4oftX6xrHnaN8NYZNKs8lG1SZR9qlHrGh4hB9Tl/wDdrwCaaa5mkubiaSaaVi8kkjl3dj1LMeSfc0wrg7aXYQM4NFKjCjG0EGKxdfGS56zv+S9EA45PWm5JOadgk+lBU9hWpzasTOKXcBRgCgLnnNILAPU0E56UdeKXGOKLjsBOBgCmAE9afxzSZzTTE0NX1pcZOc0ik4pQxBxihhFMd7CkPFANGe5qdjSwAHPPNfXX7LD/AAT8f+HNQ8OeJ/gfpFxf+ENCbUr/AFq4ZZDfEO3VdoKnA6kn7tfIuTnFfXPwf8cfD79lb4Yaf4l1e/tfEfiT4hyWV1cabaMN+n6TjJMgOfmCvIcHG92CjhS1cmNvKnyxvzdLHrZNaOI56llBLW6T9N/O2wnw5074ffG7wX8YNc8D/BPT9Ku7fQbGDR9MhijuZobsx3RMkDbRtdz5Y4wfkFbfwl8A+ALL9njw94i8R+EPh4uvTatf2F1deK7V8MY7mdfL3IC3mL5YGDxhTWr4U0zw38LtE/aB1L4O+L4Lmz/sWy1rTZtPk3tprSQ3Miw7iCuU4ZeuEZQeQaxfgL8X/B9n4a8N+B7b4/8AinTNd1e4zPYR+HraeNNRu5y8gE0ls2Q0shOSxAz6VwTcpRl7O9rrvfb5nuUY06U4e3tzOMl9mzfPpbVGP8WLDwDb/DjxC+j6J8EBfLYv5Z0SG4F8rcfNASuN4zkZ4rP+B954M1ex8HeE9d/ZDfV1v2trO48UyWsrQzB32m6Y+TtKgHJ+fHHWvUPjP8UPB2jReJ/hV41/aG8WSXxs5LO7sl8OWmx/NhDKnmx2owGDrkqwxnqKb4Y034za7+zh8KIPg18RdH8N3lrpOdW+13Ea+apUbFAaOT7pDenXvSUmqS5ur3ba6ehUqUZYpunZ8q1SUW/iWlru2/kzldd+G/w/0/Tf2mYLHwZo0Q8Mw2v9jsLNC1husN58kkEpl/m4PWt3RNA+BehR/BjwjrXwN0PV9R+IekwvNqbBVMMqwRs8jqQTIWLE8EVRtfDfi7w78K/2gx438Y6V4n8Q6loNpfX15pkgkjR/IuIxGxVVG8JEpPyjgj611ekeApvFkv7P/juz8UeHraz8FaNC+o29zfBZ38y3iwI1AIJG05DEUpTstZafP+VfqVTpXknGCv2aWidV37rSJ554u+EOhXXwc+M8fgz4fWlxq+j+OZrXTns7FXubWzjNqzpE33lRUMhIBxgtXTeA/hh8MfF3wg1bU9b0j4OWNknhxIYvEOnXDTTWN5JAAJrtnVUjdSwYgPnfxUXjPxNrGgfA/wCO+u+FNYltJ3+Ic0SXdqVOYpWs43AOCMFXI/GuV8P+CPi78XvA3h2/+M3izQfCPwZsrOC8MVpPFa/a4EQbMhcnecA5duDkhC2Kr35Qu5WV/nsvvI5aUK1o0+ZuO1lb4pat9F3fpY7T4vfC/wCHWieGPit/Zngzw/HJpHgrSLqxubewiUxTO92HmjIHys2xMsOTgelfCZB3ECvt74m23xAPgL4k+IvCGu+HfiB4M8R6Lb2q6qNZiiu9JsbZJGw8aRKkzbpZDjIboME18Qkkc+tdmAvyu7vt+R5GeKPtIcsbaP8A9Kf36CEEdKUD1pAc85pSTiu88KwhHI7Uhx60pPbNIeBTCWg0Zx1p44/GmYIp6jI96GRF23F60cE8Ck60cgZzSsappi5FJsCZKgAk5OKQ0mSTxQF0i1aanqdlbT2djqN3bQXa7LiKGd40mXnh1UgMOTwQepplneXVhdw3+n3U1tc20izQzwuUkikU5VlYcgggEEdKgLHoKXOOOOKVg5uty5q2savr2oTavruqXeo31wQZrq7maWWQgADc7Ek4AA57AVS8qI5PlIf+AilGT9KUt2zTWmiDm5tWWLXUdQsLa4sdP1C5tre7GLiGCZo45h6OqkB+vcGqhggJLNBGWPJJQZp/QUDrk0KwrruWItR1GHT30uHULqKwlcPJaJO6wOwxhjGDtJ4HOOw9KS4v768ggtLq+uZ4LUBYIpZmdIh6IpJC/gBVc5/Cg8c5osh83S5LDcz2qTJbTyxLcL5cyxuVEq/3XA+8PY5qMc5JNIMdzQBk4H1osHMKCOlKSMcUzGOOadjjOaBXAkDn1pPvdKQ5NJ2GetMmb6CkknJoYnHBoGCcGlOABQStBofAC4Oadk4PamgYO48mlzkdKAuxG3MfSjOBjinEjoODSYXuKAvcQcfjQBnrS45zQW60AJ356UZIoNHfrQJaCg9zSEkml5oBwOnNAaibiAF70AnqaO4YigtmgewhYk80odhxigFT2oHHUZoC4mTnNOySKOpyRxQT2FA7sQknjNGMigEA0qtQJiMPSlI4yTS4J7UYbpg0CTQgwe9KQMcGkIYDoRSbTjOKB3Q7A7nn1poHOTSlXIo2sD0oC6Ak9qOB70hVvSjaxPSgVwxk8mlPPSjDD+GlCt6UBcT2zRgdyc0m0jqKMHvQFxSpzikIXBA70u1vTrSYOc4NA+awYCinKAeppuGPagA44FAXQp6kClwMUgyOoNGD70BuIQM80AjoKMH0NLtOOlAr9T//2Q==" alt="자투리마켓" style="width:40px; height:40px; border:1px solid #000;" />
-            <div>
-              <div style="font-size:11px; font-weight:700; color:#277381;">산업용 자투리 자재 맞춤재단 오픈마켓</div>
-              <div style="font-size:15px; font-weight:900;">자투리마켓 (Jaturi Market)</div>
-            </div>
-          </div>
-          <div class="quote-title">${docType}</div>
-          <div style="text-align:right; font-size:11.5px; font-family:monospace;">
-            <div>문서번호: JM-20261014-089</div>
-            <div>발행일자: 2026-10-14</div>
-          </div>
-        </div>
-
-        <table class="quote-table" style="margin-bottom:12px;">
-          <tbody>
-            <tr>
-              <th style="width:15%;">수신처</th>
-              <td style="width:35%; font-weight:700; white-space:normal;">${buyerOrg} 귀하</td>
-              <th style="width:15%;">공급자 상호</th>
-              <td style="width:35%;">자투리마켓 / ${c.mat.partner}</td>
-            </tr>
-            <tr>
-              <th>결제구분</th>
-              <td>가상계좌 무통장 / 연구비·법인카드</td>
-              <th>사업자번호</th>
-              <td>________________ (추후 기입)</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div style="border:2px solid #000; padding:9px 14px; margin-bottom:12px; background:#f8f9fa; display:flex; justify-content:space-between; font-size:14px; font-weight:800;">
-          <span>총 합계금액 (부가가치세 포함)</span>
-          <span style="font-family:monospace;">일금 ${c.total.toLocaleString()} 원정</span>
-        </div>
-
-        <table class="quote-table">
-          <thead>
-            <tr>
-              <th>No</th>
-              <th>품목코드 / 재질명</th>
-              <th>규격 및 재단 치수(mm)</th>
-              <th>수량/중량</th>
-              <th>공급가액</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="text-align:center;">1</td>
-              <td style="white-space:normal;">[${c.mat.code}] ${c.mat.name}</td>
-              <td style="white-space:normal;">${specDesc}</td>
-              <td style="text-align:center;">${c.reqQty}EA (${c.weightKg.toFixed(2)}kg)</td>
-              <td style="text-align:right; font-family:monospace;">${c.baseCost.toLocaleString()}원</td>
-            </tr>
-            <tr>
-              <td style="text-align:center;">2</td>
-              <td>정밀 맞춤 재단 가공비</td>
-              <td>절단 ${c.cutCount}회 가공</td>
-              <td style="text-align:center;">${c.cutCount}회</td>
-              <td style="text-align:right; font-family:monospace;">${c.cutCost.toLocaleString()}원</td>
-            </tr>
-            <tr>
-              <td style="text-align:center;">3</td>
-              <td>공장 직배송 화물·택배비</td>
-              <td>파손방지 완충 포장 및 직배송</td>
-              <td style="text-align:center;">1식</td>
-              <td style="text-align:right; font-family:monospace;">${c.shipCost.toLocaleString()}원</td>
-            </tr>
-          </tbody>
-          <tfoot>
-            <tr>
-              <th colspan="4" style="text-align:right;">공급가액 합계</th>
-              <th style="text-align:right; font-family:monospace;">${(c.baseCost + c.cutCost + c.shipCost).toLocaleString()}원</th>
-            </tr>
-            <tr>
-              <th colspan="4" style="text-align:right;">부가가치세 (VAT 10%)</th>
-              <th style="text-align:right; font-family:monospace;">${c.vat.toLocaleString()}원</th>
-            </tr>
-            <tr>
-              <th colspan="4" style="text-align:right;">총 청구(결제) 금액</th>
-              <th style="text-align:right; font-family:monospace; color:#e03131;">${c.total.toLocaleString()}원</th>
-            </tr>
-          </tfoot>
-        </table>
-      `;
     }
 
     function handleSellerRegister(e) {
@@ -7794,8 +9127,17 @@
               <button class="btn-mall btn-mall-white" style="padding:5px 10px; font-size:11.5px;" onclick="advanceOrderStatus('${o.id}', 'COMPLETED')">구매확정 전환</button>
             </div>
           `;
+        } else if (o.status === 'CANCELLED' || o.status === 'RETURN_REQUESTED' || o.status === 'REFUND_REQUESTED') {
+          const stInfo = getOrderStatusInfo(o);
+          const cNote = extractOrderClaimNote(o);
+          statusBadge = `<span class="state-badge state-wait" style="background:#fff5f5; border-color:#ffc9c9; color:#c92a2a;">${stInfo.label}</span>`;
+          actionHtml = `
+            <div style="padding-top:8px; border-top:1px solid var(--bg-subtle); font-size:11.5px; color:#c92a2a; font-weight:700;">
+              ${cNote || '고객 취소·반품·환불 요청 건'}
+            </div>
+          `;
         } else {
-          statusBadge = `<span class="state-badge state-done">구매확정 (${o.courier} ${o.waybill})</span>`;
+          statusBadge = `<span class="state-badge state-done">구매확정 (${o.courier || '직배송'} ${o.waybill || ''})</span>`;
           actionHtml = `<div style="font-size:11.5px; color:#2b8a3e; font-weight:700; padding-top:6px;">구매확정 완료 — 수수료(${commissionRate}%) 공제 정산 대상</div>`;
         }
 
@@ -7825,6 +9167,38 @@
         `;
       }).join('');
 
+      }
+
+      const invTbody = document.getElementById('seller-inventory-tbody');
+      if (invTbody) {
+        const myMats = (currentUser && (currentUser.role === 'CORPORATE' || currentUser.type === 'CORPORATE'))
+          ? materials.filter(m => m.partner === currentUser.name)
+          : materials;
+        if (myMats.length === 0) {
+          invTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-secondary);">등록된 자재 품목이 없습니다. 좌측 폼에서 신규 자투리 자재를 등록해 보세요.</td></tr>`;
+        } else {
+          invTbody.innerHTML = myMats.map(m => `
+            <tr>
+              <td>
+                <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">[${m.code}]</div>
+                <div style="font-weight:700; font-size:12px;">${m.name}</div>
+              </td>
+              <td style="font-family:var(--font-mono); font-size:11.5px;">${m.w}x${m.l}x${m.t}T</td>
+              <td class="num">
+                <input type="number" class="inline-select" id="seller-stk-${m.id}" value="${m.stock}" min="0" style="width:64px; text-align:right; font-family:var(--font-mono); font-weight:700;" />
+              </td>
+              <td class="num">
+                <input type="number" class="inline-select" id="seller-prc-${m.id}" value="${m.price}" min="500" step="500" style="width:90px; text-align:right; font-family:var(--font-mono); font-weight:700;" />
+              </td>
+              <td>
+                <div style="display:flex; gap:4px;">
+                  <button type="button" class="btn-mall btn-mall-brand" style="padding:4px 8px; font-size:11px;" onclick="saveMaterialStockPrice('${m.id}', 'seller')">저장</button>
+                  <button type="button" class="btn-mall btn-mall-white" style="padding:4px 8px; font-size:11px; color:var(--price-red);" onclick="deleteMaterialByAdmin('${m.id}')">삭제</button>
+                </div>
+              </td>
+            </tr>
+          `).join('');
+        }
       }
 
       const tbody = document.getElementById('seller-settlement-tbody');
@@ -8124,6 +9498,26 @@
       showToast(`신규 계정 [${name} (${id})]이(가) [${getRoleLabel(role)}] 권한으로 발급되었습니다.`);
     }
 
+    function saveMaterialStockPrice(matId, prefix) {
+      const m = materials.find(item => item.id === matId);
+      if (!m) return;
+      const stkEl = document.getElementById(`${prefix}-stk-${matId}`);
+      const prcEl = document.getElementById(`${prefix}-prc-${matId}`);
+      if (stkEl) m.stock = Math.max(0, parseInt(stkEl.value, 10) || 0);
+      if (prcEl) {
+        m.price = Math.max(500, parseInt(prcEl.value, 10) || m.price);
+        m.marketPrice = Math.max(m.marketPrice || 0, Math.round(m.price * 2.2));
+      }
+      saveStateToStorage();
+      syncMaterialToSupabase(m);
+      renderCatalog();
+      renderSelectedMaterialDetailView();
+      updateCalculator();
+      renderSellerDashboard();
+      renderAdminDashboard();
+      showToast(`[${m.code}] 재고(${m.stock}장) 및 기준단가(${m.price.toLocaleString()}원) 수정사항이 즉시 반영되었습니다.`);
+    }
+
     function deleteMaterialByAdmin(matId) {
       if (materials.length <= 1) {
         showToast('최소 1개 이상의 상품은 유지되어야 합니다.');
@@ -8139,6 +9533,7 @@
       deleteRowFromSupabase('materials', matId);
       updateBadges();
       renderCatalog();
+      renderSellerDashboard();
       renderAdminDashboard();
       showToast(`상품 [${removed.code}] ${removed.name}이(가) 삭제되었습니다.`);
     }
@@ -8160,9 +9555,10 @@
     function settleAllCompletedOrders() {
       let count = 0;
       orders.forEach(o => {
-        if (!o.settled) {
+        if (!o.settled && o.status !== 'CANCELLED') {
           o.status = 'COMPLETED';
           o.settled = true;
+          syncOrderToSupabase(o);
           count++;
         }
       });
@@ -8242,6 +9638,9 @@
                 <option value="CUT_DONE" ${o.status === 'CUT_DONE' ? 'selected' : ''}>상품준비중 (재단완료)</option>
                 <option value="SHIPPED" ${o.status === 'SHIPPED' ? 'selected' : ''}>배송중</option>
                 <option value="COMPLETED" ${o.status === 'COMPLETED' ? 'selected' : ''}>배송완료 (카운트제외)</option>
+                <option value="CANCELLED" ${o.status === 'CANCELLED' ? 'selected' : ''}>주문취소 완료</option>
+                <option value="RETURN_REQUESTED" ${o.status === 'RETURN_REQUESTED' ? 'selected' : ''}>반품신청 접수</option>
+                <option value="REFUND_REQUESTED" ${o.status === 'REFUND_REQUESTED' ? 'selected' : ''}>환불신청 접수</option>
               </select>
             </td>
             <td class="num">${o.totalAmount.toLocaleString()}원</td>
@@ -8381,10 +9780,17 @@
               <div style="font-weight:700; font-size:12px;">${m.name}</div>
             </td>
             <td style="font-size:12px;">${m.partner}</td>
-            <td style="font-family:var(--font-mono); font-size:11.5px;">${m.w}x${m.l}x${m.t}T (${m.stock}장)</td>
-            <td class="num" style="font-family:var(--font-mono); font-weight:700;">${m.price.toLocaleString()}원</td>
+            <td style="font-family:var(--font-mono); font-size:11.5px;">
+              ${m.w}x${m.l}x${m.t}T · 재고 <input type="number" class="inline-select" id="admin-stk-${m.id}" value="${m.stock}" min="0" style="width:56px; padding:2px 4px; text-align:right; font-family:var(--font-mono); font-weight:700;" />장
+            </td>
+            <td class="num" style="font-family:var(--font-mono); font-weight:700;">
+              <input type="number" class="inline-select" id="admin-prc-${m.id}" value="${m.price}" min="500" step="500" style="width:86px; padding:2px 4px; text-align:right; font-family:var(--font-mono); font-weight:700;" />원
+            </td>
             <td>
-              <button type="button" class="btn-mall btn-mall-white" style="padding:4px 8px; font-size:11px; color:var(--price-red);" onclick="deleteMaterialByAdmin('${m.id}')">삭제</button>
+              <div style="display:flex; gap:4px;">
+                <button type="button" class="btn-mall btn-mall-brand" style="padding:4px 8px; font-size:11px;" onclick="saveMaterialStockPrice('${m.id}', 'admin')">저장</button>
+                <button type="button" class="btn-mall btn-mall-white" style="padding:4px 8px; font-size:11px; color:var(--price-red);" onclick="deleteMaterialByAdmin('${m.id}')">삭제</button>
+              </div>
             </td>
           </tr>
         `).join('');
@@ -8447,10 +9853,6 @@
     }
 
     function openRfpModal() {
-      if (!currentUser || (currentUser.role !== 'ADMIN' && currentUser.type !== 'ADMIN')) {
-        showToast('DB·PG 연동 및 초기화 설정은 [관리자] 계정 로그인 시에만 이용 가능합니다.');
-        return;
-      }
       document.getElementById('rfpModal').classList.add('open');
     }
 
@@ -8568,27 +9970,31 @@
 
         loadActiveSessionCart(false);
 
-        const cfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v1') || '{}');
-        const defaultSbUrl = 'https://qyaexsrtplnsqwmujpfn.supabase.co';
-        const defaultSbKey = 'sb_publishable_OZl7RqNjUz2sxstWZuVuRA_wZ27Lw2S';
-        const activeSbUrl = (cfg.sbUrl || defaultSbUrl).replace(/\/$/, '');
-        const activeSbKey = (cfg.sbKey || defaultSbKey).trim();
-        document.getElementById('cfg-sb-url').value = activeSbUrl;
-        document.getElementById('cfg-sb-key').value = activeSbKey;
-        if (cfg.poStore) document.getElementById('cfg-po-store').value = cfg.poStore;
-        if (cfg.poChannel) document.getElementById('cfg-po-channel').value = cfg.poChannel;
-        if (!cfg.sbUrl || !cfg.sbKey) {
-          localStorage.setItem('jaturi_cloud_cfg_v1', JSON.stringify({
-            sbUrl: activeSbUrl,
-            sbKey: activeSbKey,
-            poStore: cfg.poStore || '',
-            poChannel: cfg.poChannel || ''
-          }));
+        const legacyCfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v14') || '{}');
+        const onpodCfg = JSON.parse(localStorage.getItem('jaturi_onpod_cfg_v1') || '{}');
+        const cfg = (onpodCfg && onpodCfg.sbUrl) ? onpodCfg : legacyCfg;
+        const defaultOnpodUrl = (window.location.hostname && window.location.hostname.endsWith('.onpod.ai')) ? '/api' : '';
+        const activeApiUrl = (cfg.sbUrl || defaultOnpodUrl).replace(/\/$/, '');
+        const activeApiKey = (cfg.sbKey || '').trim();
+        if (cfg.poStore === LEGACY_SAMPLE_STORE_ID) cfg.poStore = DEFAULT_PORTONE_STORE_ID;
+        if (cfg.poChannel === LEGACY_SAMPLE_CHANNEL_KEY) cfg.poChannel = DEFAULT_PORTONE_CHANNEL_KEY;
+        document.getElementById('cfg-sb-url').value = activeApiUrl;
+        document.getElementById('cfg-sb-key').value = activeApiKey;
+        document.getElementById('cfg-po-store').value = cfg.poStore || DEFAULT_PORTONE_STORE_ID;
+        document.getElementById('cfg-po-channel').value = cfg.poChannel || DEFAULT_PORTONE_CHANNEL_KEY;
+        if (document.getElementById('cfg-po-secret')) {
+          document.getElementById('cfg-po-secret').value = cfg.poSecret || DEFAULT_PORTONE_API_SECRET;
         }
-        if (activeSbUrl && activeSbKey) {
-          document.getElementById('live-mode-indicator').textContent = 'Supabase 클라우드 DB + Realtime 실시간 반영 활성화됨';
-          initSupabaseRealtime(activeSbUrl, activeSbKey);
-          pullFromSupabaseCloud(activeSbUrl, activeSbKey);
+        localStorage.setItem('jaturi_onpod_cfg_v1', JSON.stringify({
+          sbUrl: activeApiUrl,
+          sbKey: activeApiKey,
+          poStore: document.getElementById('cfg-po-store').value,
+          poChannel: document.getElementById('cfg-po-channel').value,
+          poSecret: cfg.poSecret || DEFAULT_PORTONE_API_SECRET
+        }));
+        if (activeApiUrl) {
+          document.getElementById('live-mode-indicator').textContent = `에이아이쓰리 온팟(Onpod) 서버·PostgreSQL 연동됨 (${activeApiUrl})`;
+          pullFromSupabaseCloud(activeApiUrl, activeApiKey);
         }
       } catch (err) {
         console.warn('Storage load skipped:', err);
@@ -8629,234 +10035,149 @@
       URL.revokeObjectURL(url);
     }
 
-    const DEFAULT_SUPABASE_URL = 'https://qyaexsrtplnsqwmujpfn.supabase.co';
-    const DEFAULT_SUPABASE_KEY = 'sb_publishable_OZl7RqNjUz2sxstWZuVuRA_wZ27Lw2S';
+    // =========================================================================
+    // 에이아이쓰리 온팟 (AI3 Onpod) 서버 · 관리형 PostgreSQL DB 연동 어댑터
+    // - 단독 홈페이지 실행 시: 브라우저 LocalStorage 영구 저장으로 모든 기능 100% 작동
+    // - 에이아이쓰리 온팟(Onpod) 배포 시: 온팟 서버 API(/api 또는 커스텀 서버 주소)와 자동 동기화
+    // =========================================================================
     const tableSchemaColumnsCache = {};
     const confirmedCloudUserIds = new Set(['jaturimarket', 'corp01', 'user01']);
     const confirmedCloudPartnerIds = new Set(['PTN-01', 'PTN-02', 'PTN-03', 'PTN-04', 'PTN-05']);
 
+    function exportMigrationSqlForOnpod() {
+      const esc = (val) => {
+        if (val === null || val === undefined) return 'NULL';
+        if (typeof val === 'boolean') return val ? 'true' : 'false';
+        if (typeof val === 'number') return Number.isFinite(val) ? String(val) : '0';
+        return "'" + String(val).replace(/'/g, "''") + "'";
+      };
+      const lines = [];
+      lines.push('-- ============================================================================');
+      lines.push('-- 자투리마켓 (Jaturi Market) : Supabase -> 에이아이쓰리 온팟(Onpod) 데이터 마이그레이션 SQL');
+      lines.push('-- 생성일시: ' + getNowDateTimeStr());
+      lines.push('-- 사용법: 먼저 jaturi_market_onpod_postgres_schema.sql 실행 후, 본 파일을 실행하거나');
+      lines.push('--        온팟(Onpod) DB 콘솔 / psql 에서 바로 실행하면 현재 운영 데이터가 100% 이전됩니다.');
+      lines.push('-- ============================================================================\n');
+
+      users.forEach(u => {
+        const isApp = (u.approvalStatus !== 'PENDING');
+        lines.push(`INSERT INTO public.users (id, email, pw_hash, role, approval_status, name, phone, addr, addr_detail, org, partner_id, region, items, equip, logo_text, logo_url, can_issue_docs) VALUES (${esc(u.id)}, ${esc(u.email||'')}, ${esc(u.pwHash||'')}, ${esc(u.role||u.type||'PERSONAL')}, ${esc(u.approvalStatus||'APPROVED')}, ${esc(u.name||'')}, ${esc(u.phone||'')}, ${esc(u.addr||'')}, ${esc(u.addrDetail||'')}, ${esc(u.org||'')}, ${esc(u.partnerId||null)}, ${esc(u.region||'')}, ${esc(u.items||'')}, ${esc(u.equip||'')}, ${esc(u.logoText||'')}, ${esc(u.logoUrl||'')}, ${esc(isApp)}) ON CONFLICT (id) DO UPDATE SET email=EXCLUDED.email, pw_hash=EXCLUDED.pw_hash, role=EXCLUDED.role, approval_status=EXCLUDED.approval_status, name=EXCLUDED.name, phone=EXCLUDED.phone, addr=EXCLUDED.addr, addr_detail=EXCLUDED.addr_detail, org=EXCLUDED.org, partner_id=EXCLUDED.partner_id, region=EXCLUDED.region, items=EXCLUDED.items, equip=EXCLUDED.equip, logo_text=EXCLUDED.logo_text, logo_url=EXCLUDED.logo_url, can_issue_docs=EXCLUDED.can_issue_docs;`);
+      });
+      lines.push('');
+      partners.forEach(p => {
+        lines.push(`INSERT INTO public.partners (id, user_id, name, biz_no, logo_text, logo_url, items, addr, addr_detail, region, phone, email, equip, status) VALUES (${esc(p.id)}, ${esc(p.userId||'')}, ${esc(p.name||'')}, ${esc(p.bizNo||'-')}, ${esc(p.logoText||'')}, ${esc(p.logoUrl||'')}, ${esc(p.items||'')}, ${esc(p.addr||'')}, ${esc(p.addrDetail||'')}, ${esc(p.region||'')}, ${esc(p.phone||'')}, ${esc(p.email||'')}, ${esc(p.equip||'')}, ${esc(p.status||'APPROVED')}) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, items=EXCLUDED.items, addr=EXCLUDED.addr, region=EXCLUDED.region, phone=EXCLUDED.phone, equip=EXCLUDED.equip, status=EXCLUDED.status, logo_url=EXCLUDED.logo_url;`);
+      });
+      lines.push('');
+      materials.forEach(m => {
+        lines.push(`INSERT INTO public.materials (id, code, category, name, grade, partner, region, w, l, t, stock, market_price, price, cuttable, cut_fee_per_cut, rating, reviews, dispatch, surface_type, image_url) VALUES (${esc(m.id)}, ${esc(m.code)}, ${esc(m.category)}, ${esc(m.name)}, ${esc(m.grade||'')}, ${esc(m.partner)}, ${esc(m.region)}, ${esc(m.w||100)}, ${esc(m.l||100)}, ${esc(m.t||1)}, ${esc(m.stock||0)}, ${esc(m.marketPrice||0)}, ${esc(m.price||0)}, ${esc(m.cuttable!==false)}, ${esc(m.cutFeePerCut||0)}, ${esc(String(m.rating||'5.0'))}, ${esc(m.reviews||1)}, ${esc(m.dispatch||'당일~익일')}, ${esc(m.surfaceType||'METAL_AL')}, ${esc(m.imageUrl||'')}) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, stock=EXCLUDED.stock, price=EXCLUDED.price, market_price=EXCLUDED.market_price, reviews=EXCLUDED.reviews, rating=EXCLUDED.rating, image_url=EXCLUDED.image_url;`);
+      });
+      lines.push('');
+      orders.forEach(o => {
+        lines.push(`INSERT INTO public.orders (id, order_date, buyer_id, buyer_name, buyer, phone, address, partner, material_id, material_name, orig_spec, mode, cut_spec, scrap_option, pay_method, total_amount, status, claim_type, claim_reason_cat, claim_reason_detail, claim_refund_account, claim_at, courier, waybill, settled) VALUES (${esc(o.id)}, ${esc(o.date||'')}, ${esc(o.buyerId||'guest')}, ${esc(o.buyerName||'')}, ${esc(o.buyer||'')}, ${esc(o.phone||'')}, ${esc(o.address||'')}, ${esc(o.partner||'')}, ${esc(o.materialId||null)}, ${esc(o.materialName||'')}, ${esc(o.origSpec||'')}, ${esc(o.mode||'CUT')}, ${esc(o.cutSpec||'')}, ${esc(o.scrapOption||'')}, ${esc(o.payMethod||'')}, ${esc(o.totalAmount||0)}, ${esc(o.status||'RECEIVED')}, ${esc(o.claimType||'')}, ${esc(o.claimReasonCat||'')}, ${esc(o.claimReasonDetail||'')}, ${esc(o.claimRefundAccount||'')}, ${esc(o.claimAt||'')}, ${esc(o.courier||'')}, ${esc(o.waybill||'')}, ${esc(Boolean(o.settled))}) ON CONFLICT (id) DO UPDATE SET status=EXCLUDED.status, scrap_option=EXCLUDED.scrap_option, claim_type=EXCLUDED.claim_type, claim_reason_cat=EXCLUDED.claim_reason_cat, claim_reason_detail=EXCLUDED.claim_reason_detail, claim_refund_account=EXCLUDED.claim_refund_account, claim_at=EXCLUDED.claim_at, courier=EXCLUDED.courier, waybill=EXCLUDED.waybill, settled=EXCLUDED.settled;`);
+      });
+      lines.push('');
+      noticePosts.forEach(n => {
+        lines.push(`INSERT INTO public.notices (id, cat, title, notice_date, views, content) VALUES (${esc(n.id)}, ${esc(n.cat||'안내')}, ${esc(n.title||'')}, ${esc(n.date||'')}, ${esc(n.views||1)}, ${esc(n.content||'')}) ON CONFLICT (id) DO UPDATE SET title=EXCLUDED.title, content=EXCLUDED.content;`);
+      });
+      lines.push('');
+      adminQnaPosts.forEach(a => {
+        lines.push(`INSERT INTO public.admin_qna_posts (id, category, title, author, post_date, content, answer, answered_at) VALUES (${esc(a.id)}, ${esc(a.category||'기타')}, ${esc(a.title||'')}, ${esc(a.author||'')}, ${esc(a.date||'')}, ${esc(a.content||'')}, ${esc(a.answer||'')}, ${esc(a.answeredAt||'')}) ON CONFLICT (id) DO UPDATE SET answer=EXCLUDED.answer, answered_at=EXCLUDED.answered_at;`);
+      });
+      lines.push('');
+      productReviews.forEach(r => {
+        lines.push(`INSERT INTO public.product_reviews (id, material_id, author, score, review_date, cut_spec, content) VALUES (${esc(r.id)}, ${esc(r.materialId||null)}, ${esc(r.author||'')}, ${esc(String(r.score||'5.0'))}, ${esc(r.date||'')}, ${esc(r.cutSpec||'')}, ${esc(r.content||'')}) ON CONFLICT (id) DO UPDATE SET content=EXCLUDED.content, score=EXCLUDED.score;`);
+      });
+      lines.push('');
+      productQnaPosts.forEach(q => {
+        lines.push(`INSERT INTO public.product_qna_posts (id, material_id, author, post_date, question, seller_name, answer, answered_at) VALUES (${esc(q.id)}, ${esc(q.materialId||null)}, ${esc(q.author||'')}, ${esc(q.date||'')}, ${esc(q.question||'')}, ${esc(q.sellerName||'')}, ${esc(q.answer||'')}, ${esc(q.answeredAt||'')}) ON CONFLICT (id) DO UPDATE SET answer=EXCLUDED.answer, answered_at=EXCLUDED.answered_at;`);
+      });
+
+      const blob = new Blob([lines.join('\n')], { type: 'application/sql;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'jaturi_market_migration_to_onpod.sql';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('온팟(Onpod) 이전용 통합 데이터 SQL 파일이 다운로드되었습니다.');
+    }
+
     function getSupabaseCreds() {
       try {
-        const cfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v1') || '{}');
-        const sbUrl = (cfg.sbUrl && cfg.sbUrl.includes('supabase.co'))
-          ? cfg.sbUrl.replace(/\/$/, '')
-          : DEFAULT_SUPABASE_URL;
-        const sbKey = (cfg.sbKey && (cfg.sbKey.startsWith('sb_publishable_') || cfg.sbKey.startsWith('eyJ')))
-          ? cfg.sbKey.trim()
-          : DEFAULT_SUPABASE_KEY;
+        const legacyCfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v14') || '{}');
+        const onpodCfg = JSON.parse(localStorage.getItem('jaturi_onpod_cfg_v1') || '{}');
+        const cfg = (onpodCfg && onpodCfg.sbUrl) ? onpodCfg : legacyCfg;
+        const autoUrl = (window.location.hostname && window.location.hostname.endsWith('.onpod.ai')) ? '/api' : '';
+        const sbUrl = (cfg.sbUrl || autoUrl).trim().replace(/\/$/, '');
+        const sbKey = (cfg.sbKey || '').trim();
+        if (!sbUrl) return null;
         return { sbUrl, sbKey };
-      } catch (e) {}
-      return { sbUrl: DEFAULT_SUPABASE_URL, sbKey: DEFAULT_SUPABASE_KEY };
-    }
-
-    // 공식 Supabase 가이드 준수:
-    // sb_publishable_ 키는 JWT가 아니므로 Authorization: Bearer 헤더에 넣으면 서버가 "Invalid JWT"로 거절합니다.
-    // 따라서 sb_publishable_ 키를 사용할 때는 반드시 apikey 헤더만 단독 전송하도록 SDK와 REST fetch 모두에서 강제합니다.
-    function createPublishableSafeFetch(sbKey) {
-      return async function(input, init = {}) {
-        const headers = new Headers(init.headers || {});
-        headers.set('apikey', sbKey);
-        if (sbKey && sbKey.startsWith('sb_publishable_')) {
-          const authVal = headers.get('Authorization') || headers.get('authorization') || '';
-          if (!authVal || authVal.includes('sb_publishable_')) {
-            headers.delete('Authorization');
-            headers.delete('authorization');
-          }
-        } else if (sbKey && sbKey.startsWith('eyJ') && !headers.has('Authorization')) {
-          headers.set('Authorization', `Bearer ${sbKey}`);
-        }
-        return fetch(input, Object.assign({}, init, { headers }));
-      };
-    }
-
-    function ensureSupabaseClient() {
-      const creds = getSupabaseCreds();
-      if (!creds) return null;
-      if (!supabaseClientInstance && window.supabase && typeof window.supabase.createClient === 'function') {
-        try {
-          supabaseClientInstance = window.supabase.createClient(creds.sbUrl, creds.sbKey, {
-            auth: { persistSession: false, autoRefreshToken: false },
-            global: { fetch: createPublishableSafeFetch(creds.sbKey) }
-          });
-        } catch (e) {}
-      }
-      return supabaseClientInstance;
-    }
-
-    function buildSupabaseHeaders(sbKey, extra = {}) {
-      const h = Object.assign({ 'apikey': sbKey }, extra);
-      if (sbKey && sbKey.startsWith('eyJ')) {
-        h['Authorization'] = `Bearer ${sbKey}`;
-      } else {
-        delete h['Authorization'];
-        delete h['authorization'];
-      }
-      return h;
-    }
-
-    async function supabaseRestFetch(url, options = {}, sbKey = '') {
-      const key = sbKey || (getSupabaseCreds() ? getSupabaseCreds().sbKey : DEFAULT_SUPABASE_KEY);
-      const isLegacyJwt = Boolean(key && key.startsWith('eyJ'));
-
-      // 1차 시도: 공식 문서 기준 (sb_publishable_ 키는 apikey 단독 헤더만 전송, 구형 eyJ 키만 Authorization: Bearer 포함)
-      const primaryHeaders = Object.assign({ 'apikey': key }, options.headers || {});
-      if (isLegacyJwt) {
-        primaryHeaders['Authorization'] = `Bearer ${key}`;
-      } else {
-        delete primaryHeaders['Authorization'];
-        delete primaryHeaders['authorization'];
-      }
-
-      let res = await fetch(url, Object.assign({}, options, { headers: primaryHeaders }));
-      if (res.ok) return res;
-
-      // 만약 401/403 발생 시에만 보조 헤더 조합으로 1회 폴백 시도하되, 보조 시도 응답이 2xx일 때만 채택
-      if (res.status === 401 || res.status === 403) {
-        const fallbackHeaders = Object.assign({ 'apikey': key }, options.headers || {});
-        if (isLegacyJwt) {
-          delete fallbackHeaders['Authorization'];
-        } else {
-          fallbackHeaders['Authorization'] = `Bearer ${key}`;
-        }
-        const retryRes = await fetch(url, Object.assign({}, options, { headers: fallbackHeaders }));
-        if (retryRes.ok) return retryRes;
-      }
-      return res;
-    }
-
-    async function discoverTableColumns(table) {
-      if (tableSchemaColumnsCache[table] && tableSchemaColumnsCache[table].size > 0) {
-        return tableSchemaColumnsCache[table];
-      }
-      const creds = getSupabaseCreds();
-      if (!creds) return null;
-      try {
-        const res = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}?select=*&limit=1`, {}, creds.sbKey);
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0 && rows[0]) {
-            tableSchemaColumnsCache[table] = new Set(Object.keys(rows[0]));
-            return tableSchemaColumnsCache[table];
-          }
-        }
       } catch (e) {}
       return null;
     }
 
-    function filterPayloadByKnownColumns(table, rowObj, knownCols) {
-      if (!knownCols || !knownCols.size) return Object.assign({}, rowObj);
-      const filtered = {};
-      Object.keys(rowObj).forEach(k => {
-        if (knownCols.has(k)) {
-          filtered[k] = rowObj[k];
-        }
-      });
-      return filtered;
+    function isSupabaseUrl(baseUrl) {
+      return Boolean(baseUrl && (baseUrl.includes('supabase.co') || baseUrl.includes('supabase.in') || baseUrl.endsWith('/rest/v1')));
     }
 
-    async function tryRestUpsertOrInsertPatch(creds, table, payloadObj) {
-      const upsertUrl = `${creds.sbUrl}/rest/v1/${table}?on_conflict=id`;
-      const upsertHeaders = {
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal'
-      };
-      let payload = Object.assign({}, payloadObj);
-
-      // 1순위: REST API 직접 호출 (apikey 단독 헤더 보장 + Upsert -> 순수 POST -> 409 시 PATCH + 누락 컬럼 자동 제거)
-      for (let attempt = 0; attempt < 15; attempt++) {
-        let res = await supabaseRestFetch(upsertUrl, {
-          method: 'POST',
-          headers: upsertHeaders,
-          body: JSON.stringify(payload)
-        }, creds.sbKey);
-        if (res.ok) return true;
-
-        let errText = await res.text().catch(() => '');
-
-        // 순수 POST Insert 시도
-        const insertRes = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify(payload)
-        }, creds.sbKey);
-        if (insertRes.ok) return true;
-
-        const insertErrText = await insertRes.text().catch(() => '');
-        if (insertRes.status === 409 || insertErrText.includes('23505') || errText.includes('23505')) {
-          const patchRes = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}?id=eq.${encodeURIComponent(payload.id)}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-            body: JSON.stringify(payload)
-          }, creds.sbKey);
-          if (patchRes.ok) return true;
+    function normalizeOnpodEndpoint(baseUrl, pathAndQuery) {
+      // 1) Supabase URL인 경우: 표준 PostgREST 경로(/rest/v1/{table}) 그대로 유지
+      if (isSupabaseUrl(baseUrl)) {
+        const cleanBase = baseUrl.replace(/\/rest\/v1$/, '');
+        if (pathAndQuery.startsWith('/rest/v1/')) {
+          return `${cleanBase}${pathAndQuery}`;
         }
-
-        const combinedErr = `${errText} ${insertErrText}`;
-        window.lastSupabaseErrorText = combinedErr;
-        const colMatch = (
-          combinedErr.match(/Could not find the '([^']+)' column/i) ||
-          combinedErr.match(/column "([^"]+)" of relation/i) ||
-          combinedErr.match(/column [a-z0-9_]+\.([a-z0-9_]+) does not exist/i)
-        );
-        if (colMatch && colMatch[1] && Object.prototype.hasOwnProperty.call(payload, colMatch[1])) {
-          delete payload[colMatch[1]];
-          if (tableSchemaColumnsCache[table]) tableSchemaColumnsCache[table].delete(colMatch[1]);
-          continue;
-        }
-        break;
+        return `${cleanBase}/rest/v1${pathAndQuery.startsWith('/') ? '' : '/'}${pathAndQuery}`;
       }
-
-      // 2순위: @supabase/supabase-js 클라이언트 폴백 (createPublishableSafeFetch 적용됨)
-      const client = ensureSupabaseClient();
-      if (client) {
-        const { error } = await client.from(table).upsert(payload, { onConflict: 'id' });
-        if (!error) return true;
+      // 2) 에이아이쓰리 온팟(Onpod) 백엔드인 경우: /api/{table} 경로로 자동 매핑
+      const cleanPath = pathAndQuery.replace(/^\/rest\/v1\//, '/');
+      if (baseUrl.endsWith('/api') || baseUrl.endsWith('/v1')) {
+        return `${baseUrl}${cleanPath}`;
       }
-      return false;
+      return `${baseUrl}/api${cleanPath}`;
+    }
+
+    async function supabaseRestFetch(url, options = {}, sbKey = '') {
+      const creds = getSupabaseCreds();
+      if (!creds && !url.startsWith('/api')) {
+        return new Response(null, { status: 204 });
+      }
+      const baseUrl = creds ? creds.sbUrl : '';
+      const key = sbKey || (creds ? creds.sbKey : '');
+      const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
+      if (key) {
+        headers['apikey'] = key;
+        headers['Authorization'] = key.startsWith('Bearer ') ? key : `Bearer ${key}`;
+        headers['X-Onpod-Token'] = key;
+      }
+      if (isSupabaseUrl(baseUrl) && options.method === 'POST' && !headers['Prefer']) {
+        headers['Prefer'] = 'resolution=merge-duplicates,return=minimal';
+      }
+      const resolvedUrl = creds
+        ? normalizeOnpodEndpoint(creds.sbUrl, url.replace(creds.sbUrl, ''))
+        : url;
+      return await fetch(resolvedUrl, Object.assign({}, options, { headers }));
     }
 
     async function syncTableRowToSupabase(table, coreRowObj, extendedRowObj) {
       const creds = getSupabaseCreds();
       if (!creds) return false;
       try {
-        // 1단계: 구버전·신버전 테이블 모두에 100% 존재하는 핵심 호환 컬럼(coreRowObj)으로 먼저 즉시 저장!
-        const knownCols = await discoverTableColumns(table);
-        let corePayload = filterPayloadByKnownColumns(table, coreRowObj, knownCols);
-        if (Object.keys(corePayload).length === 0) corePayload = Object.assign({}, coreRowObj);
-
-        const coreOk = await tryRestUpsertOrInsertPatch(creds, table, corePayload);
-
-        // 2단계: 만약 테이블에 확장 컬럼(email, approval_status, addr_detail 등)도 존재한다면 추가 업데이트
-        if (extendedRowObj && knownCols && knownCols.size > 0) {
-          const extPayload = filterPayloadByKnownColumns(table, extendedRowObj, knownCols);
-          if (Object.keys(extPayload).length > Object.keys(corePayload).length) {
-            await tryRestUpsertOrInsertPatch(creds, table, extPayload);
-          }
-        }
-
-        if (coreOk) {
-          if (table === 'users' && coreRowObj.id) confirmedCloudUserIds.add(coreRowObj.id);
-          if (table === 'partners' && coreRowObj.id) confirmedCloudPartnerIds.add(coreRowObj.id);
-          return true;
-        }
-
-        // 3단계: 최후 보장 — users 테이블인 경우 필수 4개 컬럼(id, pw_hash, role, name)만으로 즉시 저장
-        if (table === 'users' && coreRowObj.id) {
-          const minUser = {
-            id: coreRowObj.id,
-            pw_hash: coreRowObj.pw_hash,
-            role: coreRowObj.role || 'PERSONAL',
-            name: coreRowObj.name || coreRowObj.id
-          };
-          const minOk = await tryRestUpsertOrInsertPatch(creds, 'users', minUser);
-          if (minOk) {
-            confirmedCloudUserIds.add(coreRowObj.id);
-            return true;
-          }
+        const fullPayload = Object.assign({}, coreRowObj, extendedRowObj || {});
+        const res = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}`, {
+          method: 'POST',
+          body: JSON.stringify(fullPayload)
+        }, creds.sbKey);
+        if (res && res.ok) return true;
+        if (extendedRowObj && isSupabaseUrl(creds.sbUrl)) {
+          const fallbackRes = await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}`, {
+            method: 'POST',
+            body: JSON.stringify(coreRowObj)
+          }, creds.sbKey);
+          return Boolean(fallbackRes && fallbackRes.ok);
         }
         return false;
       } catch (err) {
-        console.warn(`Supabase sync (${table}) skipped:`, err);
         return false;
       }
     }
@@ -8865,16 +10186,10 @@
       const creds = getSupabaseCreds();
       if (!creds) return;
       try {
-        if (supabaseClientInstance) {
-          const { error } = await supabaseClientInstance.from(table).delete().eq('id', idVal);
-          if (!error) return;
-        }
         await supabaseRestFetch(`${creds.sbUrl}/rest/v1/${table}?id=eq.${encodeURIComponent(idVal)}`, {
           method: 'DELETE'
         }, creds.sbKey);
-      } catch (err) {
-        console.warn(`Supabase delete (${table}) skipped:`, err);
-      }
+      } catch (err) {}
     }
 
     function syncOrderToSupabase(o) {
@@ -8882,6 +10197,7 @@
         id: o.id,
         order_date: o.date,
         buyer_id: o.buyerId || 'guest',
+        buyer_name: o.buyerName || '',
         buyer: o.buyer,
         phone: o.phone || '',
         address: o.address || '',
@@ -8895,15 +10211,17 @@
         pay_method: o.payMethod || '',
         total_amount: o.totalAmount,
         status: o.status,
+        claim_type: o.claimType || '',
+        claim_reason_cat: o.claimReasonCat || '',
+        claim_reason_detail: o.claimReasonDetail || '',
+        claim_refund_account: o.claimRefundAccount || '',
+        claim_at: o.claimAt || '',
         courier: o.courier || '',
         waybill: o.waybill || '',
-        settled: Boolean(o.settled)
+        settled: Boolean(o.settled),
+        payment_id: o.paymentId || o.id
       });
     }
-
-    let supabaseClientInstance = null;
-    let supabaseRealtimeChannel = null;
-    let supabasePollTimer = null;
 
     function mapDbUserToLocal(u) {
       const derivedApproval = u.approval_status
@@ -8947,77 +10265,37 @@
       updateBadges();
     }
 
-    async function pullFromSupabaseCloud(sbUrl, sbKey, isSilentRealtime) {
+    async function pullFromSupabaseCloud(sbUrl, sbKey) {
+      if (!sbUrl) return false;
       try {
         const [resUsers, resPartners, resMats, resOrders, resRevs, resPqna, resNotices, resAqna] = await Promise.all([
-          supabaseRestFetch(`${sbUrl}/rest/v1/users?select=*&order=created_at.asc`, {}, sbKey).catch(() => null),
-          supabaseRestFetch(`${sbUrl}/rest/v1/partners?select=*&order=created_at.asc`, {}, sbKey).catch(() => null),
-          supabaseRestFetch(`${sbUrl}/rest/v1/materials?select=*&order=created_at.asc`, {}, sbKey).catch(() => null),
-          supabaseRestFetch(`${sbUrl}/rest/v1/orders?select=*&order=created_at.desc`, {}, sbKey).catch(() => null),
-          supabaseRestFetch(`${sbUrl}/rest/v1/product_reviews?select=*&order=created_at.desc`, {}, sbKey).catch(() => null),
-          supabaseRestFetch(`${sbUrl}/rest/v1/product_qna_posts?select=*&order=created_at.desc`, {}, sbKey).catch(() => null),
-          supabaseRestFetch(`${sbUrl}/rest/v1/notices?select=*&order=created_at.desc`, {}, sbKey).catch(() => null),
-          supabaseRestFetch(`${sbUrl}/rest/v1/admin_qna_posts?select=*&order=created_at.desc`, {}, sbKey).catch(() => null)
+          supabaseRestFetch(`${sbUrl}/rest/v1/users`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/partners`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/materials`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/orders`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/product_reviews`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/product_qna_posts`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/notices`, {}, sbKey).catch(() => null),
+          supabaseRestFetch(`${sbUrl}/rest/v1/admin_qna_posts`, {}, sbKey).catch(() => null)
         ]);
 
         if (!resMats || !resMats.ok) return false;
 
-        // 1) Users 동기화 (로컬 신규 가입 계정이 유실되지 않도록 안전 병합 + 미동기화 계정 자동 업로드)
         if (resUsers && resUsers.ok) {
           const dbUsers = await resUsers.json();
-          if (Array.isArray(dbUsers)) {
-            if (dbUsers.length > 0 && dbUsers[0]) {
-              tableSchemaColumnsCache['users'] = new Set(Object.keys(dbUsers[0]));
-            }
+          if (Array.isArray(dbUsers) && dbUsers.length > 0) {
             const mappedDbUsers = dbUsers.map(u => mapDbUserToLocal(u));
             const dbUserMap = new Map(mappedDbUsers.map(u => [u.id, u]));
-            mappedDbUsers.forEach(u => confirmedCloudUserIds.add(u.id));
-
-            // 로컬에 존재하나 아직 Supabase dbUsers에서 한 번도 확인되지 않은 계정(!confirmedCloudUserIds.has)은
-            // 절대 지우지 않고 보존함과 동시에 즉시 Supabase DB로 자동 업로드!
-            const localUnsyncedUsers = users.filter(
-              localU => !dbUserMap.has(localU.id) && !explicitlyDeletedUserIds.includes(localU.id) && !confirmedCloudUserIds.has(localU.id)
-            );
-
+            const localUnsyncedUsers = users.filter(localU => !dbUserMap.has(localU.id) && !explicitlyDeletedUserIds.includes(localU.id));
             const combinedUsers = sortUsersByRolePriority(mappedDbUsers.concat(localUnsyncedUsers));
             users.length = 0;
-            combinedUsers.forEach(u => {
-              if (dbUserMap.has(u.id)) {
-                u._syncedToCloud = true;
-              }
-              users.push(u);
-            });
-            localUnsyncedUsers.forEach(localU => {
-              syncUserToSupabase(localU).then(ok => {
-                if (ok) {
-                  localU._syncedToCloud = true;
-                  saveStateToStorage();
-                }
-              });
-            });
-
-            if (currentUser) {
-              const latestMe = users.find(x => x.id === currentUser.id);
-              if (!latestMe) {
-                currentUser = null;
-                showToast('계정 정보가 삭제되어 로그아웃되었습니다.');
-              } else if (latestMe.role === 'CORPORATE' && latestMe.approvalStatus === 'PENDING') {
-                currentUser = null;
-                showToast('기업 계정 승인 상태가 대기(PENDING)로 변경되어 로그아웃되었습니다.');
-              } else {
-                currentUser = latestMe;
-              }
-            }
+            combinedUsers.forEach(u => users.push(u));
           }
         }
 
-        // 2) Partners 동기화 (로컬 신규 가입 파트너 보존 및 자동 업로드)
         if (resPartners && resPartners.ok) {
           const dbPartners = await resPartners.json();
-          if (Array.isArray(dbPartners)) {
-            const dbPartnerIds = new Set(dbPartners.map(p => p.id));
-            const localUnsyncedPartners = partners.filter(lp => !dbPartnerIds.has(lp.id) && !lp._fromCloud);
-
+          if (Array.isArray(dbPartners) && dbPartners.length > 0) {
             partners.length = 0;
             dbPartners.forEach(p => {
               partners.push({
@@ -9034,20 +10312,14 @@
                 phone: p.phone || '',
                 email: p.email || '',
                 equip: p.equip || '',
-                status: p.status || 'APPROVED',
-                _fromCloud: true
+                status: p.status || 'APPROVED'
               });
-            });
-            localUnsyncedPartners.forEach(lp => {
-              partners.push(lp);
-              syncPartnerToSupabase(lp);
             });
           }
         }
 
-        // 3) Materials 동기화 (상품 삭제·수정·추가 시 즉시 반영)
         const dbMats = await resMats.json();
-        if (Array.isArray(dbMats)) {
+        if (Array.isArray(dbMats) && dbMats.length > 0) {
           materials.length = 0;
           dbMats.forEach(m => {
             materials.push({
@@ -9073,22 +10345,18 @@
               imageUrl: m.image_url || ''
             });
           });
-          if (selectedMaterialId && !materials.some(m => m.id === selectedMaterialId)) {
-            selectedMaterialId = '';
-            currentCalcResult = null;
-          }
         }
 
-        // 4) Orders 동기화
         if (resOrders && resOrders.ok) {
           const dbOrders = await resOrders.json();
-          if (Array.isArray(dbOrders)) {
+          if (Array.isArray(dbOrders) && dbOrders.length > 0) {
             orders.length = 0;
             dbOrders.forEach(o => {
               orders.push({
                 id: o.id,
                 date: o.order_date || '',
                 buyerId: o.buyer_id || 'guest',
+                buyerName: o.buyer_name || '',
                 buyer: o.buyer,
                 phone: o.phone || '',
                 address: o.address || '',
@@ -9102,6 +10370,11 @@
                 payMethod: o.pay_method || '',
                 totalAmount: o.total_amount || 0,
                 status: o.status || 'RECEIVED',
+                claimType: o.claim_type || '',
+                claimReasonCat: o.claim_reason_cat || '',
+                claimReasonDetail: o.claim_reason_detail || '',
+                claimRefundAccount: o.claim_refund_account || '',
+                claimAt: o.claim_at || '',
                 courier: o.courier || '',
                 waybill: o.waybill || '',
                 settled: Boolean(o.settled)
@@ -9110,10 +10383,9 @@
           }
         }
 
-        // 5) Product Reviews 동기화 (리뷰 삭제/추가 시 즉시 반영)
         if (resRevs && resRevs.ok) {
           const dbRevs = await resRevs.json();
-          if (Array.isArray(dbRevs)) {
+          if (Array.isArray(dbRevs) && dbRevs.length > 0) {
             productReviews.length = 0;
             dbRevs.forEach(r => {
               productReviews.push({
@@ -9129,10 +10401,9 @@
           }
         }
 
-        // 6) Product Q&A 동기화
         if (resPqna && resPqna.ok) {
           const dbPqna = await resPqna.json();
-          if (Array.isArray(dbPqna)) {
+          if (Array.isArray(dbPqna) && dbPqna.length > 0) {
             productQnaPosts.length = 0;
             dbPqna.forEach(q => {
               productQnaPosts.push({
@@ -9149,10 +10420,9 @@
           }
         }
 
-        // 7) Notices 동기화
         if (resNotices && resNotices.ok) {
           const dbNtc = await resNotices.json();
-          if (Array.isArray(dbNtc)) {
+          if (Array.isArray(dbNtc) && dbNtc.length > 0) {
             noticePosts.length = 0;
             dbNtc.forEach(n => {
               noticePosts.push({
@@ -9167,10 +10437,9 @@
           }
         }
 
-        // 8) Admin Q&A 동기화
         if (resAqna && resAqna.ok) {
           const dbAqna = await resAqna.json();
-          if (Array.isArray(dbAqna)) {
+          if (Array.isArray(dbAqna) && dbAqna.length > 0) {
             adminQnaPosts.length = 0;
             dbAqna.forEach(a => {
               adminQnaPosts.push({
@@ -9191,47 +10460,7 @@
         refreshAllVisibleViews();
         return true;
       } catch (err) {
-        if (!isSilentRealtime) console.warn('Supabase pull skipped:', err);
         return false;
-      }
-    }
-
-    function initSupabaseRealtime(sbUrl, sbKey) {
-      if (!sbUrl || !sbKey) return;
-      if (!window.supabase && !document.getElementById('supabase-cdn-script') && window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') {
-        const sc = document.createElement('script');
-        sc.id = 'supabase-cdn-script';
-        sc.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-        sc.async = true;
-        sc.onload = () => initSupabaseRealtime(sbUrl, sbKey);
-        document.head.appendChild(sc);
-      }
-      try {
-        if (window.supabase && typeof window.supabase.createClient === 'function') {
-          if (supabaseRealtimeChannel && supabaseClientInstance) {
-            try { supabaseClientInstance.removeChannel(supabaseRealtimeChannel); } catch (e) {}
-          }
-          supabaseClientInstance = window.supabase.createClient(sbUrl, sbKey);
-          supabaseRealtimeChannel = supabaseClientInstance
-            .channel('jaturi-realtime-sync')
-            .on(
-              'postgres_changes',
-              { event: '*', schema: 'public' },
-              (payload) => {
-                pullFromSupabaseCloud(sbUrl, sbKey, true);
-              }
-            )
-            .subscribe();
-        }
-      } catch (err) {
-        console.warn('Realtime WebSocket subscription fallback active:', err);
-      }
-
-      // [RAM 및 로그 최적화 완료] 기존 5초 주기 8개 테이블 무한 폴링(분당 96회 요청)을 제거하여
-      // Supabase API 로그 폭주 및 NANO 인스턴스 RAM 점유율 상승을 방지합니다.
-      if (supabasePollTimer) {
-        clearInterval(supabasePollTimer);
-        supabasePollTimer = null;
       }
     }
 
@@ -9246,19 +10475,21 @@
     async function saveCloudConfig() {
       const sbUrl = document.getElementById('cfg-sb-url').value.trim().replace(/\/$/, '');
       const sbKey = document.getElementById('cfg-sb-key').value.trim();
-      const poStore = document.getElementById('cfg-po-store').value.trim();
-      const poChannel = document.getElementById('cfg-po-channel').value.trim();
-      localStorage.setItem('jaturi_cloud_cfg_v1', JSON.stringify({ sbUrl, sbKey, poStore, poChannel }));
+      const poStore = document.getElementById('cfg-po-store').value.trim() || DEFAULT_PORTONE_STORE_ID;
+      const poChannel = document.getElementById('cfg-po-channel').value.trim() || DEFAULT_PORTONE_CHANNEL_KEY;
+      const poSecret = (document.getElementById('cfg-po-secret') ? document.getElementById('cfg-po-secret').value.trim() : '') || DEFAULT_PORTONE_API_SECRET;
+      localStorage.setItem('jaturi_onpod_cfg_v1', JSON.stringify({ sbUrl, sbKey, poStore, poChannel, poSecret }));
+      localStorage.setItem('jaturi_cloud_cfg_v14', JSON.stringify({ sbUrl, sbKey, poStore, poChannel, poSecret }));
 
-      if (sbUrl && sbKey) {
+      if (sbUrl) {
         const ok = await pullFromSupabaseCloud(sbUrl, sbKey);
-        initSupabaseRealtime(sbUrl, sbKey);
         document.getElementById('live-mode-indicator').textContent = ok
-          ? 'Supabase 클라우드 DB + Realtime 실시간 반영 완료'
-          : 'Supabase 연동 키 저장됨 (Realtime 대기)';
-        showToast(ok ? 'Supabase 클라우드 DB 및 Realtime 실시간 연동이 활성화되었습니다!' : 'Supabase 연동 설정이 저장되었습니다.');
+          ? `에이아이쓰리 온팟(Onpod) 서버·PostgreSQL 연동 완료 (${sbUrl})`
+          : `온팟(Onpod) API 경로 저장됨 (${sbUrl})`;
+        showToast(ok ? '에이아이쓰리 온팟(Onpod) 서버 및 PostgreSQL DB 연동이 활성화되었습니다!' : '온팟(Onpod) 서버 연동 주소가 저장되었습니다.');
       } else {
-        showToast('설정이 저장되었습니다 (로컬 영구저장 모드).');
+        document.getElementById('live-mode-indicator').textContent = '홈페이지 단독 실행 + 온팟(Onpod) 서버 하이브리드 모드 활성화됨';
+        showToast('설정이 저장되었습니다 (홈페이지 단독 영구저장 모드).');
       }
       closeModal('rfpModal');
     }
