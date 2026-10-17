@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>자투리마켓 (Jaturi Market) - 산업용 자투리·잉여 자재 맞춤재단 전문 쇼핑몰</title>
   <script src="https://cdn.portone.io/v2/browser-sdk.js" async defer></script>
   <style>
@@ -2354,15 +2354,7 @@
         margin-bottom: 14px !important;
         width: 100% !important;
       }
-      iframe[name*="portone"], iframe[id*="portone"], div[class*="portone-ui-container"] {
-        min-width: 520px !important;
-        max-width: 640px !important;
-        width: 580px !important;
-        height: 700px !important;
-        max-height: 92vh !important;
-        border-radius: 8px !important;
-        box-shadow: 0 16px 40px rgba(0,0,0,0.3) !important;
-      }
+      /* PC에서는 포트원·토스페이먼츠 기본 정중앙 모달 레이아웃을 원본 그대로 유지 */
     }
 
     /* Mobile Responsive Overrides: No Horizontal Swipe & Clean Stacked Modals */
@@ -2479,13 +2471,85 @@
         word-break: keep-all !important;
         text-align: center !important;
       }
-      iframe[name*="portone"], iframe[id*="portone"], div[class*="portone-ui-container"], div[id*="portone"] {
+      /* 모바일 입력창 터치 시 브라우저 자동 줌인(화면 잘림 원인) 방지 */
+      .modal-win input,
+      .modal-win select,
+      .modal-win textarea,
+      .erp-input {
+        font-size: 16px !important;
+      }
+      /* 모바일 포트원 V2 및 토스페이먼츠(Toss Payments) 결제창 전체화면 맞춤 */
+      div[class*="portone-ui-container"],
+      div[id*="portone"],
+      div[id*="tosspayments"],
+      div[class*="tosspayments"],
+      #__tosspayments_payment-gateway_dimmer__ {
+        position: fixed !important;
+        inset: 0 !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
         min-width: 0 !important;
-        max-width: 100% !important;
-        width: 100% !important;
-        height: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
         border-radius: 0 !important;
+        transform: none !important;
+        z-index: 2147483647 !important;
         box-sizing: border-box !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+      div[class*="portone-ui-container"] > div,
+      div[id*="portone"] > div,
+      div[id*="tosspayments"] > div {
+        max-width: 100vw !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        border-radius: 0 !important;
+      }
+      iframe[name*="portone"],
+      iframe[id*="portone"],
+      iframe[src*="portone"],
+      iframe[src*="iamport"],
+      iframe[id*="tosspayments"],
+      iframe[name*="tosspayments"],
+      iframe[src*="tosspayments"],
+      #__tosspayments_payment-gateway_frame__,
+      div[class*="portone-ui-container"] iframe,
+      div[id*="portone"] iframe,
+      div[id*="tosspayments"] iframe {
+        position: fixed !important;
+        inset: 0 !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        min-width: 0 !important;
+        max-width: 100vw !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+        transform: none !important;
+        box-sizing: border-box !important;
+        z-index: 2147483647 !important;
       }
       .calc-btn-row {
         grid-template-columns: 1fr !important;
@@ -2615,16 +2679,85 @@
       word-break: keep-all !important;
       text-align: center !important;
     }
+    body.force-mobile-view .modal-win input,
+    body.force-mobile-view .modal-win select,
+    body.force-mobile-view .modal-win textarea,
+    body.force-mobile-view .erp-input {
+      font-size: 16px !important;
+    }
+    body.force-mobile-view div[class*="portone-ui-container"],
+    body.force-mobile-view div[id*="portone"],
+    body.force-mobile-view div[id*="tosspayments"],
+    body.force-mobile-view div[class*="tosspayments"],
+    body.force-mobile-view #__tosspayments_payment-gateway_dimmer__ {
+      position: fixed !important;
+      inset: 0 !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      max-width: 100vw !important;
+      min-width: 0 !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      max-height: 100dvh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      transform: none !important;
+      z-index: 2147483647 !important;
+      box-sizing: border-box !important;
+    }
     body.force-mobile-view iframe[name*="portone"],
     body.force-mobile-view iframe[id*="portone"],
-    body.force-mobile-view div[class*="portone-ui-container"],
-    body.force-mobile-view div[id*="portone"] {
+    body.force-mobile-view iframe[src*="portone"],
+    body.force-mobile-view iframe[src*="iamport"],
+    body.force-mobile-view iframe[id*="tosspayments"],
+    body.force-mobile-view iframe[name*="tosspayments"],
+    body.force-mobile-view iframe[src*="tosspayments"],
+    body.force-mobile-view #__tosspayments_payment-gateway_frame__,
+    body.force-mobile-view div[class*="portone-ui-container"] iframe,
+    body.force-mobile-view div[id*="portone"] iframe,
+    body.force-mobile-view div[id*="tosspayments"] iframe {
+      position: fixed !important;
+      inset: 0 !important;
+      top: 0 !important;
+      left: 0 !important;
       min-width: 0 !important;
-      max-width: 100% !important;
-      width: 100% !important;
-      height: 100% !important;
+      max-width: 100vw !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      height: 100dvh !important;
+      max-height: 100dvh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
       border-radius: 0 !important;
+      transform: none !important;
       box-sizing: border-box !important;
+      z-index: 2147483647 !important;
+    }
+    /* PC 브라우저에서 모바일 모드(또는 680px 미만 폭)로 테스트 시 680px 고정폭 토스페이먼츠 PC IFRAME이 잘리지 않도록 화면 비율 자동 축소 */
+    body.portone-scale-pc-iframe iframe[name*="portone"],
+    body.portone-scale-pc-iframe iframe[id*="portone"],
+    body.portone-scale-pc-iframe iframe[src*="portone"],
+    body.portone-scale-pc-iframe iframe[src*="iamport"],
+    body.portone-scale-pc-iframe iframe[id*="tosspayments"],
+    body.portone-scale-pc-iframe iframe[name*="tosspayments"],
+    body.portone-scale-pc-iframe iframe[src*="tosspayments"],
+    body.portone-scale-pc-iframe #__tosspayments_payment-gateway_frame__,
+    body.portone-scale-pc-iframe div[class*="portone-ui-container"] iframe,
+    body.portone-scale-pc-iframe div[id*="tosspayments"] iframe {
+      width: 680px !important;
+      max-width: 680px !important;
+      height: var(--po-iframe-scaled-h, 100dvh) !important;
+      max-height: none !important;
+      top: 0 !important;
+      left: var(--po-iframe-offset-x, 0px) !important;
+      transform: scale(var(--po-iframe-scale, 1)) !important;
+      transform-origin: top left !important;
     }
 
     /* Mobile Reordering: Selected Material Detail View -> Custom Cut Calculator -> Catalog -> Reviews -> Partner Banners */
@@ -5384,6 +5517,7 @@
     function setViewportMode(mobile, notify) {
       isMobileViewport = mobile;
       document.body.classList.toggle('force-mobile-view', mobile);
+      if (typeof syncPortOneViewportScale === 'function') syncPortOneViewportScale();
       const btn = document.getElementById('device-mode-btn');
       if (btn) {
         btn.textContent = mobile
@@ -8528,6 +8662,113 @@
       }
     }
 
+    function isMobileBrowserUA() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent || '');
+    }
+
+    function getPortOneRedirectUrl() {
+      try {
+        const href = window.location.href || '';
+        if (href.startsWith('https://') || href.startsWith('http://')) {
+          return href.split('?')[0].split('#')[0];
+        }
+      } catch (e) {}
+      return 'https://jarutimarket.vercel.app/';
+    }
+
+    function syncPortOneViewportScale() {
+      const vw = window.innerWidth || document.documentElement.clientWidth || 375;
+      const vh = window.innerHeight || document.documentElement.clientHeight || 667;
+      // PC 브라우저(Desktop UA)에서 모바일 모드(또는 680px 미만 창)로 볼 때만 680px 고정폭 토스페이먼츠 PC IFRAME을 화면 폭에 맞게 축소
+      if (!isMobileBrowserUA() && (isMobileViewport || vw < 680)) {
+        const targetW = Math.min(vw, 430);
+        const scale = Math.max(0.45, Math.min(1, targetW / 680));
+        const scaledH = Math.ceil(vh / scale);
+        const offsetX = Math.max(0, Math.floor((vw - 680 * scale) / 2));
+        document.documentElement.style.setProperty('--po-iframe-scale', String(scale));
+        document.documentElement.style.setProperty('--po-iframe-scaled-h', `${scaledH}px`);
+        document.documentElement.style.setProperty('--po-iframe-offset-x', `${offsetX}px`);
+        document.body.classList.add('portone-scale-pc-iframe');
+      } else {
+        document.body.classList.remove('portone-scale-pc-iframe');
+        document.documentElement.style.removeProperty('--po-iframe-scale');
+        document.documentElement.style.removeProperty('--po-iframe-scaled-h');
+        document.documentElement.style.removeProperty('--po-iframe-offset-x');
+      }
+    }
+
+    function prepareMobileViewportForPortOne() {
+      try {
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
+        window.scrollTo(0, 0);
+      } catch (e) {}
+      syncPortOneViewportScale();
+      closeModal('orderInfoModal');
+      closeModal('paymentModal');
+    }
+
+    function savePendingPortOneCheckout(paymentId, payMethodDesc, buyerInfo, totalAmount, methodIdx) {
+      try {
+        const payload = {
+          paymentId,
+          payMethodDesc,
+          buyerInfo,
+          totalAmount,
+          methodIdx: methodIdx || 2,
+          orderCheckoutMode,
+          selectedMaterialId,
+          savedAt: Date.now()
+        };
+        localStorage.setItem('jaturi_pending_portone_tx_v1', JSON.stringify(payload));
+      } catch (e) {}
+    }
+
+    async function handlePortOneMobileRedirectReturn() {
+      try {
+        const search = window.location.search || '';
+        if (!search || !search.includes('paymentId=') && !search.includes('payment_id=')) return;
+        const params = new URLSearchParams(search);
+        const paymentId = params.get('paymentId') || params.get('payment_id');
+        if (!paymentId) return;
+
+        const code = params.get('code') || params.get('pgCode');
+        const message = params.get('message') || params.get('pgMessage');
+
+        // 주소창 쿼리 파라미터 정리
+        try {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (e) {}
+
+        const rawPending = localStorage.getItem('jaturi_pending_portone_tx_v1');
+        localStorage.removeItem('jaturi_pending_portone_tx_v1');
+        const pending = rawPending ? JSON.parse(rawPending) : null;
+
+        if (pending) {
+          if (pending.buyerInfo) pendingOrderBuyerInfo = pending.buyerInfo;
+          if (pending.orderCheckoutMode) orderCheckoutMode = pending.orderCheckoutMode;
+          if (pending.selectedMaterialId && !selectedMaterialId) {
+            selectMaterial(pending.selectedMaterialId, true);
+          }
+        }
+
+        if (code) {
+          const failMsg = message || '결제가 취소되었거나 실패했습니다.';
+          openPaymentModal(pending ? pending.methodIdx : 2);
+          showPaymentModalError(failMsg);
+          showToast(failMsg);
+          return;
+        }
+
+        const b = (pending && pending.buyerInfo) || pendingOrderBuyerInfo || { name: '구매고객', phone: '010-2849-1029', fullAddress: '-', org: '개인/기업' };
+        const payMethodDesc = (pending && pending.payMethodDesc) || `포트원 모바일 결제 완료 (승인번호: ${paymentId} / 주문자: ${b.name})`;
+        finalizeVerifiedOrder(paymentId, payMethodDesc, b);
+      } catch (e) {
+        console.warn('Redirect return check skipped:', e);
+      }
+    }
+
     async function requestPortOneVirtualAccountPayment() {
       if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
       const b = pendingOrderBuyerInfo || { name: '구매고객', phone: '010-2849-1029', fullAddress: '-', org: '개인/기업' };
@@ -8561,10 +8802,12 @@
       const paymentId = randomId();
       const cleanPhone = (b.phone || '01028491029').replace(/[^0-9]/g, '') || '01028491029';
       const customerEmail = (currentUser && currentUser.email) ? currentUser.email : 'customer@jaturimarket.kr';
+      const payMethodDesc = `포트원 가상계좌 결제 (승인번호: ${paymentId} / 입금자: ${b.name})`;
 
       let payment;
       try {
         const webhookUrl = getResolvedWebhookUrl();
+        const redirectUrl = getPortOneRedirectUrl();
         const paymentPayload = {
           storeId: poCfg.storeId,
           channelKey: poCfg.channelKey,
@@ -8573,6 +8816,7 @@
           totalAmount,
           currency: 'KRW',
           payMethod: 'VIRTUAL_ACCOUNT',
+          redirectUrl,
           windowType: {
             pc: 'IFRAME',
             mobile: 'REDIRECTION'
@@ -8595,6 +8839,8 @@
         if (webhookUrl && (webhookUrl.startsWith('https://') || webhookUrl.startsWith('http://'))) {
           paymentPayload.noticeUrls = [webhookUrl];
         }
+        savePendingPortOneCheckout(paymentId, payMethodDesc, b, totalAmount, 1);
+        prepareMobileViewportForPortOne();
         payment = await PortOne.requestPayment(paymentPayload);
       } catch (err) {
         setWaitingPayment(false);
@@ -8614,9 +8860,10 @@
         return;
       }
 
+      localStorage.removeItem('jaturi_pending_portone_tx_v1');
       setWaitingPayment(false);
-      const payMethodDesc = `포트원 가상계좌 결제 (승인번호: ${payment.paymentId || paymentId} / 입금자: ${b.name})`;
-      finalizeVerifiedOrder(payment.paymentId || paymentId, payMethodDesc, b);
+      const finalPayDesc = `포트원 가상계좌 결제 (승인번호: ${payment.paymentId || paymentId} / 입금자: ${b.name})`;
+      finalizeVerifiedOrder(payment.paymentId || paymentId, finalPayDesc, b);
     }
 
     function finalizeVerifiedOrder(verifiedPaymentId, payMethodDesc, b) {
@@ -8787,6 +9034,7 @@
       let payment;
       try {
         const webhookUrl = getResolvedWebhookUrl();
+        const redirectUrl = getPortOneRedirectUrl();
         const paymentPayload = {
           storeId: poCfg.storeId,
           channelKey: poCfg.channelKey,
@@ -8795,6 +9043,7 @@
           totalAmount,
           currency: 'KRW',
           payMethod: 'CARD',
+          redirectUrl,
           windowType: {
             pc: 'IFRAME',
             mobile: 'REDIRECTION'
@@ -8812,6 +9061,8 @@
         if (webhookUrl && (webhookUrl.startsWith('https://') || webhookUrl.startsWith('http://'))) {
           paymentPayload.noticeUrls = [webhookUrl];
         }
+        savePendingPortOneCheckout(paymentId, payMethodDesc, b, totalAmount, 2);
+        prepareMobileViewportForPortOne();
         payment = await PortOne.requestPayment(paymentPayload);
       } catch (err) {
         setWaitingPayment(false);
@@ -11185,6 +11436,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       loadStateFromStorage();
       detectViewportMode();
+      syncPortOneViewportScale();
       updateAuthUI();
       renderPartnerBanners();
       renderCatalog();
@@ -11193,6 +11445,7 @@
       renderNoticeBoard();
       renderAdminQnaBoard();
       updateBadges();
+      handlePortOneMobileRedirectReturn();
     });
 
     window.addEventListener('resize', () => {
@@ -11201,6 +11454,7 @@
       } else if (window.innerWidth > 820 && isMobileViewport) {
         setViewportMode(false, false);
       }
+      syncPortOneViewportScale();
     });
   </script>
 </body>
