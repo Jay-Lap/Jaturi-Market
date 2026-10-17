@@ -2167,6 +2167,176 @@
       grid-template-columns: 1fr !important;
     }
 
+  
+    /* ==========================================
+       SELECTED MATERIAL DETAIL VIEW (BSDV) RESPONSIVE STYLES
+       ========================================== */
+    .bsdv-header {
+      background: var(--brand-light);
+      border-bottom: 1px solid var(--brand-border);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .bsdv-header-title-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .bsdv-header-title-box #bsdv-head-title {
+      font-size: 14.5px;
+      color: var(--brand-dark);
+      word-break: keep-all;
+    }
+    .bsdv-header-btn-box {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .bsdv-body-grid {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    .bsdv-thumb-box {
+      background: var(--bg-gray);
+      border: 1px solid var(--border-color);
+      height: 168px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      position: relative;
+    }
+    .bsdv-spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 820px) {
+      .bsdv-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        padding: 10px 12px !important;
+      }
+      .bsdv-header-title-box {
+        width: 100% !important;
+        flex-wrap: wrap !important;
+      }
+      .bsdv-header-title-box #bsdv-head-title {
+        font-size: 13.5px !important;
+        line-height: 1.35 !important;
+      }
+      .bsdv-header-btn-box {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+        width: 100% !important;
+      }
+      .bsdv-header-btn-box .btn-mall {
+        width: 100% !important;
+        padding: 6px 4px !important;
+        font-size: 11px !important;
+        text-align: center !important;
+        white-space: normal !important;
+        word-break: keep-all !important;
+      }
+      .bsdv-body-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+      .bsdv-thumb-box {
+        width: 100% !important;
+        height: 180px !important;
+      }
+      .bsdv-spec-table {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+      }
+      .bsdv-spec-table th, .bsdv-spec-table td {
+        white-space: normal !important;
+        word-break: keep-all !important;
+        padding: 6px 8px !important;
+        font-size: 11.5px !important;
+      }
+    }
+    body.force-mobile-view .bsdv-header {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 8px !important;
+      padding: 10px 12px !important;
+    }
+    body.force-mobile-view .bsdv-header-title-box {
+      width: 100% !important;
+      flex-wrap: wrap !important;
+    }
+    body.force-mobile-view .bsdv-header-title-box #bsdv-head-title {
+      font-size: 13.5px !important;
+      line-height: 1.35 !important;
+    }
+    body.force-mobile-view .bsdv-header-btn-box {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 6px !important;
+      width: 100% !important;
+    }
+    body.force-mobile-view .bsdv-header-btn-box .btn-mall {
+      width: 100% !important;
+      padding: 6px 4px !important;
+      font-size: 11px !important;
+      text-align: center !important;
+      white-space: normal !important;
+      word-break: keep-all !important;
+    }
+    body.force-mobile-view .bsdv-body-grid {
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+    }
+    body.force-mobile-view .bsdv-thumb-box {
+      width: 100% !important;
+      height: 180px !important;
+    }
+    body.force-mobile-view .bsdv-spec-table {
+      display: block !important;
+      width: 100% !important;
+      overflow-x: auto !important;
+    }
+    body.force-mobile-view .bsdv-spec-table th, body.force-mobile-view .bsdv-spec-table td {
+      white-space: normal !important;
+      word-break: keep-all !important;
+      padding: 6px 8px !important;
+      font-size: 11.5px !important;
+    }
+
+    /* ==========================================
+       PORTONE PC CHECKOUT MODAL & IFRAME VISIBILITY OVERRIDES
+       ========================================== */
+    @media (min-width: 821px) {
+      #paymentModal .modal-win, #orderInfoModal .modal-win {
+        max-width: 680px !important;
+      }
+      /* PortOne PC 결제창 오버레이 가로 비율 및 가시성 확장 */
+      iframe[name*="portone"], iframe[id*="portone"], div[class*="portone-ui-container"] {
+        min-width: 520px !important;
+        max-width: 640px !important;
+        width: 580px !important;
+        height: 700px !important;
+        max-height: 92vh !important;
+        border-radius: 8px !important;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.3) !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -2401,14 +2571,14 @@
         <div id="buyer-left-column">
           <!-- 자재 선택 시 좌측 상단에 즉시 전환·표시되는 전용 상세 페이지 뷰 (우측 계산기 레이아웃 유지) -->
           <div class="erp-box" id="buyer-selected-detail-view" style="display:none; border:2px solid var(--brand); margin-bottom:18px; background:#fff; box-shadow:0 4px 14px rgba(39,115,129,0.10);">
-            <div class="erp-box-head" style="background:var(--brand-light); border-bottom:1px solid var(--brand-border); padding:12px 16px;">
-              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <div class="erp-box-head bsdv-header">
+              <div class="bsdv-header-title-box">
                 <span class="tag-square tag-cut">선택 자재 상세페이지</span>
-                <strong style="font-size:14.5px; color:var(--brand-dark);" id="bsdv-head-title">자재 상세 정보</strong>
+                <strong id="bsdv-head-title">자재 상세 정보</strong>
               </div>
-              <div style="display:flex; gap:6px; align-items:center;">
-                <button type="button" class="btn-mall btn-mall-white" style="padding:5px 10px; font-size:11.5px;" onclick="scrollToProductReviews()">구매후기·상품Q&amp;A 바로가기</button>
-                <button type="button" class="btn-mall btn-mall-dark" style="padding:5px 11px; font-size:11.5px;" onclick="selectMaterial(selectedMaterialId)">← 전체 자재 목록으로 돌아가기 (선택해제)</button>
+              <div class="bsdv-header-btn-box">
+                <button type="button" class="btn-mall btn-mall-white" onclick="scrollToProductReviews()">구매후기·상품Q&amp;A 바로가기</button>
+                <button type="button" class="btn-mall btn-mall-dark" onclick="selectMaterial(selectedMaterialId)">← 전체 자재 목록으로 돌아가기 (선택해제)</button>
               </div>
             </div>
             <div class="erp-box-body" id="bsdv-body" style="padding:16px;"></div>
@@ -3645,17 +3815,10 @@
         </div>
 
         <div style="margin-top:14px; padding-top:12px; border-top:1px dashed var(--border-strong);">
-          <div style="font-size:11.5px; font-weight:800; color:var(--brand-dark); margin-bottom:8px;">
-            결제 수단 바로 선택 — 클릭 시 중간 선택 화면 없이 포트원 결제창이 즉시 열립니다.
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-            <button type="button" class="btn-mall btn-mall-dark" id="btn-step1-virtual-account" style="padding:13px 10px; font-size:13.5px; font-weight:800;" onclick="proceedOrderStep1VirtualAccount()">
-              가상계좌 발급 (결제창 호출)
-            </button>
-            <button type="submit" class="btn-mall btn-mall-brand" id="btn-step1-direct-portone" style="padding:13px 10px; font-size:13.5px; font-weight:800;">
-              간편 · 카드결제 (결제창 호출)
-            </button>
-          </div>
+          <button type="submit" class="btn-mall btn-mall-brand" id="btn-step1-direct-portone" style="width:100%; padding:14px 10px; font-size:15px; font-weight:800; margin-bottom:8px;">
+            결제 진행하기 (결제수단 선택) →
+          </button>
+          <button type="button" id="btn-step1-virtual-account" style="display:none;" aria-hidden="true" onclick="proceedOrderStep1VirtualAccount()"></button>
           <button type="button" class="btn-mall btn-mall-white" style="width:100%; padding:8px;" onclick="closeModal('orderInfoModal')">취소 (닫기)</button>
         </div>
       </form>
@@ -3911,7 +4074,10 @@
           </div>
         </div>
         <div style="border:1px solid var(--border-color); padding:12px;">
-          <div style="font-weight:800; margin-bottom:8px; color:var(--text-primary);">2. 포트원(PortOne V2) 실결제 연동</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-weight:800; color:var(--text-primary);">2. 포트원(PortOne V2) 결제 및 실시간 웹훅(Webhook) 연동</span>
+            <span class="tag-square tag-cut" style="font-size:10.5px;">V2 SDK 지원</span>
+          </div>
           <div class="form-row">
             <label>PortOne Store ID (상점아이디)</label>
             <input type="text" class="erp-input" id="cfg-po-store" value="store-ad3a98e5-7ce7-4fee-b6e1-395e58e7c75e" placeholder="store-ad3a98e5-7ce7-4fee-b6e1-395e58e7c75e" />
@@ -3920,9 +4086,26 @@
             <label>PortOne Channel Key (채널키)</label>
             <input type="text" class="erp-input" id="cfg-po-channel" value="channel-key-4147d38a-d029-4682-8939-e5d86f4e8759" placeholder="channel-key-4147d38a-d029-4682-8939-e5d86f4e8759" />
           </div>
-          <div class="form-row" style="margin-bottom:0;">
+          <div class="form-row">
             <label>PortOne V2 API Key (API Secret)</label>
             <input type="password" class="erp-input" id="cfg-po-secret" value="a3CSBNggMfDZqz5AB79gk6otO7hCppL9ytRr81Oro3uIDiwBIUgup8EJX8PL6ZY9ujxTMztUHKdHaL6m" placeholder="PortOne V2 API Secret" />
+          </div>
+          <!-- 실시간 웹훅(Webhook) 연동 정보 & 복사 -->
+          <div style="background:var(--bg-gray); border:1px solid var(--border-strong); padding:10px 12px; border-radius:3px; margin-top:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <strong style="font-size:12px; color:var(--brand-dark);">포트원 콘솔 등록용 실시간 웹훅 URL:</strong>
+              <button type="button" class="btn-mall btn-mall-white" style="padding:2px 8px; font-size:11px; border-color:var(--brand); color:var(--brand-dark);" onclick="copyWebhookUrlText()">URL 복사</button>
+            </div>
+            <div id="cfg-webhook-url-display" style="font-family:var(--font-mono); font-size:11.5px; color:var(--text-primary); word-break:break-all; background:#fff; border:1px solid var(--border-color); padding:6px 8px; margin-bottom:6px;">
+              /api/webhook/portone
+            </div>
+            <div class="form-row" style="margin-bottom:0;">
+              <label style="font-size:11.5px;">PortOne Webhook Secret (선택/서명 검증용)</label>
+              <input type="password" class="erp-input" id="cfg-po-webhook-secret" placeholder="포트원 콘솔 웹훅 시크릿 (선택사항)" />
+            </div>
+            <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+              * 포트원 관리자 콘솔(admin.portone.io) > [결제 연동] > [웹훅 설정]에 위 URL을 등록하면 결제완료/가상계좌 입금/취소 상태가 DB에 실시간 자동 동기화됩니다.
+            </p>
           </div>
         </div>
       </div>
@@ -6880,8 +7063,8 @@
       if (titleEl) titleEl.textContent = `[${mat.code}] ${mat.name}`;
 
       bodyEl.innerHTML = `
-        <div style="display:grid; grid-template-columns:220px 1fr; gap:18px; align-items:center;">
-          <div style="background:var(--bg-gray); border:1px solid var(--border-color); height:168px; display:flex; align-items:center; justify-content:center; padding:10px; position:relative;">
+        <div class="bsdv-body-grid">
+          <div class="bsdv-thumb-box">
             ${mat.imageUrl
               ? `<img src="${mat.imageUrl}" alt="${mat.name}" style="width:100%; height:148px; object-fit:cover;" />`
               : getRealisticMaterialSVG(mat)}
@@ -6892,8 +7075,8 @@
               <span style="font-size:12px; font-weight:800; color:var(--brand-dark);">공급 파트너: ${mat.partner} (${mat.region})</span>
               <span style="font-size:11.5px; color:var(--text-secondary);">발송소요일: <strong>${mat.dispatch}</strong> · 평점 <strong>${mat.rating}</strong> (${mat.reviews}건)</span>
             </div>
-            <h4 style="font-size:16px; font-weight:800; color:var(--text-primary); margin-bottom:10px;">${mat.name}</h4>
-            <table class="erp-table" style="margin-bottom:10px; font-size:12px;">
+            <h4 style="font-size:16px; font-weight:800; color:var(--text-primary); margin-bottom:10px; word-break:keep-all;">${mat.name}</h4>
+            <table class="erp-table bsdv-spec-table">
               <tbody>
                 <tr>
                   <th style="width:110px;">원판 보유규격</th>
@@ -7533,12 +7716,19 @@
       } else {
         const c = currentCalcResult;
         document.getElementById('step1-item-brief').innerHTML = `
-          <div style="font-weight:800; color:var(--text-primary); margin-bottom:2px;">주문 품목: [${c.mat.code}] ${c.mat.name}</div>
-          <div style="font-family:var(--font-mono); color:var(--brand-dark); font-weight:700;">
-            ${c.mode === 'CUT'
-              ? `맞춤 재단: ${c.reqW} x ${c.reqL} x ${c.mat.t}mm (${c.reqQty}EA / ${c.weightKg.toFixed(2)}kg)`
-              : `원판 구매: ${c.mat.w} x ${c.mat.l} x ${c.mat.t}mm (${c.reqQty}장 / ${c.weightKg.toFixed(2)}kg)`}
-            | 결제금액: <span style="color:var(--price-red);">${c.total.toLocaleString()}원</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:6px;">
+            <strong style="font-size:13px; color:var(--text-primary);">주문 품목: [${c.mat.code}] ${c.mat.name}</strong>
+            <span style="font-size:11.5px; color:var(--brand-dark); font-weight:700;">공급: ${c.mat.partner}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px solid var(--border-color); padding:8px 12px; border-radius:3px; flex-wrap:wrap; gap:8px;">
+            <div style="font-family:var(--font-mono); color:var(--brand-dark); font-weight:700; font-size:12px;">
+              ${c.mode === 'CUT'
+                ? `맞춤 재단: ${c.reqW} x ${c.reqL} x ${c.mat.t}mm (${c.reqQty}EA / ${c.weightKg.toFixed(2)}kg)`
+                : `원판 구매: ${c.mat.w} x ${c.mat.l} x ${c.mat.t}mm (${c.reqQty}장 / ${c.weightKg.toFixed(2)}kg)`}
+            </div>
+            <div style="font-size:14px; font-weight:800;">
+              결제금액: <span style="font-size:17px; color:var(--price-red); font-family:var(--font-mono);">${c.total.toLocaleString()}원</span>
+            </div>
           </div>
         `;
       }
@@ -7595,9 +7785,8 @@
       const info = collectAndValidateStep1BuyerInfo();
       if (!info) return;
 
-      selectedPayMethodIdx = 2;
       closeModal('orderInfoModal');
-      confirmOrderPayment();
+      openPaymentModal();
     }
 
     function backToOrderStep1() {
@@ -7614,36 +7803,63 @@
 
       if (orderCheckoutMode === 'CART') {
         const totalAmt = getActiveCheckoutTotal();
+        const sumSupply = cartItems.reduce((acc, i) => acc + i.baseCost + i.cutCost + i.shipCost, 0);
+        const sumVat = cartItems.reduce((acc, i) => acc + i.vat, 0);
         document.getElementById('payment-summary-box').innerHTML = `
-          <div style="font-weight:800; font-size:13.5px; margin-bottom:4px;">장바구니 일괄 결제 (${cartItems.length}개 품목: ${getCartCategorySummaryText()})</div>
-          <div style="color:var(--brand-dark); font-weight:700; font-family:var(--font-mono); font-size:11.5px; margin-bottom:6px;">
-            ${cartItems.map(i => `• [${getShortCatLabel(i.category)}] ${i.cutSpec}`).join('<br/>')}
+          <div style="background:#fff; border:1px solid var(--border-color); padding:14px 16px; margin-bottom:12px; border-radius:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span class="tag-square tag-cut" style="font-size:11px;">장바구니 일괄 결제 (${cartItems.length}건)</span>
+              <span style="font-size:12px; color:var(--brand-dark); font-weight:700;">구성: ${getCartCategorySummaryText()}</span>
+            </div>
+            <div style="color:var(--brand-dark); font-weight:700; font-family:var(--font-mono); font-size:12px; margin-bottom:8px; max-height:110px; overflow-y:auto; background:var(--brand-light); border:1px solid var(--brand-border); padding:8px 10px; border-radius:3px;">
+              ${cartItems.map(i => `• [${getShortCatLabel(i.category)}] ${i.materialName.replace(/^\[[^\]]+\]\s*/, '')} (${i.cutSpec}) — ${i.total.toLocaleString()}원`).join('<br/>')}
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; background:var(--bg-gray); padding:8px 10px; border-radius:3px;">
+              <div><strong>수령인:</strong> ${b.name} (${b.phone})</div>
+              <div><strong>배송지:</strong> ${b.fullAddress}</div>
+            </div>
           </div>
-          <div style="font-size:12px; color:var(--text-secondary); border-top:1px dashed var(--border-strong); padding-top:6px; margin-bottom:6px;">
-            <div><strong>수령인:</strong> ${b.name} (${b.phone})</div>
-            <div><strong>배송지 주소:</strong> ${b.fullAddress}</div>
-          </div>
-          <div style="border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between; font-size:14px; font-weight:800;">
-            <span>총 결제 금액 (VAT 포함)</span>
-            <span style="color:var(--price-red); font-family:var(--font-mono);">${totalAmt.toLocaleString()}원</span>
+          <!-- 대형 결제 금액 강조 배너 -->
+          <div style="background:var(--brand-light); border:2px solid var(--brand); padding:14px 18px; border-radius:4px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <div style="font-size:11.5px; font-weight:700; color:var(--brand-dark); margin-bottom:2px;">포트원(PortOne) 결제 승인 요청 금액</div>
+              <strong style="font-size:14px; color:var(--text-primary);">장바구니 총 결제금액 (VAT 포함)</strong>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:26px; font-weight:900; color:var(--price-red); font-family:var(--font-mono); letter-spacing:-0.5px;">${totalAmt.toLocaleString()}원</span>
+              <div style="font-size:11px; color:var(--text-secondary);">(공급가 ${sumSupply.toLocaleString()}원 + VAT ${sumVat.toLocaleString()}원)</div>
+            </div>
           </div>
         `;
-      } else {
+            } else {
         const c = currentCalcResult;
         document.getElementById('payment-summary-box').innerHTML = `
-          <div style="font-weight:800; font-size:13.5px; margin-bottom:4px;">[${c.mat.code}] ${c.mat.name}</div>
-          <div style="color:var(--brand-dark); font-weight:700; font-family:var(--font-mono); margin-bottom:6px;">
-            ${c.mode === 'CUT'
-              ? `맞춤 재단: ${c.reqW} x ${c.reqL}mm (${c.reqQty}EA) / 절단 ${c.cutCount}회`
-              : `원판 그대로 구매: ${c.mat.w} x ${c.mat.l} x ${c.mat.t}mm (${c.reqQty}장)`}
+          <div style="background:#fff; border:1px solid var(--border-color); padding:14px 16px; margin-bottom:12px; border-radius:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+              <span class="tag-square tag-cut" style="font-size:11px;">[${c.mat.code}] ${c.mat.category}</span>
+              <span style="font-size:12px; color:var(--brand-dark); font-weight:700;">공급 파트너: ${c.mat.partner}</span>
+            </div>
+            <h4 style="font-size:15px; font-weight:800; color:var(--text-primary); margin-bottom:8px; word-break:keep-all;">${c.mat.name}</h4>
+            <div style="font-size:12.5px; font-weight:700; color:var(--brand-dark); font-family:var(--font-mono); background:var(--brand-light); border:1px solid var(--brand-border); padding:8px 12px; border-radius:3px; margin-bottom:10px;">
+              ${c.mode === 'CUT'
+                ? `맞춤 재단 규격: ${c.reqW} x ${c.reqL} x ${c.mat.t}mm (${c.reqQty}EA / 중량 ${c.weightKg.toFixed(2)}kg) · 절단 ${c.cutCount}회`
+                : `원판 구매 규격: ${c.mat.w} x ${c.mat.l} x ${c.mat.t}mm (${c.reqQty}장 / 중량 ${c.weightKg.toFixed(2)}kg)`}
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; background:var(--bg-gray); padding:8px 10px; border-radius:3px;">
+              <div><strong>수령인:</strong> ${b.name} (${b.phone})</div>
+              <div><strong>배송지:</strong> ${b.fullAddress}</div>
+            </div>
           </div>
-          <div style="font-size:12px; color:var(--text-secondary); border-top:1px dashed var(--border-strong); padding-top:6px; margin-bottom:6px;">
-            <div><strong>수령인:</strong> ${b.name} (${b.phone})</div>
-            <div><strong>배송지 주소:</strong> ${b.fullAddress}</div>
-          </div>
-          <div style="border-top:1px solid var(--border-color); padding-top:8px; display:flex; justify-content:space-between; font-size:14px; font-weight:800;">
-            <span>총 결제 금액 (VAT 포함)</span>
-            <span style="color:var(--price-red); font-family:var(--font-mono);">${c.total.toLocaleString()}원</span>
+          <!-- 대형 결제 금액 강조 배너 (PC 와이드 폰트 가시성 강화) -->
+          <div style="background:var(--brand-light); border:2px solid var(--brand); padding:14px 18px; border-radius:4px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <div style="font-size:11.5px; font-weight:700; color:var(--brand-dark); margin-bottom:2px;">포트원(PortOne) 결제 승인 요청 금액</div>
+              <strong style="font-size:14px; color:var(--text-primary);">총 결제금액 (자재비·가공비·배송비·VAT 포함)</strong>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:26px; font-weight:900; color:var(--price-red); font-family:var(--font-mono); letter-spacing:-0.5px;">${c.total.toLocaleString()}원</span>
+              <div style="font-size:11px; color:var(--text-secondary);">(공급가 ${c.supply.toLocaleString()}원 + VAT ${c.vat.toLocaleString()}원)</div>
+            </div>
           </div>
         `;
       }
@@ -7847,7 +8063,7 @@
     }
 
     function setWaitingPayment(isWaiting) {
-      ['btn-final-pay-submit', 'btn-portone-va-sdk', 'btn-pay-back-step1', 'btn-step1-direct-portone', 'btn-step1-virtual-account'].forEach(id => {
+      ['btn-final-pay-submit', 'btn-portone-va-sdk', 'btn-pay-back-step1', 'btn-step1-proceed-payment', 'btn-step1-direct-portone', 'btn-step1-virtual-account'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
           el.setAttribute('aria-busy', isWaiting.toString());
@@ -7869,6 +8085,56 @@
     }
 
     // 포트원 V2 공식 가상계좌 결제창 호출 (payMethod: 'VIRTUAL_ACCOUNT', virtualAccount.accountExpiry.validHours: 24)
+    
+    function getResolvedWebhookUrl() {
+      try {
+        const legacyCfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v14') || '{}');
+        const onpodCfg = JSON.parse(localStorage.getItem('jaturi_onpod_cfg_v1') || '{}');
+        const cfg = Object.assign({}, legacyCfg, onpodCfg);
+        if (cfg.poWebhookUrl && typeof cfg.poWebhookUrl === 'string') {
+          const customUrl = cfg.poWebhookUrl.trim();
+          if (customUrl.startsWith('https://') || customUrl.startsWith('http://')) {
+            return customUrl;
+          }
+        }
+      } catch (e) {}
+
+      try {
+        const origin = window.location.origin;
+        if (origin && typeof origin === 'string' && (origin.startsWith('https://') || origin.startsWith('http://'))) {
+          // localhost / 127.0.0.1 은 포트원 외부 서버에서 직접 호출할 수 없으므로 noticeUrls를 생략 (콘솔 기본 웹훅 사용)
+          if (!origin.includes('localhost') && !origin.includes('127.0.0.1')) {
+            return `${origin}/api/webhook/portone`;
+          }
+        }
+      } catch (e) {}
+
+      return '';
+    }
+
+    function copyWebhookUrlText() {
+      let url = getResolvedWebhookUrl();
+      if (!url) {
+        const origin = (window.location.origin && window.location.origin.startsWith('http')) ? window.location.origin : 'https://jarutimarket.vercel.app';
+        url = `${origin}/api/webhook/portone`;
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = url;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+        }
+        showToast(`포트원 웹훅 URL 복사 완료: ${url}`);
+      } catch (e) {
+        showToast(`웹훅 URL: ${url}`);
+      }
+    }
+
     async function requestPortOneVirtualAccountPayment() {
       if (orderCheckoutMode !== 'CART' && !currentCalcResult) return;
       const b = pendingOrderBuyerInfo || { name: '구매고객', phone: '010-2849-1029', fullAddress: '-', org: '개인/기업' };
@@ -7905,7 +8171,8 @@
 
       let payment;
       try {
-        payment = await PortOne.requestPayment({
+        const webhookUrl = getResolvedWebhookUrl();
+        const paymentPayload = {
           storeId: poCfg.storeId,
           channelKey: poCfg.channelKey,
           paymentId,
@@ -7913,6 +8180,10 @@
           totalAmount,
           currency: 'KRW',
           payMethod: 'VIRTUAL_ACCOUNT',
+          windowType: {
+            pc: 'IFRAME',
+            mobile: 'REDIRECTION'
+          },
           virtualAccount: {
             accountExpiry: {
               validHours: 24,
@@ -7926,7 +8197,12 @@
           customData: {
             item: itemId,
           },
-        });
+        };
+        // noticeUrls는 유효한 http:// 또는 https:// 절대 URL일 때만 전달 (유효하지 않거나 로컬/파일 환경이면 포트원 콘솔 기본 웹훅 사용)
+        if (webhookUrl && (webhookUrl.startsWith('https://') || webhookUrl.startsWith('http://'))) {
+          paymentPayload.noticeUrls = [webhookUrl];
+        }
+        payment = await PortOne.requestPayment(paymentPayload);
       } catch (err) {
         setWaitingPayment(false);
         const errMsg = (err && err.message) ? err.message : '포트원 가상계좌 결제창 호출 중 오류가 발생했습니다.';
@@ -8117,7 +8393,8 @@
 
       let payment;
       try {
-        payment = await PortOne.requestPayment({
+        const webhookUrl = getResolvedWebhookUrl();
+        const paymentPayload = {
           storeId: poCfg.storeId,
           channelKey: poCfg.channelKey,
           paymentId,
@@ -8125,6 +8402,10 @@
           totalAmount,
           currency: 'KRW',
           payMethod: 'CARD',
+          windowType: {
+            pc: 'IFRAME',
+            mobile: 'REDIRECTION'
+          },
           customer: {
             fullName: b.name || '구매고객',
             phoneNumber: cleanPhone,
@@ -8133,7 +8414,12 @@
           customData: {
             item: itemId,
           },
-        });
+        };
+        // noticeUrls는 유효한 http:// 또는 https:// 절대 URL일 때만 전달 (유효하지 않거나 로컬/파일 환경이면 포트원 콘솔 기본 웹훅 사용)
+        if (webhookUrl && (webhookUrl.startsWith('https://') || webhookUrl.startsWith('http://'))) {
+          paymentPayload.noticeUrls = [webhookUrl];
+        }
+        payment = await PortOne.requestPayment(paymentPayload);
       } catch (err) {
         setWaitingPayment(false);
         console.error(err);
@@ -9985,6 +10271,13 @@
         if (document.getElementById('cfg-po-secret')) {
           document.getElementById('cfg-po-secret').value = cfg.poSecret || DEFAULT_PORTONE_API_SECRET;
         }
+        if (document.getElementById('cfg-po-webhook-secret')) {
+          document.getElementById('cfg-po-webhook-secret').value = cfg.poWebhookSecret || '';
+        }
+        const whDisplay = document.getElementById('cfg-webhook-url-display');
+        if (whDisplay) {
+          whDisplay.textContent = getResolvedWebhookUrl();
+        }
         localStorage.setItem('jaturi_onpod_cfg_v1', JSON.stringify({
           sbUrl: activeApiUrl,
           sbKey: activeApiKey,
@@ -10478,8 +10771,10 @@
       const poStore = document.getElementById('cfg-po-store').value.trim() || DEFAULT_PORTONE_STORE_ID;
       const poChannel = document.getElementById('cfg-po-channel').value.trim() || DEFAULT_PORTONE_CHANNEL_KEY;
       const poSecret = (document.getElementById('cfg-po-secret') ? document.getElementById('cfg-po-secret').value.trim() : '') || DEFAULT_PORTONE_API_SECRET;
-      localStorage.setItem('jaturi_onpod_cfg_v1', JSON.stringify({ sbUrl, sbKey, poStore, poChannel, poSecret }));
-      localStorage.setItem('jaturi_cloud_cfg_v14', JSON.stringify({ sbUrl, sbKey, poStore, poChannel, poSecret }));
+      const poWebhookSecret = (document.getElementById('cfg-po-webhook-secret') ? document.getElementById('cfg-po-webhook-secret').value.trim() : '');
+      const poWebhookUrl = getResolvedWebhookUrl();
+      localStorage.setItem('jaturi_onpod_cfg_v1', JSON.stringify({ sbUrl, sbKey, poStore, poChannel, poSecret, poWebhookSecret, poWebhookUrl }));
+      localStorage.setItem('jaturi_cloud_cfg_v14', JSON.stringify({ sbUrl, sbKey, poStore, poChannel, poSecret, poWebhookSecret, poWebhookUrl }));
 
       if (sbUrl) {
         const ok = await pullFromSupabaseCloud(sbUrl, sbKey);
