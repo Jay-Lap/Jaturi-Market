@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>자투리마켓 (Jaturi Market) - 산업용 자투리·잉여 자재 맞춤재단 전문 쇼핑몰</title>
+  <title>자투리마켓 (Jaturi Market) Final.ver - 산업용 자투리·잉여 자재 맞춤재단 전문 상용 쇼핑몰</title>
   <script src="https://cdn.portone.io/v2/browser-sdk.js" async defer></script>
   <style>
     :root {
@@ -66,14 +66,14 @@
       color: var(--text-secondary);
     }
     .util-inner {
-      max-width: 1280px;
-      margin: 0 auto;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
       padding: 6px 16px;
       min-height: 38px;
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      flex-wrap: wrap;
       gap: 8px;
     }
     .util-links {
@@ -201,7 +201,7 @@
 
     /* Search Box (디바이스마트 스타일 직사각형 테두리 검색창) */
     .search-area {
-      max-width: 580px;
+      max-width: 680px;
       width: 100%;
       margin: 0 auto;
     }
@@ -248,10 +248,12 @@
       margin-top: 6px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      gap: 6px;
       font-size: 11.5px;
       color: var(--text-muted);
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      white-space: nowrap;
     }
     .popular-keywords strong {
       color: var(--text-secondary);
@@ -1348,6 +1350,7 @@
       #corpPendingModal,
       #orderClaimModal,
       #orderCompleteModal,
+      #rfqCustomModal,
       .no-print {
         display: none !important;
       }
@@ -1552,16 +1555,34 @@
       color: var(--text-secondary);
     }
     .util-inner {
-      max-width: 1280px;
-      margin: 0 auto;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
       padding: 7px 16px !important;
       height: auto !important;
-      min-height: 38px !important;
-      display: flex !important;
-      justify-content: space-between !important;
+      min-height: 40px !important;
+      display: grid !important;
+      grid-template-columns: 1fr auto 1fr !important;
       align-items: center !important;
-      flex-wrap: wrap !important;
       gap: 8px 12px !important;
+      box-sizing: border-box !important;
+    }
+    .util-left-nav {
+      justify-self: start !important;
+      justify-content: flex-start !important;
+      text-align: left !important;
+      margin-right: auto !important;
+    }
+    .util-center-nav {
+      justify-self: center !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+    }
+    .util-right-nav {
+      justify-self: end !important;
+      justify-content: flex-end !important;
+      text-align: right !important;
+      margin-left: auto !important;
     }
     .util-links {
       display: flex !important;
@@ -1602,10 +1623,22 @@
     }
     .header-grid {
       display: grid !important;
-      grid-template-columns: 245px minmax(300px, 540px) auto !important;
+      grid-template-columns: 245px minmax(560px, 680px) auto !important;
       justify-content: space-between !important;
       align-items: center !important;
       gap: 16px !important;
+    }
+    @media (max-width: 960px) {
+      .popular-keywords {
+        flex-wrap: wrap !important;
+        white-space: normal !important;
+        justify-content: flex-start !important;
+      }
+    }
+    body.force-mobile-view .popular-keywords {
+      flex-wrap: wrap !important;
+      white-space: normal !important;
+      justify-content: flex-start !important;
     }
     .header-quick-icons {
       display: flex !important;
@@ -1641,8 +1674,8 @@
       display: flex !important;
       align-items: center !important;
       justify-content: space-between !important;
-      gap: 6px !important;
-      overflow-x: hidden !important;
+      gap: 8px !important;
+      overflow-x: auto !important;
     }
     .gnb-left {
       display: flex !important;
@@ -1683,10 +1716,10 @@
       white-space: nowrap !important;
     }
 
-    /* Partner Banner Section */
+    /* Partner Banner Section: 5개 입점 파트너사가 4+1 두 줄로 나뉘지 않고 PC에서 한 줄(5열)로 깔끔하게 정렬 */
     .partner-banner-grid {
       display: grid !important;
-      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
       gap: 8px !important;
     }
 
@@ -1711,16 +1744,32 @@
       background: var(--bg-gray) !important;
     }
     body.force-mobile-view .util-inner {
-      flex-direction: column !important;
-      align-items: stretch !important;
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      justify-content: space-between !important;
+      align-items: center !important;
       padding: 8px 12px !important;
-      gap: 8px !important;
+      gap: 6px 8px !important;
     }
-    body.force-mobile-view .util-links {
-      justify-content: center !important;
+    body.force-mobile-view .util-left-nav {
+      order: 1 !important;
+      justify-content: flex-start !important;
+      align-self: center !important;
+      width: auto !important;
+      margin-right: auto !important;
+      gap: 6px !important;
+    }
+    body.force-mobile-view .util-right-nav {
+      order: 2 !important;
+      justify-content: flex-end !important;
+      align-self: center !important;
+      width: auto !important;
+      margin-left: auto !important;
       gap: 6px !important;
     }
     body.force-mobile-view .role-switch-group {
+      order: 3 !important;
       display: grid !important;
       grid-template-columns: repeat(2, 1fr) !important;
       width: 100% !important;
@@ -1938,15 +1987,30 @@
         padding: 10px 12px !important;
       }
       .util-inner {
-        flex-direction: column !important;
-        align-items: stretch !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: space-between !important;
+        align-items: center !important;
         padding: 8px 12px !important;
-        gap: 8px !important;
+        gap: 6px 8px !important;
       }
-      .util-links {
-        justify-content: center !important;
+      .util-left-nav {
+        order: 1 !important;
+        justify-content: flex-start !important;
+        align-self: center !important;
+        width: auto !important;
+        margin-right: auto !important;
+      }
+      .util-right-nav {
+        order: 2 !important;
+        justify-content: flex-end !important;
+        align-self: center !important;
+        width: auto !important;
+        margin-left: auto !important;
       }
       .role-switch-group {
+        order: 3 !important;
         display: grid !important;
         grid-template-columns: repeat(3, 1fr) !important;
         width: 100% !important;
@@ -2842,34 +2906,33 @@
   <!-- 1. TOP UTILITY BAR -->
   <div class="util-bar no-print">
     <div class="util-inner">
-      <ul class="util-links">
+      <ul class="util-links util-left-nav">
         <li><button class="device-mode-badge" id="device-mode-btn" onclick="toggleViewportMode()">화면: PC모드 (모바일전환)</button></li>
-        <li id="util-rfp-li"><button class="util-btn" id="btn-util-rfp" onclick="openRfpModal()" style="color:var(--brand); font-weight:700;">온팟(Onpod) 서버·DB 연동설정</button></li>
+        <li id="util-rfp-li" style="display:none;"><button class="util-btn" id="btn-util-rfp" onclick="openRfpModal()" style="color:var(--brand); font-weight:700;">온팟(Onpod) 서버·DB 연동설정</button></li>
       </ul>
 
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-        <div class="role-switch-group" role="tablist">
-          <button class="role-switch-btn" id="tab-notice" onclick="switchRole('notice')">
-            공지사항<span class="role-count" id="badge-notice-count">(5)</span>
-          </button>
-          <button class="role-switch-btn" id="tab-qna" onclick="switchRole('qna')">
-            Q&amp;A 게시판<span class="role-count" id="badge-qna-count">(3)</span>
-          </button>
-          <button class="role-switch-btn active" id="tab-buyer" onclick="switchRole('buyer')">
-            구매자 쇼핑몰<span class="role-count" id="badge-catalog-count">(10)</span>
-          </button>
-          <button class="role-switch-btn" id="tab-seller" onclick="switchRole('seller')">
-            공장 파트너센터<span class="role-count" id="badge-seller-orders">(3)</span>
-          </button>
-          <button class="role-switch-btn" id="tab-admin" onclick="switchRole('admin')">
-            통합 어드민<span class="role-count" id="badge-admin-fee">(10%)</span>
-          </button>
-        </div>
-        <ul class="util-links" id="auth-nav-area">
-          <li><button class="util-btn" style="font-weight:700; color:var(--text-primary);" onclick="openLoginModal()">로그인</button></li>
-          <li><button class="util-btn" style="font-weight:700; color:var(--brand);" onclick="openSignupModal('PERSONAL')">회원가입</button></li>
-        </ul>
+      <div class="role-switch-group util-center-nav" role="tablist">
+        <button class="role-switch-btn" id="tab-notice" onclick="switchRole('notice')">
+          공지사항<span class="role-count" id="badge-notice-count">(5)</span>
+        </button>
+        <button class="role-switch-btn" id="tab-qna" onclick="switchRole('qna')">
+          Q&amp;A 게시판<span class="role-count" id="badge-qna-count">(3)</span>
+        </button>
+        <button class="role-switch-btn active" id="tab-buyer" onclick="switchRole('buyer')">
+          구매자 쇼핑몰<span class="role-count" id="badge-catalog-count">(10)</span>
+        </button>
+        <button class="role-switch-btn" id="tab-seller" onclick="switchRole('seller')">
+          공장 파트너센터<span class="role-count" id="badge-seller-orders">(3)</span>
+        </button>
+        <button class="role-switch-btn" id="tab-admin" onclick="switchRole('admin')">
+          통합 어드민<span class="role-count" id="badge-admin-fee">(10%)</span>
+        </button>
       </div>
+
+      <ul class="util-links util-right-nav" id="auth-nav-area">
+        <li><button class="util-btn" style="font-weight:700; color:var(--text-primary);" onclick="openLoginModal()">로그인</button></li>
+        <li><button class="util-btn" style="font-weight:700; color:var(--brand);" onclick="openSignupModal('PERSONAL')">회원가입</button></li>
+      </ul>
     </div>
   </div>
 
@@ -2965,8 +3028,10 @@
           <li><button class="gnb-link" data-cat="구리·황동" onclick="setFilterCategory('구리·황동')">구리/황동/비철금속</button></li>
         </ul>
       </div>
-      <div class="gnb-right-meta">
-        <button class="spec-tag-outline" id="gnb-right-action-btn" onclick="handleGnbRightActionClick()">비회원 주문조회</button>
+      <div class="gnb-right-meta" style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+        <button type="button" class="spec-tag-outline" style="background:#fff; border-color:var(--brand); color:var(--brand-dark);" onclick="openRfqCustomModal()">도면·대량 주문제작 견적요청(RFQ)<span id="badge-rfq-count" style="display:none;"></span></button>
+        <button type="button" class="spec-tag-outline" id="gnb-right-action-btn" onclick="openRecentOrderQuoteModal()">전자견적서 즉시발급</button>
+        <button type="button" class="spec-tag-outline" id="gnb-guest-order-btn" style="display:none;" onclick="handleGnbRightActionClick()">비회원 주문조회</button>
       </div>
     </div>
   </nav>
@@ -3004,15 +3069,15 @@
         </div>
 
         <div class="notice-box">
-          <div class="notice-head" style="cursor:pointer;" onclick="switchRole('notice')">
+          <div class="notice-head" style="cursor:pointer;" onclick="openNoticePageAndDetail()">
             <span>공지사항 및 이용안내</span>
             <span style="font-size:11px; color:var(--brand); font-weight:700;">전체보기 +</span>
           </div>
-          <ul class="notice-list" style="cursor:pointer;" onclick="switchRole('notice')">
-            <li><span class="notice-tag">[안내]</span>대학 산학협력단·연구비 카드 거래명세서 즉시 출력 지원</li>
-            <li><span class="notice-tag">[발송]</span>평일 오후 2시 이전 맞춤재단 발주 건 당일~익일 직배송</li>
-            <li><span class="notice-tag">[규격]</span>톱날 절삭 손실폭(Kerf 3mm) 자동 반영 재단 계산기 적용</li>
-            <li><span class="notice-tag">[입점]</span>시화·남동·문래·사상 파트너 가공 공장 상시 입점 모집</li>
+          <ul class="notice-list" id="main-notice-preview-list" style="cursor:pointer;">
+            <li onclick="openNoticePageAndDetail('NTC-05')"><span class="notice-tag">[입점]</span>구조용 쇠파이프·각관(원형강관/사각파이프) 전문 파트너 입점 및 맞춤 절단 오픈</li>
+            <li onclick="openNoticePageAndDetail('NTC-04')"><span class="notice-tag">[안내]</span>대학교 산학협력단·연구비 카드 결제 및 전자 거래명세서/견적서 즉시 발급 안내</li>
+            <li onclick="openNoticePageAndDetail('NTC-03')"><span class="notice-tag">[발송]</span>평일 오후 2시 이전 맞춤 재단 발주 건 당일 가공 및 직배송 출고 원칙 안내</li>
+            <li onclick="openNoticePageAndDetail('NTC-02')"><span class="notice-tag">[규격]</span>자투리 최저 시세(원/kg) 실시간 중량 과금 및 톱날 손실폭(Kerf 3mm) 적용 기준</li>
           </ul>
         </div>
       </div>
@@ -3082,9 +3147,38 @@
             <div class="erp-box-body" id="bsdv-body" style="padding:16px;"></div>
           </div>
 
-          <div class="section-bar" id="catalog-section-bar">
-            <h3>실시간 등록 자투리·잉여 자재 <span class="count-num" id="catalog-result-count">10</span>건</h3>
-            <span style="font-size:12px; color:var(--text-secondary);">자재 클릭 시 우측 <strong>[맞춤 재단 계산기]</strong>는 그대로 유지되며 해당 자재의 <strong>[상세 페이지 뷰]</strong>로 즉시 전환됩니다.</span>
+          <!-- 최근 조회한 자재 빠른 이동 바 -->
+          <div id="recent-viewed-bar" style="display:none; background:var(--bg-gray); border:1px solid var(--border-color); padding:8px 12px; margin-bottom:12px; border-radius:3px; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; flex:1; min-width:0;">
+              <strong style="font-size:11.5px; color:var(--brand-dark); white-space:nowrap;">최근 본 자재:</strong>
+              <div id="recent-viewed-list" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;"></div>
+            </div>
+            <button type="button" class="util-btn" style="font-size:11px; color:var(--text-muted);" onclick="clearRecentViewedMaterials()">기록 지우기</button>
+          </div>
+
+          <div class="section-bar" id="catalog-section-bar" style="flex-wrap:wrap; gap:10px;">
+            <div>
+              <h3>실시간 등록 자투리·잉여 자재 <span class="count-num" id="catalog-result-count">10</span>건</h3>
+              <span style="font-size:11.5px; color:var(--text-secondary); display:block; margin-top:2px;">자재 클릭 시 우측 <strong>[맞춤 재단 계산기]</strong>가 연동되며 <strong>[상세 페이지 뷰]</strong>로 전환됩니다.</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <label style="display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:700; color:var(--text-secondary); cursor:pointer; background:var(--bg-gray); padding:5px 8px; border:1px solid var(--border-color); border-radius:2px;">
+                <input type="checkbox" id="filter-instock-only" checked onchange="renderCatalog()" />
+                품절 제외
+              </label>
+              <button type="button" class="spec-chip" id="btn-filter-wishlist" onclick="toggleWishlistFilter()" style="font-weight:700;">
+                관심찜 자재만 (<span id="wishlist-count-num">0</span>)
+              </button>
+              <select class="inline-select" id="catalog-sort-select" onchange="renderCatalog()" style="font-weight:700;">
+                <option value="RECOMMEND">정렬: 추천·인기순</option>
+                <option value="PRICE_ASC">정렬: 낮은 가격순 (최저가)</option>
+                <option value="PRICE_DESC">정렬: 높은 가격순</option>
+                <option value="DISCOUNT_DESC">정렬: 높은 할인율순</option>
+                <option value="RATING_DESC">정렬: 평점·후기 많은순</option>
+                <option value="THICKNESS_ASC">정렬: 두께(T) 얇은순</option>
+                <option value="THICKNESS_DESC">정렬: 두께(T) 두꺼운순</option>
+              </select>
+            </div>
           </div>
           <div class="product-grid" id="material-grid"></div>
 
@@ -3148,6 +3242,12 @@
                           <option value="5.0">평점 5.0점</option>
                           <option value="4.5">평점 4.5점</option>
                           <option value="4.0">평점 4.0점</option>
+                          <option value="3.5">평점 3.5점</option>
+                          <option value="3.0">평점 3.0점</option>
+                          <option value="2.5">평점 2.5점</option>
+                          <option value="2.0">평점 2.0점</option>
+                          <option value="1.5">평점 1.5점</option>
+                          <option value="1.0">평점 1.0점</option>
                         </select>
                         <input type="text" class="erp-input" id="prev-spec" placeholder="주문 재단치수 (예: 250x180mm 2EA 맞춤재단)" required />
                       </div>
@@ -3243,7 +3343,7 @@
               <table class="cut-input-table">
                 <tbody>
                   <tr>
-                    <th>요청 가로 (W)</th>
+                    <th id="cut-w-th">요청 가로 (W)</th>
                     <td>
                       <div class="unit-input-wrap">
                         <input type="number" id="cut-w" value="250" min="10" max="3000" step="1" oninput="updateCalculator()" />
@@ -3252,11 +3352,26 @@
                     </td>
                   </tr>
                   <tr>
-                    <th>요청 세로 (L)</th>
+                    <th id="cut-l-th">요청 세로 (L)</th>
                     <td>
                       <div class="unit-input-wrap">
                         <input type="number" id="cut-l" value="180" min="10" max="3000" step="1" oninput="updateCalculator()" />
                         <span class="unit-label">mm</span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr id="pipe-r-row" style="display:none; background:var(--brand-light);">
+                    <th id="cut-pipe-r-th" style="color:var(--brand-dark);">파이프 벤딩 R값<br/><span id="cut-pipe-r-subth" style="font-size:10.5px; font-weight:600; color:var(--brand);">(최소 1.5D 이상)</span></th>
+                    <td>
+                      <div class="unit-input-wrap">
+                        <input type="number" id="cut-pipe-r" value="98" min="0" max="3000" step="0.5" placeholder="0(직관) 또는 R값 입력" oninput="updateCalculator()" />
+                        <span class="unit-label">R(mm)</span>
+                      </div>
+                      <div id="pipe-r-presets" style="display:flex; gap:4px; flex-wrap:wrap; margin-top:5px;">
+                        <button type="button" class="spec-chip" style="padding:2px 6px; font-size:10.5px;" onclick="setPipeRValue(0)">0R (직관)</button>
+                        <button type="button" class="spec-chip" style="padding:2px 6px; font-size:10.5px;" onclick="setPipeRValue(73.5)">최소 R73.5 (1.5D)</button>
+                        <button type="button" class="spec-chip" style="padding:2px 6px; font-size:10.5px;" onclick="setPipeRValue(98)">표준 R98 (2.0D)</button>
+                        <button type="button" class="spec-chip" style="padding:2px 6px; font-size:10.5px;" onclick="setPipeRValue(147)">권장 R147 (3.0D)</button>
                       </div>
                     </td>
                   </tr>
@@ -3269,6 +3384,24 @@
                       </div>
                     </td>
                   </tr>
+                  <tr>
+                    <th>정밀 후가공 옵션</th>
+                    <td>
+                      <select class="erp-input" id="cut-post-proc" style="padding:5px 8px; font-size:12px; font-weight:700;" onchange="updateCalculator()">
+                        <option value="NONE">기본 정밀절단 (추가 후가공 없음 · 0원)</option>
+                        <option value="DEBURR">4모서리 정밀 면취 · 버(Burr) 제거 (+1,000원/EA)</option>
+                        <option value="CHAMFER">모서리 챔퍼(C2) / 라운드(R3) 가공 (+2,000원/EA)</option>
+                        <option value="HOLE_2">볼트 홀(구멍) 타공 2개소 (+2,500원/EA)</option>
+                        <option value="HOLE_4">볼트 홀(구멍) 타공 4개소 (+4,000원/EA)</option>
+                      </select>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>가공 지시 메모</th>
+                    <td>
+                      <input type="text" class="erp-input" id="cut-work-memo" placeholder="예: 모서리 15mm 안쪽 M6 타공 / 공차 ±0.1mm" style="padding:5px 8px; font-size:11.5px;" oninput="updateCalculator()" />
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -3277,11 +3410,11 @@
               <table class="cut-input-table">
                 <tbody>
                   <tr>
-                    <th>원판 구매 수량</th>
+                    <th id="raw-qty-th">원판 구매 수량</th>
                     <td>
                       <div class="unit-input-wrap">
                         <input type="number" id="raw-qty" value="1" min="1" max="50" step="1" oninput="updateCalculator()" />
-                        <span class="unit-label">장</span>
+                        <span class="unit-label" id="raw-qty-unit">장</span>
                       </div>
                     </td>
                   </tr>
@@ -3311,7 +3444,7 @@
 
             <div class="form-row" style="margin-bottom:10px;">
               <label for="buyer-org">연구실·동아리·기업명 (개인·기업 회원 공통: 견적서·거래명세서 수신처)</label>
-              <input type="text" class="erp-input" id="buyer-org" value="울산모빌리티연구실" />
+              <input type="text" class="erp-input" id="buyer-org" value="" placeholder="예: 울산모빌리티연구실 / 홍길동 (미입력 시 주문자명 자동 반영)" />
             </div>
 
             <table class="price-calc-table">
@@ -3356,6 +3489,9 @@
               <button type="button" class="btn-mall btn-mall-brand" id="btn-open-pay" onclick="openOrderStep1Modal()">
                 현재 품목 바로 주문하기 (배송지 입력)
               </button>
+              <button type="button" class="btn-mall btn-mall-white" style="padding:8px 10px; font-size:11.5px; border-color:var(--brand); color:var(--brand-dark);" onclick="openRfqCustomModal()">
+                보유 규격 외 특수치수 · 도면(DXF/PDF) 대량 제작 견적요청(RFQ)
+              </button>
             </div>
 
             <!-- 상품 클릭 시 즉시 보이는 선택 상품 구매후기(리뷰) 목록 및 구매자 리뷰 작성 영역 -->
@@ -3377,6 +3513,11 @@
                     <option value="4.5">평점 4.5점</option>
                     <option value="4.0">평점 4.0점</option>
                     <option value="3.5">평점 3.5점</option>
+                    <option value="3.0">평점 3.0점</option>
+                    <option value="2.5">평점 2.5점</option>
+                    <option value="2.0">평점 2.0점</option>
+                    <option value="1.5">평점 1.5점</option>
+                    <option value="1.0">평점 1.0점</option>
                   </select>
                 </div>
                 <div style="display:flex; gap:6px;">
@@ -3443,12 +3584,30 @@
           </div>
         </div>
 
-        <!-- 우측: 전체 공지사항 목록 -->
+        <!-- 우측: 선택 공지사항 상세보기 및 전체 공지사항 목록 -->
         <div>
+          <!-- 공지사항 클릭 시 열리는 상세보기 박스 -->
+          <div class="erp-box" id="notice-detail-view-box" style="display:none; border:2px solid var(--brand); margin-bottom:16px; background:#ffffff; box-shadow:0 4px 12px rgba(39,115,129,0.10);">
+            <div class="erp-box-head" style="background:var(--brand-light); border-bottom:1px solid var(--brand-border);">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span class="tag-square tag-cut" id="ndv-cat">[공지]</span>
+                <strong style="font-size:15px; color:var(--brand-dark);" id="ndv-title">공지사항 상세 제목</strong>
+              </div>
+              <button type="button" class="btn-mall btn-mall-white" style="padding:4px 10px; font-size:11.5px;" onclick="closeNoticeDetailView()">상세보기 닫기 X</button>
+            </div>
+            <div class="erp-box-body" style="padding:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted); padding-bottom:10px; margin-bottom:12px; border-bottom:1px dashed var(--border-color); font-family:var(--font-mono);">
+                <span id="ndv-meta">작성자: 자투리마켓 운영본부 | 등록일: -</span>
+                <span id="ndv-views">조회수: 0</span>
+              </div>
+              <div id="ndv-content" style="font-size:13.5px; color:var(--text-primary); line-height:1.75; white-space:pre-wrap; min-height:70px; padding:4px 2px;"></div>
+            </div>
+          </div>
+
           <div class="erp-box">
             <div class="erp-box-head">
-              <span>전체 공지사항 목록 (<span id="notice-total-count">5</span>건)</span>
-              <span style="font-size:11.5px; color:var(--text-secondary);">항목 클릭 시 상세 내용을 확인하실 수 있습니다.</span>
+              <span>전체 공지사항 목록 (<span id="notice-total-count">5</span>건 · 최신 등록순)</span>
+              <span style="font-size:11.5px; color:var(--brand-dark); font-weight:700;">제목을 클릭하면 전체 상세 내용을 확인하실 수 있습니다.</span>
             </div>
             <div class="erp-box-body" id="notice-list-container"></div>
           </div>
@@ -4003,8 +4162,8 @@
                 <thead>
                   <tr>
                     <th>상품코드 / 품목명</th>
-                    <th>원판 규격(mm)</th>
-                    <th class="num">보유 재고(장)</th>
+                    <th>원판·원관 규격(mm)</th>
+                    <th class="num">보유 재고(장/본)</th>
                     <th class="num">기준 단가(원)</th>
                     <th>재고·단가 저장 / 삭제</th>
                   </tr>
@@ -4017,6 +4176,7 @@
           <div class="erp-box">
             <div class="erp-box-head">
               <span>파트너 정산 대장 (중개 수수료 공제 내역)</span>
+              <button type="button" class="btn-mall btn-mall-white" style="padding:5px 10px; font-size:11.5px; border-color:var(--brand); color:var(--brand-dark);" onclick="exportOrdersToCsv('SELLER')">수주·정산내역 엑셀(CSV) 다운로드</button>
             </div>
             <div class="erp-box-body" style="padding:0; overflow-x:auto;">
               <table class="erp-table" style="border:none;">
@@ -4103,9 +4263,12 @@
       </div>
 
       <div class="erp-box">
-        <div class="erp-box-head">
+        <div class="erp-box-head" style="flex-wrap:wrap; gap:8px;">
           <span>전체 거래 내역 및 수수료 공제 정산 실행</span>
-          <button class="btn-mall btn-mall-dark" style="padding:6px 12px; font-size:12px;" onclick="settleAllCompletedOrders()">미정산 거래 일괄 정산 지급</button>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn-mall btn-mall-white" style="padding:6px 12px; font-size:12px; border-color:var(--brand); color:var(--brand-dark);" onclick="exportOrdersToCsv('ADMIN')">전체 거래·정산 엑셀(CSV) 다운로드</button>
+            <button class="btn-mall btn-mall-dark" style="padding:6px 12px; font-size:12px;" onclick="settleAllCompletedOrders()">미정산 거래 일괄 정산 지급</button>
+          </div>
         </div>
         <div class="erp-box-body" style="padding:0; overflow-x:auto;">
           <table class="erp-table" style="border:none;">
@@ -4165,6 +4328,65 @@
           </div>
         </div>
 
+        <!-- 상용 출시용 쇼핑몰 사업자 정보 · 하단 푸터 · 전자견적서 공급자 정보 실시간 설정 -->
+        <div class="erp-box" style="border-top:2px solid var(--brand);">
+          <div class="erp-box-head">
+            <span>상용 쇼핑몰 사업자 정보 및 견적서·거래명세서 공급자 설정 (하단 푸터 &amp; 공문서 실시간 연동)</span>
+            <span class="state-badge state-done">Final.ver 상용 설정</span>
+          </div>
+          <div class="erp-box-body">
+            <form onsubmit="saveMallBizConfig(event)">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px; margin-bottom:10px;">
+                <div class="form-row" style="margin-bottom:0;">
+                  <label>상호명 (법인/사업자명)</label>
+                  <input type="text" class="erp-input" id="admin-biz-company" value="[추후 기입]" required />
+                </div>
+                <div class="form-row" style="margin-bottom:0;">
+                  <label>대표자 성명</label>
+                  <input type="text" class="erp-input" id="admin-biz-ceo" value="[추후 기입]" required />
+                </div>
+                <div class="form-row" style="margin-bottom:0;">
+                  <label>사업자등록번호 (거래명세서 표기)</label>
+                  <input type="text" class="erp-input" id="admin-biz-no" value="[추후 기입]" required />
+                </div>
+                <div class="form-row" style="margin-bottom:0;">
+                  <label>통신판매업신고번호</label>
+                  <input type="text" class="erp-input" id="admin-biz-license" value="[추후 기입]" required />
+                </div>
+                <div class="form-row" style="margin-bottom:0;">
+                  <label>본사 소재지 주소</label>
+                  <input type="text" class="erp-input" id="admin-biz-addr" value="[추후 기입]" required />
+                </div>
+                <div class="form-row" style="margin-bottom:0;">
+                  <label>고객센터 대표 전화번호</label>
+                  <input type="text" class="erp-input" id="admin-biz-phone" value="[추후 기입]" required />
+                </div>
+                <div class="form-row" style="margin-bottom:0;">
+                  <label>대표 이메일 (세금계산서·제휴)</label>
+                  <input type="text" class="erp-input" id="admin-biz-email" value="[추후 기입]" required />
+                </div>
+                <div class="form-row" style="margin-bottom:0;">
+                  <label>고객센터 운영시간 안내</label>
+                  <input type="text" class="erp-input" id="admin-biz-hours" value="[추후 기입]" required />
+                </div>
+                <div class="form-row" style="margin-bottom:0;">
+                  <label>공식 직인(도장) 이미지 (견적서·거래명세서 날인)</label>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:44px; height:44px; border:1px solid var(--border-color); background:#fff; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;" id="admin-biz-seal-preview-box">
+                      <img id="admin-biz-seal-preview-img" src="" alt="직인" style="width:100%; height:100%; object-fit:contain;" />
+                    </div>
+                    <input type="file" accept="image/*" class="erp-input" id="admin-biz-seal-file" style="padding:4px 6px; font-size:11.5px;" onchange="previewSealImageUpload(event)" />
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <span style="font-size:11.5px; color:var(--text-secondary);">* 저장 즉시 홈페이지 하단 푸터(Footer)와 전자 견적서·거래명세서의 공급자 사업자번호/대표자란에 반영됩니다.</span>
+                <button type="submit" class="btn-mall btn-mall-brand" style="padding:8px 18px; font-size:12.5px;">사업자·푸터·견적서 정보 저장</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
         <!-- 전체 등록 상품(자투리 자재) 관리 -->
         <div class="erp-box">
           <div class="erp-box-head">
@@ -4212,20 +4434,28 @@
           <img src="data:image/jpeg;base64,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" alt="자투리마켓" style="width:36px; height:36px; border-radius:4px; border:1px solid var(--border-color);" />
           <strong style="font-size:15px; color:var(--text-primary);">자투리마켓 | 산업용 자투리·잉여 자재 맞춤재단 중개 플랫폼</strong>
         </div>
-        <p style="line-height:1.75; color:var(--text-secondary);">
-          상호명: 자투리마켓 | 대표자: [추후 기입] | 사업자등록번호: [사업자 등록 후 기입] | 통신판매업신고: [신고 후 기입]<br/>
-          사업장 소재지: [추후 기입] | 제휴 파트너 공장: [공장 섭외 및 입점 계약 후 표기]<br/>
-          개인정보보호책임자: [추후 기입] | 이메일: [추후 기입]<br/>
+        <p id="footer-biz-info-text" style="line-height:1.75; color:var(--text-secondary);">
+          상호명: [추후 기입] | 대표자: [추후 기입] | 사업자등록번호: [추후 기입] | 통신판매업신고: [추후 기입]<br/>
+          사업장 소재지: [추후 기입] | 전국 제휴 파트너 공장: [공장 섭외 및 입점 계약 후 표기]<br/>
+          개인정보보호책임자: [추후 기입] | 대표 이메일: [추후 기입]<br/>
           Copyright (c) 2026 JATURI MARKET. All rights reserved.
         </p>
       </div>
       <div style="border-left:1px solid var(--border-color); padding-left:24px;">
         <div style="font-weight:700; color:var(--text-primary); margin-bottom:4px;">고객센터 / 입점 및 맞춤재단 문의</div>
-        <div style="font-size:16px; font-weight:800; color:var(--brand); font-family:var(--font-mono); margin-bottom:6px;">연락처: [개통 후 기입]</div>
-        <p style="line-height:1.6;">
+        <div id="footer-cs-phone" style="font-size:16px; font-weight:800; color:var(--brand); font-family:var(--font-mono); margin-bottom:6px;">[추후 기입]</div>
+        <p id="footer-cs-hours" style="line-height:1.6;">
           운영시간: [추후 기입]<br/>
-          파트너 공장 입점·제휴 문의: [추후 기입]
+          파트너 공장 입점·대량재단 문의: [추후 기입]
         </p>
+        <div style="margin-top:10px;">
+          <a href="https://pf.kakao.com/_xkysmX/friend" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; background:#FEE500; color:#191919; font-weight:800; padding:8px 14px; border-radius:4px; text-decoration:none; font-size:12.5px; border:1px solid #E6CF00; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#191919">
+              <path d="M12 3C6.477 3 2 6.477 2 10.767c0 2.76 1.848 5.187 4.673 6.551-.205.762-.743 2.756-.851 3.18-.135.53.195.523.411.38.17-.113 2.705-1.84 3.799-2.585.642.094 1.303.144 1.968.144 5.523 0 10-3.477 10-7.767C22 6.477 17.523 3 12 3z"/>
+            </svg>
+            <span>카카오톡 채널 문의하기</span>
+          </a>
+        </div>
       </div>
     </div>
   </footer>
@@ -4310,6 +4540,22 @@
         <div class="form-row">
           <label for="ord-buyer-memo">배송 요청사항</label>
           <input type="text" class="erp-input" id="ord-buyer-memo" value="모서리 파손 주의 포장 요청 / 도착 전 연락 바랍니다." />
+        </div>
+        <div class="form-row" style="background:var(--bg-gray); border:1px solid var(--border-color); padding:10px 12px; border-radius:3px; margin-top:8px;">
+          <label for="ord-tax-doc-type" style="color:var(--brand-dark);">세무 · 연구비 지출증빙 서류 신청 (선택)</label>
+          <select class="erp-input" id="ord-tax-doc-type" onchange="toggleOrderTaxDocFields()" style="font-weight:700;">
+            <option value="NONE">전자 거래명세서 · 견적서만 발급 (기본)</option>
+            <option value="RESEARCH_PACK">대학 산학협력단 · 연구비 행정서류 패키지 (명세서+견적서+사업자등록증)</option>
+            <option value="TAX_INVOICE">전자세금계산서 발행 신청 (사업자등록번호 입력)</option>
+            <option value="CASH_RECEIPT">현금영수증 지출증빙 신청 (사업자번호 / 휴대폰번호)</option>
+          </select>
+          <div id="ord-tax-fields-box" style="display:none; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border-strong);">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:6px;">
+              <input type="text" class="erp-input" id="ord-tax-bizno" placeholder="사업자번호 (예: 610-81-92841)" style="font-size:12px;" />
+              <input type="text" class="erp-input" id="ord-tax-corp" placeholder="법인/상호명 및 대표자명" style="font-size:12px;" />
+            </div>
+            <input type="email" class="erp-input" id="ord-tax-email" placeholder="세금계산서 수신 이메일 (예: tax@company.co.kr)" style="font-size:12px;" />
+          </div>
         </div>
 
         <div style="margin-top:14px; padding-top:12px; border-top:1px dashed var(--border-strong);">
@@ -4787,6 +5033,77 @@
     </div>
   </div>
 
+    <!-- ==========================================
+       MODAL L: 도면(DXF/DWG/PDF) · 특수규격 · 대량 맞춤 제작 견적요청 (RFQ) 센터
+       ========================================== -->
+  <div class="modal-backdrop no-print" id="rfqCustomModal">
+    <div class="modal-win" style="max-width:740px;">
+      <button class="modal-close-btn" onclick="closeModal('rfqCustomModal')">X</button>
+      <div style="border-bottom:2px solid var(--border-dark); padding-bottom:10px; margin-bottom:14px;">
+        <span style="font-size:11px; font-weight:700; color:var(--brand);">CUSTOM CAD &amp; BULK FABRICATION RFQ</span>
+        <h3 style="font-size:18px; font-weight:800; margin-top:2px;">도면(DXF/DWG/PDF) · 특수규격 · 대량 주문제작 견적요청 (RFQ)</h3>
+        <p style="font-size:12px; color:var(--text-secondary); margin-top:2px;">쇼핑몰 보유 규격 외 특수 치수, 다수 홀 타공·절곡·용접 도면 가공, 또는 대량 발주 건을 남겨주시면 입점 파트너 공장이 견적가를 제시하고 바로 주문하실 수 있습니다.</p>
+      </div>
+
+      <div style="background:var(--bg-gray); border:1px solid var(--border-color); padding:14px; margin-bottom:16px; border-radius:3px;">
+        <div style="font-weight:800; font-size:13.5px; color:var(--brand-dark); margin-bottom:8px;">+ 신규 맞춤 제작 견적요청서 등록</div>
+        <form onsubmit="submitRfqRequest(event)">
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(135px, 1fr)); gap:8px; margin-bottom:8px;">
+            <div>
+              <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">견적요청 대상 회사</label>
+              <select class="erp-input" id="rfq-target-company" required>
+                <option value="동남정밀금속">동남정밀금속 (울산·알루미늄·SUS)</option>
+                <option value="시화알루미늄테크">시화알루미늄테크 (시화·후판블록)</option>
+                <option value="문래아크릴앤플라스틱">문래아크릴앤플라스틱 (서울·아크릴)</option>
+                <option value="남동스텐앤비철">남동스텐앤비철 (인천·스텐·구리)</option>
+                <option value="울산강관파이프">울산강관파이프 (울산·쇠파이프·각관)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">희망 재질 분류</label>
+              <select class="erp-input" id="rfq-mat-cat" required>
+                <option value="알루미늄 (AL6061/5052)">알루미늄 (AL6061/5052)</option>
+                <option value="스테인리스 (SUS304/316L)">스테인리스 (SUS304/316L)</option>
+                <option value="쇠파이프·각관 (구조용 강관)">쇠파이프·각관 (구조용 강관)</option>
+                <option value="아크릴·폴리카보네이트(PC)">아크릴·폴리카보네이트(PC)</option>
+                <option value="구리·황동 (C1100/C2680)">구리·황동 (C1100/C2680)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">요청 규격 (가로x세로x두께mm)</label>
+              <input type="text" class="erp-input" id="rfq-spec" placeholder="예: 420 x 310 x 12T" required />
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">요청 수량 (EA/식)</label>
+              <input type="number" class="erp-input" id="rfq-qty" value="10" min="1" required />
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; display:block; margin-bottom:3px;">희망 납기일</label>
+              <input type="text" class="erp-input" id="rfq-due-date" placeholder="예: 발주 후 3일 이내" required />
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px;">
+            <input type="text" class="erp-input" id="rfq-buyer-name" placeholder="요청자 성명/연구실·기업명" required />
+            <input type="text" class="erp-input" id="rfq-buyer-phone" placeholder="연락처 (예: 010-2849-1029)" required />
+            <input type="file" class="erp-input" id="rfq-drawing-file" accept=".dxf,.dwg,.pdf,.step,.stp,image/*" style="padding:5px;" />
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="text" class="erp-input" id="rfq-proc-note" placeholder="상세 가공 요청사항 (예: M6 탭 가공 4개소, 레이저 정밀 홀 가공, 절곡 포함 여부 등)" style="flex:1; min-width:220px;" required />
+            <button type="submit" class="btn-mall btn-mall-brand" style="padding:8px 18px;">견적요청 등록하기</button>
+          </div>
+        </form>
+      </div>
+
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <strong style="font-size:14px;">접수된 도면·맞춤제작 견적요청 현황</strong>
+          <span style="font-size:11.5px; color:var(--text-secondary);">* 기업 파트너 및 관리자는 제시 견적가를 입력할 수 있으며, 구매자는 제시된 견적가로 즉시 발주할 수 있습니다.</span>
+        </div>
+        <div id="rfq-list-container" style="max-height:320px; overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-wrap no-print" id="toast-container"></div>
 
     <script>
@@ -4820,7 +5137,20 @@
       return MATERIAL_MARKET_RATES.DEFAULT_PL;
     }
 
-    function calcWeightKg(wMm, lMm, tMm, qty, density) {
+    function calcWeightKg(wMm, lMm, tMm, qty, density, matOrPipe) {
+      const isPipe = Boolean(matOrPipe && (matOrPipe === true || matOrPipe.category === '쇠파이프·각관' || matOrPipe.surfaceType === 'STEEL_PIPE'));
+      if (isPipe) {
+        // 파이프 중공(속이 빈 관) 단면적 기준 실제 중량 산출: wMm = 길이(L), lMm = 외경·단면폭(OD), tMm = 관 두께(T)
+        const od = Math.max(4, Number(lMm) || 0);
+        const effT = Math.min(Number(tMm) || 1, Math.max(0.5, od / 2 - 0.2));
+        const isSquarePipe = Boolean(typeof matOrPipe === 'object' && ((matOrPipe.grade && matOrPipe.grade.includes('각관')) || (matOrPipe.name && (matOrPipe.name.includes('사각') || matOrPipe.name.includes('각관')))));
+        // 사각각관 중공 단면적 = 4 * (OD - T) * T | 원형강관 중공 단면적 = π * (OD - T) * T (mm²)
+        const crossAreaMm2 = isSquarePipe
+          ? (4 * (od - effT) * effT)
+          : (Math.PI * (od - effT) * effT);
+        const volCm3 = (crossAreaMm2 * wMm * qty) / 1000;
+        return (volCm3 * density) / 1000;
+      }
       const volCm3 = (wMm * lMm * tMm * qty) / 1000;
       return (volCm3 * density) / 1000;
     }
@@ -4841,6 +5171,30 @@
     let selectedQuoteOrderId = '';
     let activeClaimType = 'CANCELLED';
     let selectedPayMethodIdx = 1;
+    let wishlistMaterialIds = [];
+    let recentViewedMaterialIds = [];
+    let filterWishlistOnly = false;
+    const DEFAULT_SEAL_DATA_URL = 'data:image/png;base64,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';
+    let mallBizConfig = {
+      companyName: '[추후 기입]',
+      ceoName: '[추후 기입]',
+      bizNo: '[추후 기입]',
+      licenseNo: '[추후 기입]',
+      address: '[추후 기입]',
+      phone: '[추후 기입]',
+      email: '[추후 기입]',
+      hours: '[추후 기입]',
+      sealImageUrl: DEFAULT_SEAL_DATA_URL
+    };
+    const POST_PROC_OPTIONS = {
+      'NONE':    { label: '기본 정밀절단', feePerEa: 0 },
+      'DEBURR':  { label: '4모서리 정밀 면취·버제거', feePerEa: 1000 },
+      'CHAMFER': { label: '모서리 챔퍼(C2)/라운드(R3)', feePerEa: 2000 },
+      'HOLE_2':  { label: '볼트 홀 타공 2개소', feePerEa: 2500 },
+      'HOLE_4':  { label: '볼트 홀 타공 4개소', feePerEa: 4000 }
+    };
+    const rfqRequests = [];
+    let guestSessionRfqIds = [];
 
     // 현재 날짜 포맷 헬퍼 (견적서·거래명세서 발행일시: 년도·월·일 까지만 표기)
     function getNowDateStr() {
@@ -5789,6 +6143,9 @@
 
     function logoutUser() {
       currentUser = null;
+      if (document.getElementById('buyer-org')) {
+        document.getElementById('buyer-org').value = '';
+      }
       pendingRedirectAfterLogin = null;
       guestSessionOrderIds = [];
       selectedQuoteOrderId = '';
@@ -5964,9 +6321,7 @@
       if (qBtnOrders) qBtnOrders.style.display = 'flex';
       if (qOrdersLbl) qOrdersLbl.textContent = isLoggedIn ? '주문내역' : '비회원주문조회';
       if (gnbRightBtn) {
-        gnbRightBtn.textContent = isLoggedIn
-          ? '전자견적서 즉시발급 (최근주문 5건 선택)'
-          : '비회원 주문조회';
+        gnbRightBtn.textContent = '전자견적서 즉시발급';
       }
 
       if (tabSeller) {
@@ -5976,7 +6331,7 @@
         tabAdmin.style.display = (role === 'ADMIN') ? '' : 'none';
       }
       if (utilRfpLi) {
-        utilRfpLi.style.display = '';
+        utilRfpLi.style.display = (role === 'ADMIN') ? '' : 'none';
       }
 
       if (!currentUser) {
@@ -5985,6 +6340,10 @@
           <li><button class="util-btn" style="font-weight:700; color:var(--brand);" onclick="openSignupModal('PERSONAL')">회원가입</button></li>
         `;
       } else {
+        const buyerOrgEl = document.getElementById('buyer-org');
+        if (buyerOrgEl && !buyerOrgEl.value.trim()) {
+          buyerOrgEl.value = currentUser.org || currentUser.name || '';
+        }
         const rTag = getRoleLabel(role);
         authArea.innerHTML = `
           <li><span style="font-weight:800; color:var(--brand-dark);">[${rTag}] ${currentUser.name}님</span></li>
@@ -6617,12 +6976,14 @@
                   <div><strong>A.</strong> ${q.answer}</div>
                 </div>
               ` : ''}
+              ${(currentUser && (currentUser.role === 'ADMIN' || currentUser.type === 'ADMIN' || ((currentUser.role === 'CORPORATE' || currentUser.type === 'CORPORATE') && currentUser.name === mat.partner))) ? `
               <div class="qna-reply-form">
                 <input type="text" class="erp-input" id="seller-reply-input-${q.id}" placeholder="판매기업(${mat.partner}) 답변 내용을 입력하거나 수정하세요..." value="${q.answer || ''}" />
                 <button type="button" class="btn-mall btn-mall-white" style="padding:6px 12px; font-size:11.5px; border-color:var(--brand); color:var(--brand-dark);" onclick="submitSellerProductReply('${q.id}', '${mat.partner}')">
                   ${hasAns ? '판매자 답변 수정' : '판매자 답변 등록'}
                 </button>
               </div>
+              ` : ''}
             </div>
           `;
         }).join('');
@@ -6688,10 +7049,10 @@
               <td>비중 ${rateSpec.density} g/cm3 / 자투리 최저시세 ${rateSpec.scrapPerKg.toLocaleString()}원/kg</td>
             </tr>
             <tr>
-              <th>보유 원판 규격</th>
-              <td style="font-family:var(--font-mono); font-weight:700;">가로 ${mat.w} x 세로 ${mat.l} x 두께 ${mat.t}mm (재고 ${mat.stock}장)</td>
-              <th>맞춤 재단 공차</th>
-              <td>레이저·샤링·톱절단 ±0.2mm ~ ±0.5mm (Kerf 3.0mm)</td>
+              <th>${isPipeMaterial(mat) ? '보유 원관 규격' : '보유 원판 규격'}</th>
+              <td style="font-family:var(--font-mono); font-weight:700;">${isPipeMaterial(mat) ? `전장 ${mat.w} x 외경·단면 ${mat.l} x 두께 ${mat.t}mm (재고 ${mat.stock}본 · 중공단면)` : `가로 ${mat.w} x 세로 ${mat.l} x 두께 ${mat.t}mm (재고 ${mat.stock}장)`}</td>
+              <th>${isPipeMaterial(mat) ? '절단·벤딩 기준' : '맞춤 재단 공차'}</th>
+              <td>${isPipeMaterial(mat) ? `정밀 톱절단 ±0.3mm · 최소 벤딩반경 R_min = 1.5D (${Number((mat.l * 1.5).toFixed(1))}mm) 이상` : '레이저·샤링·톱절단 ±0.2mm ~ ±0.5mm (Kerf 3.0mm)'}</td>
             </tr>
             <tr>
               <th>공급 파트너 기업</th>
@@ -6886,11 +7247,70 @@
       showToast('선택한 구매후기(리뷰)가 삭제되었습니다.');
     }
 
-    function deleteNoticePost(noticeId) {
+    let selectedNoticeId = '';
+
+    function sortNoticePostsNewestFirst() {
+      noticePosts.sort((a, b) => {
+        const tA = a.createdAtMs || Date.parse(a.date || '') || 0;
+        const tB = b.createdAtMs || Date.parse(b.date || '') || 0;
+        if (tB !== tA) return tB - tA;
+        return String(b.id || '').localeCompare(String(a.id || ''));
+      });
+    }
+
+    function openNoticePageAndDetail(noticeId) {
+      switchRole('notice');
+      if (noticeId) {
+        openNoticeDetail(noticeId);
+      }
+    }
+
+    function openNoticeDetail(noticeId, evt) {
+      if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+      const post = noticePosts.find(n => n.id === noticeId);
+      if (!post) return;
+
+      if (selectedNoticeId === noticeId) {
+        // 이미 열려 있는 공지를 다시 클릭하면 닫기 토글
+        closeNoticeDetailView();
+        return;
+      }
+
+      selectedNoticeId = noticeId;
+      post.views = (Number(post.views) || 0) + 1;
+      saveStateToStorage();
+
+      const box = document.getElementById('notice-detail-view-box');
+      if (box) {
+        document.getElementById('ndv-cat').textContent = `[${post.cat}]`;
+        document.getElementById('ndv-title').textContent = post.title;
+        document.getElementById('ndv-meta').textContent = `작성자: 자투리마켓 관리자 | 등록일: ${post.date}`;
+        document.getElementById('ndv-views').textContent = `조회수: ${post.views}회`;
+        document.getElementById('ndv-content').textContent = post.content;
+        box.style.display = 'block';
+        box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      renderNoticeBoard();
+    }
+
+    function closeNoticeDetailView() {
+      selectedNoticeId = '';
+      const box = document.getElementById('notice-detail-view-box');
+      if (box) box.style.display = 'none';
+      renderNoticeBoard();
+    }
+
+    function deleteNoticePost(noticeId, evt) {
+      if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
       if (!currentUser || (currentUser.role !== 'ADMIN' && currentUser.type !== 'ADMIN')) return;
       const idx = noticePosts.findIndex(n => n.id === noticeId);
       if (idx !== -1) {
         noticePosts.splice(idx, 1);
+        if (selectedNoticeId === noticeId) {
+          selectedNoticeId = '';
+          const box = document.getElementById('notice-detail-view-box');
+          if (box) box.style.display = 'none';
+        }
         saveStateToStorage();
         deleteRowFromSupabase('notices', noticeId);
         renderNoticeBoard();
@@ -6911,6 +7331,23 @@
     }
 
     function renderNoticeBoard() {
+      sortNoticePostsNewestFirst();
+
+      // 1) 메인 홈페이지 우측 상단 공지사항 미리보기 박스(#main-notice-preview-list)를 최신 등록순 상위 4건으로 실시간 반영
+      const mainPreviewList = document.getElementById('main-notice-preview-list');
+      if (mainPreviewList) {
+        const topFour = noticePosts.slice(0, 4);
+        if (topFour.length === 0) {
+          mainPreviewList.innerHTML = `<li style="color:var(--text-muted);">등록된 공지사항이 없습니다.</li>`;
+        } else {
+          mainPreviewList.innerHTML = topFour.map(n => `
+            <li onclick="openNoticePageAndDetail('${n.id}')" title="${n.title.replace(/"/g, '&quot;')}">
+              <span class="notice-tag">[${n.cat}]</span>${n.title}
+            </li>
+          `).join('');
+        }
+      }
+
       const container = document.getElementById('notice-list-container');
       const totalEl = document.getElementById('notice-total-count');
       const badgeEl = document.getElementById('badge-notice-count');
@@ -6925,23 +7362,33 @@
       if (badgeEl) badgeEl.textContent = `(${noticePosts.length})`;
       if (!container) return;
 
-      container.innerHTML = noticePosts.map(n => `
-        <div class="qna-card" style="margin-bottom:10px;">
-          <div class="qna-card-header">
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-              <span class="tag-square tag-cut">[${n.cat}]</span>
-              <strong style="font-size:14px; color:var(--text-primary);">${n.title}</strong>
+      if (noticePosts.length === 0) {
+        container.innerHTML = `<div style="padding:28px; text-align:center; color:var(--text-secondary);">등록된 공지사항이 없습니다.</div>`;
+        return;
+      }
+
+      container.innerHTML = noticePosts.map((n, idx) => {
+        const isSelected = (selectedNoticeId === n.id);
+        return `
+          <div class="qna-card" onclick="openNoticeDetail('${n.id}')" style="margin-bottom:10px; cursor:pointer; border:${isSelected ? '2px solid var(--brand)' : '1px solid var(--border-color)'}; background:${isSelected ? 'var(--brand-light)' : '#ffffff'}; transition:border-color 0.15s, background 0.15s;">
+            <div class="qna-card-header" style="margin-bottom:0; padding-bottom:0; border-bottom:none;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex:1; min-width:0;">
+                ${idx === 0 ? `<span class="tag-square" style="background:var(--price-red); color:#fff;">최신</span>` : ''}
+                <span class="tag-square tag-cut">[${n.cat}]</span>
+                <strong style="font-size:14px; color:var(--text-primary); word-break:keep-all;">${n.title}</strong>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                <span style="font-size:11.5px; color:var(--text-muted); font-family:var(--font-mono);">등록일: ${n.date} | 조회 ${n.views}</span>
+                <span class="spec-chip ${isSelected ? 'active' : ''}" style="padding:2px 8px; font-size:11px; font-weight:700;">${isSelected ? '상세닫기 ▲' : '상세보기 ▼'}</span>
+                ${isAdmin ? `<button type="button" class="btn-mall btn-mall-white" style="padding:2px 8px; font-size:11px; color:var(--price-red);" onclick="deleteNoticePost('${n.id}', event)">삭제</button>` : ''}
+              </div>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size:11.5px; color:var(--text-muted); font-family:var(--font-mono);">등록일: ${n.date} | 조회 ${n.views}</span>
-              ${isAdmin ? `<button type="button" class="btn-mall btn-mall-white" style="padding:2px 8px; font-size:11px; color:var(--price-red);" onclick="deleteNoticePost('${n.id}')">삭제</button>` : ''}
-            </div>
+            ${isSelected ? `
+              <div style="font-size:13.5px; color:var(--text-primary); line-height:1.75; white-space:pre-wrap; padding:12px 14px; border-top:1px solid var(--brand-border); margin-top:10px; background:#ffffff; border-radius:2px;">${n.content}</div>
+            ` : ''}
           </div>
-          <div style="font-size:13px; color:var(--text-secondary); line-height:1.6; padding-top:6px; border-top:1px dashed var(--border-color); margin-top:8px;">
-            ${n.content}
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function handleNoticeSubmit(e) {
@@ -6955,21 +7402,35 @@
       const content = document.getElementById('notice-content-input').value.trim();
       if (!title || !content) return;
 
-      noticePosts.unshift({
-        id: `NTC-0${noticePosts.length + 1}`,
+      const newNotice = {
+        id: `NTC-${Date.now()}`,
         cat,
         title,
-        date: getNowDateStr(),
+        date: getNowDateTimeStr(),
+        createdAtMs: Date.now(),
         views: 1,
         content
-      });
+      };
+
+      noticePosts.unshift(newNotice);
+      selectedNoticeId = newNotice.id;
 
       document.getElementById('notice-title-input').value = '';
       document.getElementById('notice-content-input').value = '';
       saveStateToStorage();
-      syncTableRowToSupabase('notices', { id: noticePosts[0].id, cat: noticePosts[0].cat, title: noticePosts[0].title, notice_date: noticePosts[0].date, views: 1, content: noticePosts[0].content });
+      syncTableRowToSupabase('notices', { id: newNotice.id, cat: newNotice.cat, title: newNotice.title, notice_date: newNotice.date, views: 1, content: newNotice.content });
       renderNoticeBoard();
-      showToast('신규 공지사항이 등록되었습니다.');
+      // 방금 등록한 공지사항 상세보기도 즉시 표시
+      const box = document.getElementById('notice-detail-view-box');
+      if (box) {
+        document.getElementById('ndv-cat').textContent = `[${newNotice.cat}]`;
+        document.getElementById('ndv-title').textContent = newNotice.title;
+        document.getElementById('ndv-meta').textContent = `작성자: 자투리마켓 관리자 | 등록일: ${newNotice.date}`;
+        document.getElementById('ndv-views').textContent = `조회수: ${newNotice.views}회`;
+        document.getElementById('ndv-content').textContent = newNotice.content;
+        box.style.display = 'block';
+      }
+      showToast('신규 공지사항이 최상단에 등록되었으며 메인 홈페이지 공지란에도 즉시 반영되었습니다.');
     }
 
     function switchRole(role) {
@@ -7354,6 +7815,18 @@
         kickerEl.textContent = 'CUSTOMER SERVICE CENTER';
         titleEl.textContent = '고객센터 및 자주 묻는 질문 (FAQ)';
         bodyEl.innerHTML = `
+          <div style="background:#fff9db; border:1px solid #ffe066; padding:12px 14px; margin-bottom:14px; border-radius:3px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <strong style="color:#191919; font-size:13px; display:block;">카카오톡 1:1 실시간 상담 채널</strong>
+              <span style="font-size:11.5px; color:#495057;">자재 재단, 특수 규격, 연구비 정산 등 궁금하신 점을 카카오톡으로 편리하게 문의하세요.</span>
+            </div>
+            <a href="https://pf.kakao.com/_xkysmX/friend" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; background:#FEE500; color:#191919; font-weight:800; padding:8px 14px; border-radius:4px; text-decoration:none; font-size:12px; border:1px solid #E6CF00;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#191919">
+                <path d="M12 3C6.477 3 2 6.477 2 10.767c0 2.76 1.848 5.187 4.673 6.551-.205.762-.743 2.756-.851 3.18-.135.53.195.523.411.38.17-.113 2.705-1.84 3.799-2.585.642.094 1.303.144 1.968.144 5.523 0 10-3.477 10-7.767C22 6.477 17.523 3 12 3z"/>
+              </svg>
+              <span>카카오톡 채널 문의</span>
+            </a>
+          </div>
           <div style="margin-bottom:14px;">
             <div style="font-weight:800; margin-bottom:8px;">자주 묻는 질문 (FAQ)</div>
             <div style="border:1px solid var(--border-color); padding:10px 12px; margin-bottom:8px; background:var(--bg-gray);">
@@ -7472,11 +7945,75 @@
       `;
     }
 
+    function toggleWishlistFilter() {
+      filterWishlistOnly = !filterWishlistOnly;
+      const btn = document.getElementById('btn-filter-wishlist');
+      if (btn) btn.classList.toggle('active', filterWishlistOnly);
+      renderCatalog();
+    }
+
+    function toggleWishlistMaterial(matId, evt) {
+      if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+      const idx = wishlistMaterialIds.indexOf(matId);
+      const m = materials.find(x => x.id === matId);
+      if (idx === -1) {
+        wishlistMaterialIds.push(matId);
+        showToast(m ? `[${m.code}] 관심자재 찜 목록에 추가되었습니다.` : '관심자재에 추가되었습니다.');
+      } else {
+        wishlistMaterialIds.splice(idx, 1);
+        showToast('관심자재 찜이 해제되었습니다.');
+      }
+      const wCnt = document.getElementById('wishlist-count-num');
+      if (wCnt) wCnt.textContent = wishlistMaterialIds.length;
+      saveStateToStorage();
+      renderCatalog();
+    }
+
+    function pushRecentViewedMaterial(matId) {
+      if (!matId) return;
+      const idx = recentViewedMaterialIds.indexOf(matId);
+      if (idx !== -1) recentViewedMaterialIds.splice(idx, 1);
+      recentViewedMaterialIds.unshift(matId);
+      if (recentViewedMaterialIds.length > 6) recentViewedMaterialIds.length = 6;
+      saveStateToStorage();
+      renderRecentViewedBar();
+    }
+
+    function clearRecentViewedMaterials() {
+      recentViewedMaterialIds.length = 0;
+      saveStateToStorage();
+      renderRecentViewedBar();
+    }
+
+    function renderRecentViewedBar() {
+      const bar = document.getElementById('recent-viewed-bar');
+      const listEl = document.getElementById('recent-viewed-list');
+      if (!bar || !listEl) return;
+      const validItems = recentViewedMaterialIds.map(id => materials.find(m => m.id === id)).filter(Boolean);
+      if (validItems.length === 0) {
+        bar.style.display = 'none';
+        return;
+      }
+      bar.style.display = 'flex';
+      listEl.innerHTML = validItems.map(m => `
+        <button type="button" class="spec-chip ${m.id === selectedMaterialId ? 'active' : ''}" style="padding:3px 8px; font-size:11px;" onclick="selectMaterial('${m.id}')">
+          [${getShortCatLabel(m.category)}] ${m.w}x${m.l}x${m.t}T (${m.price.toLocaleString()}원)
+        </button>
+      `).join('');
+    }
+
     function renderCatalog() {
       const thicknessFilter = document.getElementById('filter-thickness').value;
       const regionFilter = document.getElementById('filter-region').value;
       const cutOnly = document.getElementById('filter-cut-only').checked;
+      const instockOnlyEl = document.getElementById('filter-instock-only');
+      const instockOnly = instockOnlyEl ? instockOnlyEl.checked : false;
+      const sortModeEl = document.getElementById('catalog-sort-select');
+      const sortMode = sortModeEl ? sortModeEl.value : 'RECOMMEND';
       const keyword = document.getElementById('filter-search').value.trim().toLowerCase();
+
+      const wCnt = document.getElementById('wishlist-count-num');
+      if (wCnt) wCnt.textContent = wishlistMaterialIds.length;
 
       const filtered = materials.filter(m => {
         if (activeCategory !== 'ALL' && m.category !== activeCategory) return false;
@@ -7486,11 +8023,34 @@
         if (thicknessFilter === 'THICK' && m.t < 16) return false;
         if (regionFilter !== 'ALL' && m.region !== regionFilter) return false;
         if (cutOnly && !m.cuttable) return false;
+        if (instockOnly && (m.stock || 0) <= 0) return false;
+        if (filterWishlistOnly && !wishlistMaterialIds.includes(m.id)) return false;
         if (keyword) {
           const hay = `${m.name} ${m.grade} ${m.code} ${m.partner} ${m.category} ${m.t}t ${m.w}x${m.l}`.toLowerCase();
           if (!hay.includes(keyword)) return false;
         }
         return true;
+      });
+
+      filtered.sort((a, b) => {
+        const rsA = getRateSpec(a);
+        const rsB = getRateSpec(b);
+        const wA = calcWeightKg(a.w, a.l, a.t, 1, rsA.density, a);
+        const wB = calcWeightKg(b.w, b.l, b.t, 1, rsB.density, b);
+        const pA = Math.max(a.price, Math.round((wA * rsA.scrapPerKg) / 100) * 100);
+        const pB = Math.max(b.price, Math.round((wB * rsB.scrapPerKg) / 100) * 100);
+        const mA = Math.max(a.marketPrice, Math.round((wA * rsA.marketPerKg) / 100) * 100);
+        const mB = Math.max(b.marketPrice, Math.round((wB * rsB.marketPerKg) / 100) * 100);
+        const dA = Math.round((1 - pA / mA) * 100);
+        const dB = Math.round((1 - pB / mB) * 100);
+
+        if (sortMode === 'PRICE_ASC') return pA - pB;
+        if (sortMode === 'PRICE_DESC') return pB - pA;
+        if (sortMode === 'DISCOUNT_DESC') return dB - dA;
+        if (sortMode === 'RATING_DESC') return (parseFloat(b.rating) * 100 + (b.reviews || 0)) - (parseFloat(a.rating) * 100 + (a.reviews || 0));
+        if (sortMode === 'THICKNESS_ASC') return a.t - b.t;
+        if (sortMode === 'THICKNESS_DESC') return b.t - a.t;
+        return 0;
       });
 
       document.getElementById('catalog-result-count').textContent = filtered.length;
@@ -7504,7 +8064,9 @@
 
       grid.innerHTML = filtered.map(m => {
         const rateSpec = getRateSpec(m);
-        const plateWeight = calcWeightKg(m.w, m.l, m.t, 1, rateSpec.density);
+        const isPipe = isPipeMaterial(m);
+        const unitCntLbl = isPipe ? '본' : '장';
+        const plateWeight = calcWeightKg(m.w, m.l, m.t, 1, rateSpec.density, m);
         const calcMarketPrice = Math.max(m.marketPrice, Math.round((plateWeight * rateSpec.marketPerKg) / 100) * 100);
         const calcScrapPrice = Math.max(m.price, Math.round((plateWeight * rateSpec.scrapPerKg) / 100) * 100);
         const discount = Math.round((1 - calcScrapPrice / calcMarketPrice) * 100);
@@ -7517,8 +8079,8 @@
                 <div class="prd-tags-top">
                   <span class="tag-square tag-fast">${m.dispatch}</span>
                   ${m.cuttable
-                    ? `<span class="tag-square tag-cut">맞춤재단</span>`
-                    : `<span class="tag-square tag-raw">원판전용</span>`}
+                    ? `<span class="tag-square tag-cut">${isPipe ? '맞춤절단·벤딩' : '맞춤재단'}</span>`
+                    : `<span class="tag-square tag-raw">${isPipe ? '원관전용' : '원판전용'}</span>`}
                 </div>
                 ${isSelected ? `<span class="prd-selected-ribbon">선택중</span>` : ''}
                 ${m.imageUrl ? `<img src="${m.imageUrl}" alt="${m.name}" style="width:100%; height:132px; object-fit:cover; border:1px solid #dee2e6;" />` : getRealisticMaterialSVG(m)}
@@ -7531,8 +8093,8 @@
                 </div>
                 <h4 class="prd-name">${m.name}</h4>
                 <div class="prd-spec-table">
-                  <span>규격: <strong>${m.w}x${m.l}x${m.t}mm</strong></span>
-                  <span style="color:var(--brand); font-weight:700;">재고 ${m.stock}장</span>
+                  <span>${isPipe ? '원관규격' : '규격'}: <strong>${m.w}x${m.l}x${m.t}mm</strong></span>
+                  <span style="color:var(--brand); font-weight:700;">재고 ${m.stock}${unitCntLbl}</span>
                 </div>
                 <div class="prd-price-box">
                   <div>
@@ -7547,7 +8109,10 @@
                 </div>
                 <div class="prd-meta-bottom">
                   <span>자투리시세 ${rateSpec.scrapPerKg.toLocaleString()}원/kg</span>
-                  <span>평점 ${m.rating} (${m.reviews})</span>
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span>평점 ${m.rating} (${m.reviews})</span>
+                    <button type="button" class="spec-chip ${wishlistMaterialIds.includes(m.id) ? 'active' : ''}" style="padding:1px 6px; font-size:10.5px; font-weight:700;" onclick="toggleWishlistMaterial('${m.id}', event)">${wishlistMaterialIds.includes(m.id) ? '찜됨' : '관심찜'}</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -7559,6 +8124,18 @@
     function scrollToProductReviews() {
       const box = document.getElementById('product-detail-community-box');
       if (box) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function isPipeMaterial(mat) {
+      return Boolean(mat && (mat.category === '쇠파이프·각관' || mat.surfaceType === 'STEEL_PIPE'));
+    }
+
+    function setPipeRValue(val) {
+      const rInp = document.getElementById('cut-pipe-r');
+      if (rInp) {
+        rInp.value = val;
+        updateCalculator();
+      }
     }
 
     function renderSelectedMaterialDetailView() {
@@ -7575,7 +8152,7 @@
       }
 
       const rateSpec = getRateSpec(mat);
-      const plateWeight = calcWeightKg(mat.w, mat.l, mat.t, 1, rateSpec.density);
+      const plateWeight = calcWeightKg(mat.w, mat.l, mat.t, 1, rateSpec.density, mat);
       const calcMarketPrice = Math.max(mat.marketPrice, Math.round((plateWeight * rateSpec.marketPerKg) / 100) * 100);
       const calcScrapPrice = Math.max(mat.price, Math.round((plateWeight * rateSpec.scrapPerKg) / 100) * 100);
       const discount = Math.round((1 - calcScrapPrice / calcMarketPrice) * 100);
@@ -7601,16 +8178,16 @@
             <table class="erp-table bsdv-spec-table">
               <tbody>
                 <tr>
-                  <th style="width:110px;">원판 보유규격</th>
-                  <td style="font-family:var(--font-mono); font-weight:800; color:var(--brand-dark);">가로 ${mat.w} x 세로 ${mat.l} x 두께 ${mat.t}mm (재고 ${mat.stock}장)</td>
+                  <th style="width:110px;">${isPipeMaterial(mat) ? '원관 보유규격' : '원판 보유규격'}</th>
+                  <td style="font-family:var(--font-mono); font-weight:800; color:var(--brand-dark);">${isPipeMaterial(mat) ? `전장(길이) ${mat.w} x 단면·외경 ${mat.l} x 두께 ${mat.t}mm (재고 ${mat.stock}본)` : `가로 ${mat.w} x 세로 ${mat.l} x 두께 ${mat.t}mm (재고 ${mat.stock}장)`}</td>
                   <th style="width:110px;">재질 / 비중</th>
                   <td>${mat.category} (${mat.grade}) · ${rateSpec.density}g/cm³</td>
                 </tr>
                 <tr>
                   <th>자투리 최저시세</th>
                   <td><strong style="color:var(--price-red); font-family:var(--font-mono);">${rateSpec.scrapPerKg.toLocaleString()}원/kg</strong> <span style="color:var(--text-muted); text-decoration:line-through; font-size:11px;">(시중 ${rateSpec.marketPerKg.toLocaleString()}원/kg)</span></td>
-                  <th>원판 기준단가</th>
-                  <td><strong style="color:var(--price-red); font-family:var(--font-mono);">${discount}% 할인 ${calcScrapPrice.toLocaleString()}원</strong></td>
+                  <th>${isPipeMaterial(mat) ? '원관 1본 기준단가' : '원판 기준단가'}</th>
+                  <td><strong style="color:var(--price-red); font-family:var(--font-mono);">${discount}% 할인 ${calcScrapPrice.toLocaleString()}원</strong> <span style="font-size:11px; color:var(--text-secondary);">(${isPipeMaterial(mat) ? '중공 단면적 실측 ' : ''}${plateWeight.toFixed(2)}kg/${isPipeMaterial(mat) ? '본' : '장'})</span></td>
                 </tr>
                 <tr>
                   <th>가공 설비/옵션</th>
@@ -7618,12 +8195,9 @@
                 </tr>
               </tbody>
             </table>
-            <div style="margin-top:12px; background:var(--brand-light); border:1.5px solid var(--brand); padding:10px 14px; border-radius:3px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-              <div>
-                <strong style="color:var(--brand-dark); font-size:12.5px;">[안내] 바로 아래 [맞춤 재단 계산기]에서 가로·세로 치수를 입력하고 주문하세요!</strong>
-                <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">입력하신 가로x세로(mm) 치수와 수량(EA)에 맞춰 자투리 최저 시세로 실시간 자동 계산됩니다.</div>
-              </div>
-              <button type="button" class="btn-mall btn-mall-brand" style="padding:6px 12px; font-size:12px; font-weight:800;" onclick="document.getElementById('calculator-panel').scrollIntoView({ behavior: 'smooth', block: 'start' })">맞춤재단 계산기 보기</button>
+            <div style="margin-top:12px; background:var(--brand-light); border:1.5px solid var(--brand); padding:10px 14px; border-radius:3px;">
+              <strong style="color:var(--brand-dark); font-size:12.5px; display:block;">${isPipeMaterial(mat) ? '[맞춤 재단 계산기]에서 절단길이·수량 및 파이프 R값을 입력하고 주문하세요' : '[맞춤 재단 계산기]에서 가로·세로 치수를 입력하고 주문하세요'}</strong>
+              <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">${isPipeMaterial(mat) ? '입력하신 절단길이(mm), 수량(EA), 파이프 R값(곡률·모서리 R)이 CAD 시뮬레이션과 견적에 실시간 반영됩니다.' : '입력하신 가로x세로(mm) 치수와 수량(EA)에 맞춰 자투리 최저 시세로 실시간 자동 계산됩니다.'}</div>
             </div>
           </div>
         </div>
@@ -7642,6 +8216,7 @@
         return;
       }
       selectedMaterialId = id;
+      pushRecentViewedMaterial(id);
       const mat = materials.find(m => m.id === id);
       if (!mat) {
         renderSelectedMaterialDetailView();
@@ -7653,9 +8228,19 @@
         document.getElementById('raw-qty').value = 1;
       } else {
         orderMode = 'CUT';
-        document.getElementById('cut-w').value = Math.min(250, Math.floor(mat.w * 0.45));
-        document.getElementById('cut-l').value = Math.min(180, Math.floor(mat.l * 0.45));
-        document.getElementById('cut-qty').value = 2;
+        if (isPipeMaterial(mat)) {
+          document.getElementById('cut-w').value = Math.min(500, Math.floor(mat.w * 0.4));
+          document.getElementById('cut-l').value = mat.l;
+          document.getElementById('cut-qty').value = 2;
+          const rInp = document.getElementById('cut-pipe-r');
+          if (rInp) rInp.value = Math.round(mat.l * 2 * 10) / 10;
+        } else {
+          document.getElementById('cut-w').value = Math.min(250, Math.floor(mat.w * 0.45));
+          document.getElementById('cut-l').value = Math.min(180, Math.floor(mat.l * 0.45));
+          document.getElementById('cut-qty').value = 2;
+          const rInp = document.getElementById('cut-pipe-r');
+          if (rInp) rInp.value = 0;
+        }
       }
 
       renderCatalog();
@@ -7695,17 +8280,33 @@
       if (emptyGuide) emptyGuide.style.display = 'none';
       if (activeContent) activeContent.style.display = 'block';
 
+      const isPipe = isPipeMaterial(mat);
+      const cutWTh = document.getElementById('cut-w-th');
+      const cutLTh = document.getElementById('cut-l-th');
+      const pipeRRow = document.getElementById('pipe-r-row');
+      const rawQtyTh = document.getElementById('raw-qty-th');
+      const rawQtyUnit = document.getElementById('raw-qty-unit');
+      if (cutWTh) cutWTh.textContent = isPipe ? '요청 절단길이 (L)' : '요청 가로 (W)';
+      if (cutLTh) cutLTh.textContent = isPipe ? '파이프 외경·단면 (OD)' : '요청 세로 (L)';
+      if (pipeRRow) pipeRRow.style.display = isPipe ? '' : 'none';
+      if (rawQtyTh) rawQtyTh.textContent = isPipe ? '원관 구매 수량' : '원판 구매 수량';
+      if (rawQtyUnit) rawQtyUnit.textContent = isPipe ? '본' : '장';
+
       const rateSpec = getRateSpec(mat);
       document.getElementById('calc-mat-cat').textContent = `[${mat.code}] ${mat.category} · ${mat.grade}`;
       document.getElementById('calc-mat-partner').textContent = `공급: ${mat.partner} (${mat.region})`;
       document.getElementById('calc-mat-name').textContent = mat.name;
-      document.getElementById('calc-mat-spec').textContent = `원판 규격: 가로 ${mat.w} x 세로 ${mat.l} x 두께 ${mat.t}mm (보유재고 ${mat.stock}장)`;
+      document.getElementById('calc-mat-spec').textContent = isPipe
+        ? `원관 규격: 길이 ${mat.w} x 외경 ${mat.l} x 두께 ${mat.t}mm (보유재고 ${mat.stock}본)`
+        : `원판 규격: 가로 ${mat.w} x 세로 ${mat.l} x 두께 ${mat.t}mm (보유재고 ${mat.stock}장)`;
       document.getElementById('calc-market-rate-info').textContent = `시중 시세: ${rateSpec.marketPerKg.toLocaleString()}원/kg`;
       document.getElementById('calc-scrap-rate-info').textContent = `자투리 최저시세: ${rateSpec.scrapPerKg.toLocaleString()}원/kg`;
 
       const btnRaw = document.getElementById('mode-raw');
       const btnCut = document.getElementById('mode-cut');
       btnCut.disabled = !mat.cuttable;
+      btnRaw.textContent = isPipe ? '원관 그대로 구매 (가공비 0원)' : '원판 그대로 구매 (가공비 0원)';
+      btnCut.textContent = isPipe ? '맞춤 절단·벤딩 주문 (길이·R값 비례)' : '맞춤 재단 주문 (치수·수량 비례)';
       btnRaw.classList.toggle('active', orderMode === 'RAW');
       btnCut.classList.toggle('active', orderMode === 'CUT');
 
@@ -7720,14 +8321,14 @@
         const rawQty = parseInt(document.getElementById('raw-qty').value, 10) || 1;
         if (rawQty < 1 || rawQty > mat.stock) {
           valBox.className = 'status-msg-box err';
-          valBox.innerHTML = `<strong>[재고 초과]</strong> 요청 수량(${rawQty}장)이 보유 재고(${mat.stock}장)를 초과합니다.`;
+          valBox.innerHTML = `<strong>[재고 초과]</strong> 요청 수량(${rawQty}${isPipe ? '본' : '장'})이 보유 재고(${mat.stock}${isPipe ? '본' : '장'})를 초과합니다.`;
           btnQuote.disabled = true;
           btnPay.disabled = true;
-          renderBlueprintSVG(mat, mat.w, mat.l, 0, 1, 1, false);
+          renderBlueprintSVG(mat, mat.w, mat.l, 0, 1, 1, false, 0);
           return;
         }
 
-        const totalWeightKg = calcWeightKg(mat.w, mat.l, mat.t, rawQty, rateSpec.density);
+        const totalWeightKg = calcWeightKg(mat.w, mat.l, mat.t, rawQty, rateSpec.density, mat);
         const marketCost = Math.max(2000, Math.round((totalWeightKg * rateSpec.marketPerKg) / 100) * 100);
         const baseCost = Math.max(1500, Math.round((totalWeightKg * rateSpec.scrapPerKg) / 100) * 100);
         const cutCost = 0;
@@ -7736,13 +8337,13 @@
         const total = baseCost + cutCost + shipCost + vat;
 
         valBox.className = 'status-msg-box ok';
-        valBox.innerHTML = `<strong>[원판 출고 모드]</strong> 기본 규격(<strong>${mat.w}x${mat.l}x${mat.t}mm</strong>) 원판 <strong>${rawQty}장</strong>(총 ${totalWeightKg.toFixed(2)}kg)이 자투리 최저시세로 계산되었습니다.`;
+        valBox.innerHTML = `<strong>[${isPipe ? '원관' : '원판'} 출고 모드]</strong> 기본 규격(<strong>${mat.w}x${mat.l}x${mat.t}mm</strong>) ${isPipe ? '원관' : '원판'} <strong>${rawQty}${isPipe ? '본' : '장'}</strong>(총 ${totalWeightKg.toFixed(2)}kg)이 자투리 최저시세로 계산되었습니다.`;
         btnQuote.disabled = false;
         btnPay.disabled = false;
 
-        document.getElementById('cad-weight-info').textContent = `총 중량: ${totalWeightKg.toFixed(2)}kg (${rawQty}장)`;
+        document.getElementById('cad-weight-info').textContent = `총 중량: ${totalWeightKg.toFixed(2)}kg (${rawQty}${isPipe ? '본' : '장'})`;
         document.getElementById('cost-market-val').textContent = `${marketCost.toLocaleString()}원`;
-        document.getElementById('cost-base-label').textContent = `자투리 원판 최저시세 (${rawQty}장 · ${totalWeightKg.toFixed(2)}kg)`;
+        document.getElementById('cost-base-label').textContent = `자투리 ${isPipe ? '원관' : '원판'} 최저시세 (${rawQty}${isPipe ? '본' : '장'} · ${totalWeightKg.toFixed(2)}kg)`;
         document.getElementById('cost-base-val').textContent = `${baseCost.toLocaleString()}원`;
         document.getElementById('cost-cut-label').textContent = `맞춤 재단 가공비 (무가공)`;
         document.getElementById('cost-cut-val').textContent = `0원`;
@@ -7750,12 +8351,12 @@
         document.getElementById('cost-total-val').textContent = `${total.toLocaleString()}원`;
 
         currentCalcResult = {
-          mat, mode: 'RAW', reqW: mat.w, reqL: mat.l, reqQty: rawQty,
+          mat, isPipe, pipeR: 0, mode: 'RAW', reqW: mat.w, reqL: mat.l, reqQty: rawQty,
           platesNeeded: rawQty, cutCount: 0, weightKg: totalWeightKg,
           marketCost, baseCost, cutCost, shipCost, vat, total
         };
 
-        renderBlueprintSVG(mat, mat.w, mat.l, 1, 1, 1, true);
+        renderBlueprintSVG(mat, mat.w, mat.l, 1, 1, 1, true, 0);
         return;
       }
 
@@ -7763,17 +8364,78 @@
       let reqW = parseInt(document.getElementById('cut-w').value, 10) || 0;
       let reqL = parseInt(document.getElementById('cut-l').value, 10) || 0;
       let reqQty = parseInt(document.getElementById('cut-qty').value, 10) || 1;
+      const rawPipeR = isPipe && document.getElementById('cut-pipe-r')
+        ? parseFloat(document.getElementById('cut-pipe-r').value)
+        : 0;
+      const pipeR = (isPipe && !isNaN(rawPipeR) && rawPipeR >= 0) ? rawPipeR : 0;
+
+      // 파이프 외경(OD = reqL)에 따른 최소 벤딩 반경 R_min (1.5D), 권장 반경 (2.0D ~ 3.0D), 최소 직선 물림부(클램핑 길이) 동적 산출
+      const pipeOd = Math.max(10, reqL || mat.l);
+      const minBendR = Number((pipeOd * 1.5).toFixed(1));
+      const stdBendR = Number((pipeOd * 2.0).toFixed(1));
+      const recBendR = Number((pipeOd * 3.0).toFixed(1));
+      const mandrelBendR = Number((pipeOd * 1.0).toFixed(1));
+      // 벤딩기 클램프 물림부 최소 절단길이: 외경의 3배(3D) 또는 벤딩반경의 1.5배(1.5R) 중 큰 값 (원관 전장 이내)
+      const minBendClampLen = Math.min(mat.w, Math.max(Math.round(pipeOd * 3), Math.round(pipeR * 1.5)));
+
+      if (isPipe) {
+        const subThEl = document.getElementById('cut-pipe-r-subth');
+        if (subThEl) subThEl.textContent = `(최소 R${minBendR} 이상)`;
+        const presetsEl = document.getElementById('pipe-r-presets');
+        if (presetsEl) {
+          presetsEl.innerHTML = `
+            <button type="button" class="spec-chip ${pipeR === 0 ? 'active' : ''}" style="padding:2px 6px; font-size:10.5px;" onclick="setPipeRValue(0)">0R (직관)</button>
+            <button type="button" class="spec-chip ${pipeR === minBendR ? 'active' : ''}" style="padding:2px 6px; font-size:10.5px;" onclick="setPipeRValue(${minBendR})">최소 R${minBendR} (1.5D)</button>
+            <button type="button" class="spec-chip ${pipeR === stdBendR ? 'active' : ''}" style="padding:2px 6px; font-size:10.5px;" onclick="setPipeRValue(${stdBendR})">표준 R${stdBendR} (2.0D)</button>
+            <button type="button" class="spec-chip ${pipeR === recBendR ? 'active' : ''}" style="padding:2px 6px; font-size:10.5px;" onclick="setPipeRValue(${recBendR})">권장 R${recBendR} (3.0D)</button>
+          `;
+        }
+      }
 
       let isValid = true;
       let errorMsg = '';
       let rotated = false;
+      let pipeSimErrorMode = false;
 
-      if (reqW < 20 || reqL < 20) {
+      if (reqW < 20 || reqL < 10) {
+        isValid = false;
+        errorMsg = isPipe
+          ? `<strong>[최소 치수 미달]</strong> 파이프 최소 절단길이는 20mm 이상, 외경(OD)은 10mm 이상이어야 합니다. (현재: 길이 ${reqW}mm / 외경 ${reqL}mm)`
+          : `<strong>[최소 치수 미달]</strong> 최소 재단 가능 치수는 가로·세로 20mm 이상입니다. (현재: ${reqW}x${reqL}mm)`;
+      } else if (!isPipe && reqL < 20) {
         isValid = false;
         errorMsg = `<strong>[최소 치수 미달]</strong> 최소 재단 가능 치수는 가로·세로 20mm 이상입니다. (현재: ${reqW}x${reqL}mm)`;
       } else if (reqQty < 1 || reqQty > 100) {
         isValid = false;
         errorMsg = `<strong>[수량 오류]</strong> 주문 수량은 1~100EA 범위로 입력해 주세요.`;
+      } else if (isPipe) {
+        if (reqW > mat.w) {
+          isValid = false;
+          errorMsg = `<strong>[원관 길이 초과]</strong> 요청하신 절단길이(${reqW}mm)가 보유 파이프 전장(${mat.w}mm)을 초과합니다.`;
+        } else if (reqL > mat.l) {
+          isValid = false;
+          errorMsg = `<strong>[파이프 외경 초과]</strong> 요청하신 외경·단면(${reqL}mm)이 보유 파이프 원관 외경 규격(${mat.l}mm)을 초과합니다.`;
+        } else if (pipeR > 0 && pipeR < minBendR) {
+          isValid = false;
+          pipeSimErrorMode = 'R_MIN_ERR';
+          const curRatioD = (pipeR / pipeOd).toFixed(2);
+          errorMsg = `
+            <strong>[최소 벤딩 R값(R<sub>min</sub>) 물리적 한계 미달 — 가공 불량 위험]</strong><br/>
+            파이프 외경(<strong>OD = ${pipeOd}mm</strong>) 기준 일반 벤딩 마지노선은 <strong>최소 R${minBendR}mm (1.5D) 이상</strong>이어야 합니다. (현재 입력: <strong>R${pipeR}mm = ${curRatioD}D</strong> / 권장: <strong>R${minBendR} ~ R${recBendR}mm</strong>)<br/>
+            • <strong>외측 늘어남 (Thinning):</strong> 바깥쪽 벽이 한계를 넘어 늘어나면서 두께가 얇아지다 <strong>찢어짐(파단)</strong> 발생<br/>
+            • <strong>내측 찌그러짐·주름 (Wrinkling):</strong> 안쪽 벽이 과도하게 압축되면서 <strong>내측 주름 및 단면 찌그러짐</strong> 발생<br/>
+            <span style="font-size:11px; color:#495057;">* 직관 절단은 <strong>0R</strong>을 선택하시고, 특수 맨드릴(내부 지지대) 장비가 필요한 <strong>1D(R${mandrelBendR}mm)</strong> 극소벤딩은 하단 <strong>[RFQ 도면 주문제작 견적요청]</strong>으로 접수해 주세요.</span>
+          `;
+        } else if (pipeR > 0 && reqW < minBendClampLen) {
+          isValid = false;
+          pipeSimErrorMode = 'CLAMP_LEN_ERR';
+          errorMsg = `
+            <strong>[파이프 벤딩 최소 직선 물림부(클램핑 길이) 미달]</strong><br/>
+            곡률 벤딩(<strong>R${pipeR}mm</strong>) 가공 시 벤딩기 클램프가 파이프 양단을 고정할 수 있도록 요청 절단길이(L)가 <strong>최소 ${minBendClampLen}mm 이상</strong>(외경의 3배 <strong>3D=${Math.round(pipeOd * 3)}mm</strong> 및 <strong>1.5R=${Math.round(pipeR * 1.5)}mm</strong> 기준)이어야 합니다.<br/>
+            • 현재 요청 절단길이: <strong>L = ${reqW}mm</strong> (최소 물림부 기준 대비 <strong>${minBendClampLen - reqW}mm 부족</strong>)<br/>
+            <span style="font-size:11px; color:#495057;">* 절단길이(L)를 <strong>${minBendClampLen}mm 이상</strong>으로 늘리시거나, 짧은 직관 절단이 필요하시면 <strong>0R (직관절단)</strong>을 선택해 주세요.</span>
+          `;
+        }
       } else if (reqW > mat.w || reqL > mat.l) {
         if (reqW <= mat.l && reqL <= mat.w) {
           rotated = true;
@@ -7788,7 +8450,7 @@
         valBox.innerHTML = errorMsg;
         btnQuote.disabled = true;
         btnPay.disabled = true;
-        renderBlueprintSVG(mat, reqW, reqL, reqQty, 0, 0, false);
+        renderBlueprintSVG(mat, reqW, reqL, reqQty, 1, 1, pipeSimErrorMode || false, pipeR);
         return;
       }
 
@@ -7796,64 +8458,285 @@
       const effL = rotated ? reqW : reqL;
 
       const colsPerPlate = Math.max(1, Math.floor((mat.w + kerf) / (effW + kerf)));
-      const rowsPerPlate = Math.max(1, Math.floor((mat.l + kerf) / (effL + kerf)));
+      const rowsPerPlate = isPipe ? 1 : Math.max(1, Math.floor((mat.l + kerf) / (effL + kerf)));
       const maxPiecesPerPlate = colsPerPlate * rowsPerPlate;
       const platesNeeded = Math.ceil(reqQty / maxPiecesPerPlate);
 
       if (platesNeeded > mat.stock) {
         valBox.className = 'status-msg-box err';
-        valBox.innerHTML = `<strong>[재고 부족]</strong> ${reqW}x${reqL}mm ${reqQty}EA 재단 시 원판 ${platesNeeded}장이 필요하나 현재 보유 재고는 ${mat.stock}장입니다.`;
+        valBox.innerHTML = `<strong>[재고 부족]</strong> ${reqW}x${reqL}mm ${reqQty}EA 재단 시 ${isPipe ? '원관' : '원판'} ${platesNeeded}${isPipe ? '본' : '장'}이 필요하나 현재 보유 재고는 ${mat.stock}${isPipe ? '본' : '장'}입니다.`;
         btnQuote.disabled = true;
         btnPay.disabled = true;
-        renderBlueprintSVG(mat, effW, effL, reqQty, colsPerPlate, rowsPerPlate, false);
+        renderBlueprintSVG(mat, effW, effL, reqQty, colsPerPlate, rowsPerPlate, false, pipeR);
         return;
       }
 
       const scrapMode = document.getElementById('scrap-handling').value;
-      const cutWeightKg = calcWeightKg(reqW, reqL, mat.t, reqQty, rateSpec.density);
-      const fullPlatesWeightKg = calcWeightKg(mat.w, mat.l, mat.t, platesNeeded, rateSpec.density);
+      const cutWeightKg = calcWeightKg(reqW, reqL, mat.t, reqQty, rateSpec.density, mat);
+      const fullPlatesWeightKg = calcWeightKg(mat.w, mat.l, mat.t, platesNeeded, rateSpec.density, mat);
       const billedWeightKg = (scrapMode === 'INCLUDE') ? fullPlatesWeightKg : cutWeightKg;
 
       const marketCost = Math.max(800, Math.round((billedWeightKg * rateSpec.marketPerKg) / 10) * 10);
       const baseCost = Math.max(400, Math.round((billedWeightKg * rateSpec.scrapPerKg) / 10) * 10);
 
-      // 수량 및 치수 둘레에 따라 실시간 변동되는 절단 가공비
-      const cutsPerPiece = (effW < mat.w ? 1 : 0) + (effL < mat.l ? 1 : 0) || 1;
+      // 수량 및 치수 둘레에 따라 실시간 변동되는 절단 가공비 + 파이프 벤딩 가공비(급곡률 1.5D~2D 할증 / 표준 2D+ 롤벤딩) + 정밀 후가공비
+      const postProcCode = (document.getElementById('cut-post-proc') && document.getElementById('cut-post-proc').value) || 'NONE';
+      const postProcSpec = POST_PROC_OPTIONS[postProcCode] || POST_PROC_OPTIONS.NONE;
+      const workMemo = (document.getElementById('cut-work-memo') && document.getElementById('cut-work-memo').value.trim()) || '';
+
+      const cutsPerPiece = isPipe ? 1 : ((effW < mat.w ? 1 : 0) + (effL < mat.l ? 1 : 0) || 1);
       const cutCount = reqQty * cutsPerPiece;
       const unitCutFee = Math.max(500, Math.round((mat.cutFeePerCut * (0.5 + (reqW + reqL) / 800)) / 100) * 100);
-      const cutCost = cutCount * unitCutFee;
+      const isTightPipeBend = Boolean(isPipe && pipeR > 0 && pipeR < stdBendR);
+      const unitPipeBendFee = (isPipe && pipeR > 0) ? (isTightPipeBend ? 3500 : 2500) : 0;
+      const pipeBendCost = reqQty * unitPipeBendFee;
+      const pipeBendLabel = (isPipe && pipeR > 0)
+        ? (isTightPipeBend ? `급곡률벤딩(R${pipeR}·${(pipeR / pipeOd).toFixed(1)}D, ${unitPipeBendFee.toLocaleString()}원/EA)` : `표준롤벤딩(R${pipeR}·${(pipeR / pipeOd).toFixed(1)}D, ${unitPipeBendFee.toLocaleString()}원/EA)`)
+        : '';
+      const postProcCost = reqQty * postProcSpec.feePerEa;
+      const cutCost = (cutCount * unitCutFee) + pipeBendCost + postProcCost;
 
       const shipCost = 4000;
       const vat = Math.round((baseCost + cutCost + shipCost) * 0.1);
       const total = baseCost + cutCost + shipCost + vat;
 
+      const pipeDRatio = (isPipe && pipeR > 0) ? (pipeR / pipeOd).toFixed(1) : '0';
+      const pipeRText = isPipe ? (pipeR > 0 ? ` · R${pipeR}mm` : ` · 직관(0R)`) : '';
       valBox.className = 'status-msg-box ok';
-      valBox.innerHTML = `<strong>[유효성 검증 통과]</strong> <strong>${reqW}x${reqL}mm x ${reqQty}EA</strong> (중량 ${cutWeightKg.toFixed(2)}kg / 원판 ${platesNeeded}장 내 배치) · 절단 ${cutCount}회`;
+      valBox.innerHTML = isPipe
+        ? `<strong>[재단 가능]</strong> <strong>길이 ${reqW}mm x 외경 ${reqL}mm (${mat.t}T${pipeRText}) x ${reqQty}EA</strong> (원관 ${platesNeeded}본 · 절단 ${cutCount}회${postProcCode !== 'NONE' ? ' · ' + postProcSpec.label : ''})`
+        : `<strong>[유효성 검증 통과]</strong> <strong>${reqW}x${reqL}mm x ${reqQty}EA</strong> (중량 ${cutWeightKg.toFixed(2)}kg / 원판 ${platesNeeded}장 내 배치) · 절단 ${cutCount}회${postProcCode !== 'NONE' ? ' · ' + postProcSpec.label : ''}`;
       btnQuote.disabled = false;
       btnPay.disabled = false;
 
-      document.getElementById('cad-weight-info').textContent = `재단 중량: ${cutWeightKg.toFixed(2)}kg (${reqQty}EA)`;
+      document.getElementById('cad-weight-info').textContent = `예상 중량: ${cutWeightKg.toFixed(2)}kg (${reqQty}EA)${isPipe && pipeR > 0 ? ' · R' + pipeR + 'mm' : ''}`;
       document.getElementById('cost-market-val').textContent = `${marketCost.toLocaleString()}원`;
       document.getElementById('cost-base-label').textContent = scrapMode === 'INCLUDE'
-        ? `원판 전체 최저시세 (${platesNeeded}장 · ${fullPlatesWeightKg.toFixed(2)}kg)`
-        : `재단 면적 최저시세 (${reqW}x${reqL}mm x ${reqQty}EA · ${cutWeightKg.toFixed(2)}kg)`;
+        ? `${isPipe ? '원관' : '원판'} 전체 최저시세 (${platesNeeded}${isPipe ? '본' : '장'} · ${fullPlatesWeightKg.toFixed(2)}kg)`
+        : `재단 ${isPipe ? '길이' : '면적'} 최저시세 (${reqW}x${reqL}mm x ${reqQty}EA · ${cutWeightKg.toFixed(2)}kg)`;
       document.getElementById('cost-base-val').textContent = `${baseCost.toLocaleString()}원`;
-      document.getElementById('cost-cut-label').textContent = `맞춤 재단 가공비 (절단 ${cutCount}회 x ${unitCutFee.toLocaleString()}원)`;
+      const feeParts = [`절단 ${cutCount}회`];
+      if (pipeBendCost > 0) feeParts.push(`R${pipeR} 벤딩 ${reqQty}EA`);
+      if (postProcCost > 0) feeParts.push(postProcSpec.label);
+      document.getElementById('cost-cut-label').textContent = (pipeBendCost > 0 || postProcCost > 0)
+        ? `맞춤 가공비 (${feeParts.join(' + ')})`
+        : `맞춤 재단 가공비 (절단 ${cutCount}회 x ${unitCutFee.toLocaleString()}원)`;
       document.getElementById('cost-cut-val').textContent = `${cutCost.toLocaleString()}원`;
       document.getElementById('cost-vat-val').textContent = `${vat.toLocaleString()}원`;
       document.getElementById('cost-total-val').textContent = `${total.toLocaleString()}원`;
 
       currentCalcResult = {
-        mat, mode: 'CUT', reqW, reqL, reqQty,
-        platesNeeded, cutCount, unitCutFee, weightKg: billedWeightKg,
+        mat, isPipe, pipeR, pipeBendCost, pipeBendLabel, mode: 'CUT', reqW, reqL, reqQty,
+        platesNeeded, cutCount, unitCutFee,
+        postProcCode, postProcLabel: postProcSpec.label, postProcCost, workMemo,
+        weightKg: billedWeightKg,
         marketCost, baseCost, cutCost, shipCost, vat, total
       };
 
       const piecesOnFirstPlate = Math.min(reqQty, maxPiecesPerPlate);
-      renderBlueprintSVG(mat, effW, effL, piecesOnFirstPlate, colsPerPlate, rowsPerPlate, true);
+      renderBlueprintSVG(mat, effW, effL, piecesOnFirstPlate, colsPerPlate, rowsPerPlate, true, pipeR);
     }
 
-    function renderBlueprintSVG(mat, pieceW, pieceL, piecesToShow, colsPerPlate, rowsPerPlate, isValid) {
+    function renderPipeBlueprintSVG(mat, pieceW, pieceL, piecesToShow, colsPerPlate, pipeR, isValid) {
+      const wrap = document.getElementById('blueprint-svg-wrap');
+      const yieldEl = document.getElementById('blueprint-yield');
+      const rVal = (!isNaN(pipeR) && pipeR >= 0) ? pipeR : 0;
+      const pipeOd = Math.max(10, pieceL || mat.l);
+      const minBendR = Number((pipeOd * 1.5).toFixed(1));
+      const dRatio = rVal > 0 ? (rVal / pipeOd).toFixed(2) : '0';
+
+      if (isValid === 'CLAMP_LEN_ERR') {
+        const minClampLen = Math.min(mat.w, Math.max(Math.round(pipeOd * 3), Math.round(rVal * 1.5)));
+        yieldEl.textContent = `벤딩 클램프 물림부 부족: L=${pieceW}mm < 최소 ${minClampLen}mm`;
+        wrap.innerHTML = `
+          <svg width="370" height="156" viewBox="0 0 370 156">
+            <rect x="6" y="6" width="358" height="144" fill="#fff5f5" stroke="#e03131" stroke-width="1.5" rx="3"/>
+            <text x="185" y="24" fill="#c92a2a" font-size="10.5" font-family="monospace" font-weight="800" text-anchor="middle">[클램핑 물림부 미달] R${rVal}mm 벤딩 시 최소 절단길이 L ≥ ${minClampLen}mm 필요</text>
+            <!-- 좌우 벤딩기 클램프 조(Jaw) 시뮬레이션 -->
+            <rect x="38" y="54" width="66" height="44" fill="#495057" stroke="#212529" stroke-width="1.5" rx="2"/>
+            <text x="71" y="79" fill="#ffffff" font-size="9.5" font-family="monospace" font-weight="700" text-anchor="middle">좌측 클램프</text>
+            <rect x="266" y="54" width="66" height="44" fill="#495057" stroke="#212529" stroke-width="1.5" rx="2"/>
+            <text x="299" y="79" fill="#ffffff" font-size="9.5" font-family="monospace" font-weight="700" text-anchor="middle">우측 클램프</text>
+            <!-- 너무 짧은 파이프 표시 -->
+            <rect x="130" y="64" width="110" height="24" fill="#ffe3e3" stroke="#e03131" stroke-width="2" stroke-dasharray="4,2"/>
+            <text x="185" y="80" fill="#c92a2a" font-size="10" font-family="monospace" font-weight="800" text-anchor="middle">현재 L=${pieceW}mm (물림 불가)</text>
+            <line x1="104" y1="76" x2="130" y2="76" stroke="#e03131" stroke-width="2" stroke-dasharray="2,2"/>
+            <line x1="240" y1="76" x2="266" y2="76" stroke="#e03131" stroke-width="2" stroke-dasharray="2,2"/>
+            <text x="185" y="122" fill="#c92a2a" font-size="10" font-family="monospace" font-weight="800" text-anchor="middle">요청 절단길이(L)를 ${minClampLen}mm 이상(3D·1.5R)으로 늘리거나</text>
+            <text x="185" y="138" fill="#495057" font-size="9.5" font-family="monospace" font-weight="700" text-anchor="middle">직관 절단이 필요하시면 [0R (직관절단)] 버튼을 선택하세요.</text>
+          </svg>
+        `;
+        return;
+      }
+
+      if (isValid === 'R_MIN_ERR') {
+        yieldEl.textContent = `벤딩 불량 위험: R${rVal}mm (${dRatio}D) < 최소 R_min ${minBendR}mm (1.5D)`;
+        wrap.innerHTML = `
+          <svg width="370" height="156" viewBox="0 0 370 156">
+            <rect x="6" y="6" width="358" height="144" fill="#fff5f5" stroke="#e03131" stroke-width="1.5" rx="3"/>
+            <text x="126" y="21" fill="#c92a2a" font-size="10" font-family="monospace" font-weight="800" text-anchor="middle">[한계 미달] 외경 D=${pipeOd}mm -> 최소 R${minBendR}(1.5D) 필요</text>
+
+            <!-- 과도한 급곡률 파이프 벤딩 시뮬레이션 (외측 늘어남/찢어짐 Thinning + 내측 주름/찌그러짐 Wrinkling) -->
+            <path d="M 34 126 Q 126 14 218 126" fill="none" stroke="#c92a2a" stroke-width="18" stroke-linecap="butt"/>
+            <path d="M 34 126 Q 126 14 218 126" fill="none" stroke="#ffe3e3" stroke-width="13" stroke-linecap="butt"/>
+
+            <!-- 외측 늘어남 및 파단(Thinning/Crack) 표시 -->
+            <path d="M 94 49 Q 126 32 158 49" fill="none" stroke="#e03131" stroke-width="2.5" stroke-dasharray="3,2"/>
+            <polyline points="122,36 126,45 130,37" fill="none" stroke="#c92a2a" stroke-width="2"/>
+            <rect x="52" y="25" width="148" height="16" rx="2" fill="#e03131"/>
+            <text x="126" y="36" fill="#ffffff" font-size="9.5" font-family="monospace" font-weight="800" text-anchor="middle">외측 늘어남·파단 (Thinning)</text>
+
+            <!-- 내측 찌그러짐 및 주름(Wrinkling) 물결 표시 -->
+            <path d="M 92 78 Q 100 68 108 76 T 124 72 T 140 76 T 156 78" fill="none" stroke="#c92a2a" stroke-width="2.4"/>
+            <rect x="48" y="86" width="156" height="16" rx="2" fill="#ffffff" stroke="#e03131" stroke-width="1.2"/>
+            <text x="126" y="97" fill="#c92a2a" font-size="9.5" font-family="monospace" font-weight="800" text-anchor="middle">내측 주름·찌그러짐 (Wrinkling)</text>
+
+            <text x="126" y="142" fill="#c92a2a" font-size="9.5" font-family="monospace" font-weight="800" text-anchor="middle">입력 R=${rVal}mm (${dRatio}D) — R${minBendR}mm 이상 입력하세요</text>
+
+            <!-- 우측: 찌그러진 단면(Ovalization/Buckling) 시뮬레이션 -->
+            <line x1="246" y1="12" x2="246" y2="144" stroke="#ffc9c9" stroke-width="1.2" stroke-dasharray="3,3"/>
+            <text x="306" y="22" fill="#c92a2a" font-size="9.5" font-family="monospace" font-weight="800" text-anchor="middle">단면 찌그러짐 불량</text>
+            <ellipse cx="306" cy="66" rx="34" ry="20" fill="#ffc9c9" stroke="#c92a2a" stroke-width="2"/>
+            <ellipse cx="306" cy="66" rx="26" ry="12" fill="#ffffff" stroke="#e03131" stroke-width="1.4" stroke-dasharray="3,2"/>
+            <text x="306" y="70" fill="#c92a2a" font-size="9" font-family="monospace" font-weight="800" text-anchor="middle">단면 붕괴</text>
+            <rect x="256" y="102" width="100" height="36" rx="2" fill="#ffffff" stroke="#e03131" stroke-width="1"/>
+            <text x="306" y="116" fill="#c92a2a" font-size="9" font-family="monospace" font-weight="800" text-anchor="middle">최소 R_min=${minBendR}</text>
+            <text x="306" y="130" fill="#495057" font-size="8.5" font-family="monospace" text-anchor="middle">(권장 3D=R${Number((pipeOd * 3).toFixed(0))}mm)</text>
+          </svg>
+        `;
+        return;
+      }
+
+      if (!isValid) {
+        yieldEl.textContent = '배치 불가 (파이프 규격 초과)';
+        wrap.innerHTML = `
+          <svg width="360" height="145" viewBox="0 0 360 145">
+            <rect x="30" y="18" width="300" height="108" fill="#fff5f5" stroke="#e03131" stroke-width="1.5" stroke-dasharray="5,3"/>
+            <text x="180" y="68" fill="#c92a2a" font-size="12" font-weight="700" text-anchor="middle">원관 규격(전장 ${mat.w} x 외경 ${mat.l}mm) 또는 재고 초과</text>
+            <text x="180" y="88" fill="#868e96" font-size="11" text-anchor="middle">요청 절단길이(L), 외경(OD) 또는 수량을 수정하세요.</text>
+          </svg>
+        `;
+        return;
+      }
+
+      const usedLen = Math.min(mat.w, pieceW * piecesToShow);
+      const yieldPct = Math.min(100, ((usedLen / mat.w) * 100)).toFixed(1);
+      yieldEl.textContent = `원관 1본 활용률: ${yieldPct}% (${rVal > 0 ? 'R=' + rVal + 'mm (' + dRatio + 'D) 정상벤딩' : 'R=0 직관절단'})`;
+
+      // 1) 좌측 상단: 원관 전장(mat.w) 대비 절단 피스 배치 바
+      const barX = 14;
+      const barY = 22;
+      const barW = 226;
+      const barH = 18;
+      const scaleW = barW / mat.w;
+      const segW = Math.max(12, Math.round(pieceW * scaleW));
+      const kerfPx = 2;
+      let segsSvg = '';
+      for (let i = 0; i < piecesToShow; i++) {
+        const sx = barX + i * (segW + kerfPx);
+        if (sx + segW <= barX + barW + 2) {
+          const drawSegW = Math.min(segW, barX + barW - sx);
+          segsSvg += `<rect x="${sx}" y="${barY}" width="${drawSegW}" height="${barH}" fill="#d0ebff" stroke="#1971c2" stroke-width="1.3"/>`;
+          if (drawSegW >= 32) {
+            segsSvg += `<text x="${sx + drawSegW/2}" y="${barY + 12}" fill="#1864ab" font-size="9" font-family="monospace" font-weight="700" text-anchor="middle">${pieceW}</text>`;
+          }
+        }
+      }
+
+      // 2) 좌측 하단 메인: 파이프 절단 & R값(벤딩 곡률 / 코너 R) 시뮬레이션 뷰
+      let mainSimSvg = '';
+      if (rVal > 0) {
+        // R값 크기에 따라 시각적 곡률(dip) 자동 조절 (R값이 작을수록 급격한 곡률, 클수록 완만한 곡률)
+        const dip = rVal < 30
+          ? Math.min(26, Math.max(10, Math.round(rVal * 1.1)))
+          : Math.min(34, Math.max(12, Math.round(3200 / (rVal + 60))));
+        const x1 = 26, y1 = 112;
+        const x2 = 228, y2 = 112;
+        const cx = 127, cy = y1 - dip * 1.85;
+        const midCurveY = Math.round(0.25 * y1 + 0.5 * cy + 0.25 * y2);
+        const radCenterX = 127, radCenterY = 144;
+
+        mainSimSvg = `
+          <!-- R값 곡률 반경 지시선 (Center to Pipe Arc) -->
+          <line x1="${radCenterX}" y1="${radCenterY}" x2="${cx - 38}" y2="${midCurveY + 4}" stroke="#e03131" stroke-width="1" stroke-dasharray="3,2"/>
+          <line x1="${radCenterX}" y1="${radCenterY}" x2="${cx + 38}" y2="${midCurveY + 4}" stroke="#e03131" stroke-width="1" stroke-dasharray="3,2"/>
+          <line x1="${radCenterX}" y1="${radCenterY}" x2="${cx}" y2="${midCurveY}" stroke="#e03131" stroke-width="1.5"/>
+          <circle cx="${radCenterX}" cy="${radCenterY}" r="2.5" fill="#e03131"/>
+          <circle cx="${cx}" cy="${midCurveY}" r="2.5" fill="#e03131"/>
+          <!-- 파이프 외경/내경 R 곡률 튜브 표현 -->
+          <path d="M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}" fill="none" stroke="#343a40" stroke-width="16" stroke-linecap="butt"/>
+          <path d="M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}" fill="none" stroke="#d0ebff" stroke-width="12" stroke-linecap="butt"/>
+          <path d="M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}" fill="none" stroke="#e03131" stroke-width="1.3" stroke-dasharray="4,2"/>
+          <!-- R값 치수 뱃지 (외경 비례 D배수 및 R_min 통과 표시) -->
+          <rect x="44" y="${Math.max(48, midCurveY - 24)}" width="166" height="18" rx="3" fill="#ebfbee" stroke="#2b8a3e" stroke-width="1.2"/>
+          <text x="127" y="${Math.max(60, midCurveY - 12)}" fill="#2b8a3e" font-size="10" font-family="monospace" font-weight="800" text-anchor="middle">벤딩 R=${rVal}mm (${dRatio}D ≥ 1.5D)</text>
+          <text x="127" y="149" fill="#1864ab" font-size="9.5" font-family="monospace" font-weight="700" text-anchor="middle">L=${pieceW}mm (${piecesToShow}EA) · 최소R_min=${minBendR}mm</text>
+        `;
+      } else {
+        mainSimSvg = `
+          <!-- 직관(R=0) 정밀 절단 시뮬레이션 -->
+          <rect x="26" y="84" width="202" height="24" fill="#d0ebff" stroke="#1971c2" stroke-width="1.6"/>
+          <line x1="26" y1="88" x2="228" y2="88" stroke="#1864ab" stroke-width="1" stroke-dasharray="3,2"/>
+          <line x1="26" y1="104" x2="228" y2="104" stroke="#1864ab" stroke-width="1" stroke-dasharray="3,2"/>
+          <line x1="20" y1="96" x2="234" y2="96" stroke="#e03131" stroke-width="1" stroke-dasharray="5,2"/>
+          <text x="127" y="77" fill="#1864ab" font-size="10" font-family="monospace" font-weight="800" text-anchor="middle">직관 절단 L = ${pieceW}mm (R = 0mm)</text>
+          <text x="127" y="126" fill="#495057" font-size="9.5" font-family="monospace" font-weight="700" text-anchor="middle">단면 ${pieceL}mm x 두께 ${mat.t}T (${piecesToShow}EA)</text>
+        `;
+      }
+
+      // 3) 우측 패널: 파이프 단면(Cross-Section) & 모서리/곡률 R 시뮬레이션
+      const isSquarePipe = Boolean((mat.grade && mat.grade.includes('각관')) || (mat.name && (mat.name.includes('사각') || mat.name.includes('각관'))));
+      let sectionSvg = '';
+      if (isSquarePipe) {
+        const outerR = rVal > 0 ? Math.min(16, Math.max(3, Math.round(rVal * 1.1))) : 2;
+        const innerR = Math.max(1, outerR - 3);
+        sectionSvg = `
+          <text x="308" y="20" fill="#212529" font-size="9.5" font-family="monospace" font-weight="800" text-anchor="middle">각관 단면 (${pieceL}x${pieceL})</text>
+          <rect x="276" y="34" width="64" height="64" rx="${outerR}" fill="#adb5bd" stroke="#212529" stroke-width="1.6"/>
+          <rect x="284" y="42" width="48" height="48" rx="${innerR}" fill="#ffffff" stroke="#1971c2" stroke-width="1.2"/>
+          <line x1="334" y1="40" x2="352" y2="26" stroke="#e03131" stroke-width="1.3"/>
+          <circle cx="334" cy="40" r="2.2" fill="#e03131"/>
+          <rect x="262" y="106" width="92" height="18" rx="2" fill="#fff5f5" stroke="#e03131" stroke-width="1"/>
+          <text x="308" y="118" fill="#c92a2a" font-size="9.5" font-family="monospace" font-weight="800" text-anchor="middle">R값: ${rVal}mm</text>
+          <text x="308" y="136" fill="#495057" font-size="9" font-family="monospace" text-anchor="middle">두께 ${mat.t}T 반영</text>
+        `;
+      } else {
+        sectionSvg = `
+          <text x="308" y="20" fill="#212529" font-size="9.5" font-family="monospace" font-weight="800" text-anchor="middle">원형관 단면 (Ø${pieceL})</text>
+          <circle cx="308" cy="66" r="32" fill="#adb5bd" stroke="#212529" stroke-width="1.6"/>
+          <circle cx="308" cy="66" r="24" fill="#ffffff" stroke="#1971c2" stroke-width="1.2"/>
+          <line x1="270" y1="66" x2="346" y2="66" stroke="#e03131" stroke-width="0.9" stroke-dasharray="3,2"/>
+          <line x1="308" y1="28" x2="308" y2="104" stroke="#e03131" stroke-width="0.9" stroke-dasharray="3,2"/>
+          <rect x="262" y="106" width="92" height="18" rx="2" fill="#fff5f5" stroke="#e03131" stroke-width="1"/>
+          <text x="308" y="118" fill="#c92a2a" font-size="9.5" font-family="monospace" font-weight="800" text-anchor="middle">R값: ${rVal}mm</text>
+          <text x="308" y="136" fill="#495057" font-size="9" font-family="monospace" text-anchor="middle">외경 Ø${pieceL} · ${mat.t}T</text>
+        `;
+      }
+
+      wrap.innerHTML = `
+        <svg width="370" height="156" viewBox="0 0 370 156">
+          <defs>
+            <pattern id="scrapHatchPipe" width="8" height="8" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="8" stroke="#dee2e6" stroke-width="2" />
+            </pattern>
+          </defs>
+          <!-- 원관 전체 길이 바 -->
+          <text x="${barX + barW/2}" y="15" fill="#212529" font-size="9.5" font-family="monospace" font-weight="700" text-anchor="middle">원관 전장 W = ${mat.w}mm (1본 내 ${colsPerPlate}피스 절단가능)</text>
+          <rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" fill="url(#scrapHatchPipe)" stroke="#343a40" stroke-width="1.5"/>
+          ${segsSvg}
+          <!-- 좌우 구분선 -->
+          <line x1="250" y1="10" x2="250" y2="146" stroke="#ced4da" stroke-width="1.2" stroke-dasharray="3,3"/>
+          ${mainSimSvg}
+          ${sectionSvg}
+        </svg>
+      `;
+    }
+
+    function renderBlueprintSVG(mat, pieceW, pieceL, piecesToShow, colsPerPlate, rowsPerPlate, isValid, pipeR) {
+      if (isPipeMaterial(mat)) {
+        renderPipeBlueprintSVG(mat, pieceW, pieceL, piecesToShow, colsPerPlate, pipeR, isValid);
+        return;
+      }
       const wrap = document.getElementById('blueprint-svg-wrap');
       const yieldEl = document.getElementById('blueprint-yield');
 
@@ -7893,8 +8776,16 @@
         const px = startX + col * (pw + kerfPx);
         const py = startY + row * (pl + kerfPx);
 
+        const ppCode = (document.getElementById('cut-post-proc') && document.getElementById('cut-post-proc').value) || 'NONE';
+        let holesSvg = '';
+        if (ppCode === 'HOLE_2' && pw >= 22 && pl >= 16) {
+          holesSvg = `<circle cx="${px + 5}" cy="${py + pl/2}" r="2.2" fill="#fff" stroke="#1971c2" stroke-width="1.2"/><circle cx="${px + pw - 5}" cy="${py + pl/2}" r="2.2" fill="#fff" stroke="#1971c2" stroke-width="1.2"/>`;
+        } else if (ppCode === 'HOLE_4' && pw >= 22 && pl >= 18) {
+          holesSvg = `<circle cx="${px + 5}" cy="${py + 5}" r="2" fill="#fff" stroke="#1971c2" stroke-width="1.1"/><circle cx="${px + pw - 5}" cy="${py + 5}" r="2" fill="#fff" stroke="#1971c2" stroke-width="1.1"/><circle cx="${px + 5}" cy="${py + pl - 5}" r="2" fill="#fff" stroke="#1971c2" stroke-width="1.1"/><circle cx="${px + pw - 5}" cy="${py + pl - 5}" r="2" fill="#fff" stroke="#1971c2" stroke-width="1.1"/>`;
+        }
         piecesSvg += `
-          <rect x="${px}" y="${py}" width="${pw}" height="${pl}" fill="#d0ebff" stroke="#1971c2" stroke-width="1.5"/>
+          <rect x="${px}" y="${py}" width="${pw}" height="${pl}" rx="${ppCode === 'CHAMFER' ? 3 : 0}" fill="#d0ebff" stroke="#1971c2" stroke-width="1.5"/>
+          ${holesSvg}
           <text x="${px + pw/2}" y="${py + pl/2 + 4}" fill="#1864ab" font-size="10" font-family="monospace" font-weight="700" text-anchor="middle">${pieceW}x${pieceL}</text>
         `;
       }
@@ -7964,8 +8855,8 @@
         platesNeeded: c.platesNeeded,
         cutCount: c.cutCount,
         cutSpec: c.mode === 'CUT'
-          ? `${c.reqW} x ${c.reqL} x ${c.mat.t}mm (${c.reqQty}EA) / 절단 ${c.cutCount}회`
-          : `원판 구매 (${c.mat.w}x${c.mat.l}x${c.mat.t}mm, ${c.reqQty}장)`,
+          ? `${c.reqW} x ${c.reqL} x ${c.mat.t}mm${c.isPipe ? (c.pipeR > 0 ? ' (파이프 R' + c.pipeR + 'mm)' : ' (직관 0R)') : ''} (${c.reqQty}EA) / 절단 ${c.cutCount}회${c.postProcCode && c.postProcCode !== 'NONE' ? ' · ' + c.postProcLabel : ''}${c.workMemo ? ' [' + c.workMemo + ']' : ''}`
+          : `${c.isPipe ? '원관' : '원판'} 구매 (${c.mat.w}x${c.mat.l}x${c.mat.t}mm, ${c.reqQty}${c.isPipe ? '본' : '장'})`,
         scrapOption: scrapText,
         weightKg: c.weightKg,
         baseCost: c.baseCost,
@@ -8287,10 +9178,29 @@
         return null;
       }
 
+      const taxType = (document.getElementById('ord-tax-doc-type') && document.getElementById('ord-tax-doc-type').value) || 'NONE';
+      const taxBizNo = (document.getElementById('ord-tax-bizno') && document.getElementById('ord-tax-bizno').value.trim()) || '';
+      const taxCorp = (document.getElementById('ord-tax-corp') && document.getElementById('ord-tax-corp').value.trim()) || '';
+      const taxEmail = (document.getElementById('ord-tax-email') && document.getElementById('ord-tax-email').value.trim()) || '';
+      let taxNote = '';
+      if (taxType === 'TAX_INVOICE') {
+        if (!taxBizNo) {
+          showToast('전자세금계산서 신청 시 사업자등록번호를 입력해 주세요.');
+          return null;
+        }
+        taxNote = `전자세금계산서 신청(${taxBizNo} / ${taxCorp || org}${taxEmail ? ' / ' + taxEmail : ''})`;
+      } else if (taxType === 'RESEARCH_PACK') {
+        taxNote = '연구비 정산서류 패키지 신청';
+      } else if (taxType === 'CASH_RECEIPT') {
+        taxNote = `현금영수증 지출증빙(${taxBizNo || phone})`;
+      }
+
       pendingOrderBuyerInfo = {
         name, phone, org,
         fullAddress: `${addr} ${addrDetail}`.trim(),
-        memo
+        memo,
+        taxType,
+        taxNote
       };
       return pendingOrderBuyerInfo;
     }
@@ -8866,9 +9776,19 @@
       finalizeVerifiedOrder(payment.paymentId || paymentId, finalPayDesc, b);
     }
 
+    function toggleOrderTaxDocFields() {
+      const sel = document.getElementById('ord-tax-doc-type');
+      const box = document.getElementById('ord-tax-fields-box');
+      if (!sel || !box) return;
+      box.style.display = (sel.value === 'TAX_INVOICE' || sel.value === 'CASH_RECEIPT') ? 'block' : 'none';
+    }
+
     function finalizeVerifiedOrder(verifiedPaymentId, payMethodDesc, b) {
       const nowStr = getNowDateTimeStr();
       const shortYmd = getNowShortYmd();
+      if (b && b.taxNote && !payMethodDesc.includes(b.taxNote)) {
+        payMethodDesc = `${payMethodDesc} · [${b.taxNote}]`;
+      }
 
       if (orderCheckoutMode === 'CART') {
         const createdOrders = [];
@@ -8942,8 +9862,8 @@
         origSpec: `${c.mat.w} x ${c.mat.l} x ${c.mat.t}mm`,
         mode: c.mode,
         cutSpec: c.mode === 'CUT'
-          ? `${c.reqW} x ${c.reqL}mm (${c.reqQty}EA) / 절단 ${c.cutCount}회`
-          : `원판 그대로 구매 (${c.mat.w}x${c.mat.l}x${c.mat.t}mm, ${c.reqQty}장)`,
+          ? `${c.reqW} x ${c.reqL}mm${c.isPipe ? (c.pipeR > 0 ? ' (파이프 R' + c.pipeR + 'mm)' : ' (직관 0R)') : ''} (${c.reqQty}EA) / 절단 ${c.cutCount}회${c.postProcCode && c.postProcCode !== 'NONE' ? ' · ' + c.postProcLabel : ''}${c.workMemo ? ' [' + c.workMemo + ']' : ''}`
+          : `${c.isPipe ? '원관' : '원판'} 그대로 구매 (${c.mat.w}x${c.mat.l}x${c.mat.t}mm, ${c.reqQty}${c.isPipe ? '본' : '장'})`,
         scrapOption: scrapText,
         payMethod: payMethodDesc,
         totalAmount: c.total,
@@ -9200,7 +10120,13 @@
       showToast(`비회원 주문 정보(${info.name} / ${info.id})가 입력되었습니다. [비회원 주문 조회 및 발급]을 클릭하세요.`);
     }
 
+    function getActiveSealImageUrl() {
+      const candidate = (mallBizConfig && mallBizConfig.sealImageUrl) ? String(mallBizConfig.sealImageUrl).trim() : '';
+      return candidate.startsWith('data:image') ? candidate : DEFAULT_SEAL_DATA_URL;
+    }
+
     function buildOfficialSealSvgHtml(partnerName) {
+      const sealSrc = getActiveSealImageUrl();
       return `
         <div style="margin-top:16px; border-top:2px solid #000; padding-top:14px;">
           <div style="text-align:center; font-size:12.5px; color:#212529; margin-bottom:6px; font-weight:600;">
@@ -9217,15 +10143,15 @@
                   자투리마켓 (Jaturi Market)<br/>
                   <span style="font-size:11px; font-weight:600; color:#495057;">공급 파트너사: ${partnerName || '자투리마켓 입점공장'}</span>
                 </td>
-                <th style="width:16%; background:#f1f3f5;">대표자 및<br/>직인 날인란</th>
+                <th style="width:16%; background:#f1f3f5;">발행처 및<br/>직인 날인란</th>
                 <td style="width:32%; text-align:center; vertical-align:middle; padding:8px 12px; position:relative;">
                   <div style="display:inline-flex; align-items:center; justify-content:center; gap:14px;">
                     <div style="text-align:left;">
-                      <div style="font-size:11px; color:#495057;">대표자 (발행인)</div>
-                      <strong style="font-size:13.5px; color:#000;">자투리마켓 대표</strong>
+                      <div style="font-size:11px; color:#495057;">발행처 (공급 플랫폼)</div>
+                      <strong style="font-size:15px; font-weight:900; color:#000;">자투리마켓</strong>
                     </div>
-                    <div style="width:54px; height:54px; border:1px dashed #adb5bd; display:flex; align-items:center; justify-content:center; background:#fff; color:#868e96; font-size:11.5px; font-weight:700;" title="직인 날인란">
-                      (인)
+                    <div style="width:60px; height:60px; display:flex; align-items:center; justify-content:center; background:#fff; position:relative;" title="자투리마켓 공식 직인 날인">
+                      <img src="${sealSrc}" alt="자투리마켓 직인" style="width:58px; height:58px; object-fit:contain; display:block;" />
                     </div>
                   </div>
                 </td>
@@ -9239,7 +10165,7 @@
     function getActiveQuoteDocumentData() {
       const nowDateOnlyLabel = getNowPrintHeaderTimeStr();
       const nowYmd = getNowCompactYmd();
-      const defaultBuyerOrg = (document.getElementById('buyer-org') ? document.getElementById('buyer-org').value : '') || (currentUser ? (currentUser.org || currentUser.name) : '울산모빌리티연구실');
+      const defaultBuyerOrg = (document.getElementById('buyer-org') ? document.getElementById('buyer-org').value.trim() : '') || (currentUser ? (currentUser.org || currentUser.name) : '구매고객');
       const prepaySelectEl = document.getElementById('quote-custom-pay-select');
       const selectedPrepay = prepaySelectEl ? prepaySelectEl.value : '연구비·법인 신용카드 결제';
 
@@ -9336,8 +10262,8 @@
       const c = currentCalcResult;
       if (!c) return null;
       const specDesc = c.mode === 'CUT'
-        ? `맞춤 재단: ${c.reqW}x${c.reqL}x${c.mat.t}mm (${c.reqQty}EA / ${c.weightKg.toFixed(2)}kg)`
-        : `원판 그대로 구매: ${c.mat.w}x${c.mat.l}x${c.mat.t}mm (${c.reqQty}장)`;
+        ? `맞춤 재단: ${c.reqW}x${c.reqL}x${c.mat.t}mm${c.isPipe ? (c.pipeR > 0 ? ' · R' + c.pipeR + 'mm' : ' · 직관(0R)') : ''} (${c.reqQty}EA / ${c.weightKg.toFixed(2)}kg)`
+        : `${c.isPipe ? '원관' : '원판'} 그대로 구매: ${c.mat.w}x${c.mat.l}x${c.mat.t}mm (${c.reqQty}${c.isPipe ? '본' : '장'})`;
       return {
         locked: false,
         mode: 'SINGLE',
@@ -9363,9 +10289,9 @@
           },
           {
             no: 2,
-            name: '정밀 맞춤 재단 가공비',
-            spec: `절단 ${c.cutCount}회 가공`,
-            qty: `${c.cutCount}회`,
+            name: c.isPipe && c.pipeR > 0 ? '정밀 파이프 절단 및 곡률 벤딩 가공비' : '정밀 맞춤 재단 가공비',
+            spec: `절단 ${c.cutCount}회${c.pipeBendCost > 0 ? ' + ' + c.pipeBendLabel : ''}${c.postProcCost > 0 ? ' + ' + c.postProcLabel : ''}`,
+            qty: `${c.cutCount}회${c.pipeBendCost > 0 ? '·벤딩' + c.reqQty + 'EA' : ''}`,
             price: c.cutCost
           },
           {
@@ -9644,7 +10570,7 @@
               <th>결제구분</th>
               <td style="font-weight:800; color:#1d5863; white-space:normal;">${d.payCategoryText}</td>
               <th>사업자번호</th>
-              <td>________________ (추후 기입)</td>
+              <td style="font-family:var(--font-mono); font-weight:700;">${mallBizConfig.bizNo || '[추후 기입]'}</td>
             </tr>
           </tbody>
         </table>
@@ -9800,7 +10726,7 @@
       ctx.fillText(d.payCategoryText.substring(0, 34), 235, y2);
       ctx.fillStyle = '#000000';
       ctx.font = '16px sans-serif';
-      ctx.fillText('________________ (추후 기입)', 775, y2);
+      ctx.fillText(`${mallBizConfig.bizNo || '[추후 기입]'}`, 775, y2);
 
       // Total highlight bar
       const barTop = metaTop + metaTotalH + 18;
@@ -9917,7 +10843,7 @@
       ctx.textAlign = 'center';
       ctx.fillText('발행 회사명', 165, signTop + 40);
       ctx.fillText('(공급 플랫폼)', 165, signTop + 62);
-      ctx.fillText('대표자 및', 705, signTop + 40);
+      ctx.fillText('발행처 및', 705, signTop + 40);
       ctx.fillText('직인 날인란', 705, signTop + 62);
 
       ctx.textAlign = 'left';
@@ -9928,26 +10854,29 @@
       ctx.fillText(`공급 파트너: ${d.partnerName}`, 270, signTop + 64);
 
       ctx.fillStyle = '#000000';
-      ctx.font = 'bold 17px sans-serif';
-      ctx.fillText('자투리마켓 대표', 825, signTop + 52);
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('자투리마켓', 835, signTop + 52);
 
-      const sealX = 1045;
-      const sealY = signTop + 18;
-      ctx.strokeStyle = '#adb5bd';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([4, 3]);
-      ctx.strokeRect(sealX, sealY, 54, 54);
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#868e96';
-      ctx.font = 'bold 14px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('(인)', sealX + 27, sealY + 32);
+      const sealX = 1040;
+      const sealY = signTop + 16;
+      const triggerDownload = () => {
+        const link = document.createElement('a');
+        link.download = `자투리마켓_${docType.replace(/\s+/g, '')}_${d.fileTag}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast(`${docType.replace(/\s+/g, '')} 이미지 파일이 다운로드되었습니다.`);
+      };
 
-      const link = document.createElement('a');
-      link.download = `자투리마켓_${docType.replace(/\s+/g, '')}_${d.fileTag}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      showToast(`${docType.replace(/\s+/g, '')} 이미지 파일이 다운로드되었습니다.`);
+      const activeSealUrl = getActiveSealImageUrl();
+      const sImg = new Image();
+      sImg.onload = function() {
+        ctx.drawImage(sImg, sealX, sealY, 58, 58);
+        triggerDownload();
+      };
+      sImg.onerror = function() {
+        triggerDownload();
+      };
+      sImg.src = activeSealUrl;
     }
 
     function handleSellerRegister(e) {
@@ -10445,7 +11374,7 @@
       updateCalculator();
       renderSellerDashboard();
       renderAdminDashboard();
-      showToast(`[${m.code}] 재고(${m.stock}장) 및 기준단가(${m.price.toLocaleString()}원) 수정사항이 즉시 반영되었습니다.`);
+      showToast(`[${m.code}] 재고(${m.stock}${isPipeMaterial(m) ? '본' : '장'}) 및 기준단가(${m.price.toLocaleString()}원) 수정사항이 즉시 반영되었습니다.`);
     }
 
     function deleteMaterialByAdmin(matId) {
@@ -10822,6 +11751,11 @@
         localStorage.setItem('jaturi_prod_qna_v9', JSON.stringify(productQnaPosts));
         localStorage.setItem('jaturi_prod_rev_v9', JSON.stringify(productReviews));
         localStorage.setItem(getActiveCartStorageKey(), JSON.stringify(cartItems));
+        localStorage.setItem('jaturi_wishlist_v1', JSON.stringify(wishlistMaterialIds));
+        localStorage.setItem('jaturi_recent_v1', JSON.stringify(recentViewedMaterialIds));
+        localStorage.setItem('jaturi_biz_cfg_v1', JSON.stringify(mallBizConfig));
+        localStorage.setItem('jaturi_rfq_v2', JSON.stringify(rfqRequests));
+        localStorage.setItem('jaturi_guest_rfq_v2', JSON.stringify(guestSessionRfqIds));
       } catch (err) {
         console.warn('Storage save skipped:', err);
       }
@@ -10899,6 +11833,45 @@
         }
 
         loadActiveSessionCart(false);
+        const wishStr = localStorage.getItem('jaturi_wishlist_v1');
+        if (wishStr) {
+          const parsedW = JSON.parse(wishStr);
+          if (Array.isArray(parsedW)) wishlistMaterialIds = parsedW;
+        }
+        const recStr = localStorage.getItem('jaturi_recent_v1');
+        if (recStr) {
+          const parsedR = JSON.parse(recStr);
+          if (Array.isArray(parsedR)) recentViewedMaterialIds = parsedR;
+        }
+        const bizStr = localStorage.getItem('jaturi_biz_cfg_v1');
+        if (bizStr) {
+          const parsedB = JSON.parse(bizStr);
+          if (parsedB && typeof parsedB === 'object') {
+            mallBizConfig = Object.assign(mallBizConfig, parsedB);
+            if (!mallBizConfig.sealImageUrl) {
+              mallBizConfig.sealImageUrl = DEFAULT_SEAL_DATA_URL;
+            }
+          }
+        }
+        const rfqStr = localStorage.getItem('jaturi_rfq_v2');
+        if (rfqStr) {
+          const parsedRfq = JSON.parse(rfqStr);
+          if (Array.isArray(parsedRfq)) {
+            rfqRequests.length = 0;
+            parsedRfq.forEach(x => {
+              if (x && x.id !== 'RFQ-261017-01' && x.id !== 'RFQ-261017-02') {
+                rfqRequests.push(x);
+              }
+            });
+          }
+        }
+        const guestRfqStr = localStorage.getItem('jaturi_guest_rfq_v2');
+        if (guestRfqStr) {
+          const parsedGuestRfq = JSON.parse(guestRfqStr);
+          if (Array.isArray(parsedGuestRfq)) {
+            guestSessionRfqIds = parsedGuestRfq;
+          }
+        }
 
         const legacyCfg = JSON.parse(localStorage.getItem('jaturi_cloud_cfg_v14') || '{}');
         const onpodCfg = JSON.parse(localStorage.getItem('jaturi_onpod_cfg_v1') || '{}');
@@ -11360,17 +12333,27 @@
         if (resNotices && resNotices.ok) {
           const dbNtc = await resNotices.json();
           if (Array.isArray(dbNtc) && dbNtc.length > 0) {
-            noticePosts.length = 0;
+            const dbMap = new Map();
             dbNtc.forEach(n => {
-              noticePosts.push({
+              dbMap.set(n.id, {
                 id: n.id,
                 cat: n.cat || '안내',
                 title: n.title,
                 date: n.notice_date || '',
+                createdAtMs: n.created_at ? Date.parse(n.created_at) : (Date.parse(n.notice_date || '') || 0),
                 views: n.views || 1,
                 content: n.content || ''
               });
             });
+            // 로컬에서 방금 작성된 공지가 있으면 유지하면서 최신순 정렬
+            noticePosts.forEach(localN => {
+              if (!dbMap.has(localN.id)) {
+                dbMap.set(localN.id, localN);
+              }
+            });
+            noticePosts.length = 0;
+            Array.from(dbMap.values()).forEach(n => noticePosts.push(n));
+            sortNoticePostsNewestFirst();
           }
         }
 
@@ -11433,6 +12416,318 @@
       closeModal('rfpModal');
     }
 
+    // =========================================================================
+    // 상용 Final.ver 전용: 1) 도면·대량 견적요청(RFQ) 2) 사업자·푸터 설정 3) 엑셀(CSV) 내보내기
+    // =========================================================================
+    function getVisibleRfqRequestsForCurrentUser() {
+      if (!currentUser) {
+        return rfqRequests.filter(r => r.buyerId === 'guest' && guestSessionRfqIds.includes(r.id));
+      }
+      const role = currentUser.role || currentUser.type || 'PERSONAL';
+      if (role === 'CORPORATE') {
+        return rfqRequests.filter(r => r.targetCompany === currentUser.name || r.partnerName === currentUser.name);
+      }
+      return rfqRequests.filter(r => r.buyerId === currentUser.id);
+    }
+
+    function openRfqCustomModal() {
+      if (currentUser) {
+        const nameEl = document.getElementById('rfq-buyer-name');
+        const phoneEl = document.getElementById('rfq-buyer-phone');
+        if (nameEl && !nameEl.value) nameEl.value = currentUser.org || currentUser.name || '';
+        if (phoneEl && !phoneEl.value) phoneEl.value = currentUser.phone || '';
+      }
+      if (currentCalcResult && currentCalcResult.mat) {
+        const specEl = document.getElementById('rfq-spec');
+        if (specEl && !specEl.value) {
+          specEl.value = `${currentCalcResult.reqW} x ${currentCalcResult.reqL} x ${currentCalcResult.mat.t}T`;
+        }
+      }
+
+      // Populate target company select dynamically
+      const compSelect = document.getElementById('rfq-target-company');
+      if (compSelect) {
+        const currentVal = compSelect.value;
+        const approvedPartners = partners.filter(p => p.status !== 'PENDING');
+        const optsHtml = approvedPartners.map(p => `
+          <option value="${p.name}">${p.name} (${p.region} / ${p.items.split(',')[0].trim()})</option>
+        `).join('');
+        compSelect.innerHTML = optsHtml;
+
+        if (currentCalcResult && currentCalcResult.mat && currentCalcResult.mat.partner) {
+          compSelect.value = currentCalcResult.mat.partner;
+        } else if (currentVal && approvedPartners.some(p => p.name === currentVal)) {
+          compSelect.value = currentVal;
+        }
+      }
+
+      renderRfqList();
+      document.getElementById('rfqCustomModal').classList.add('open');
+    }
+
+    function submitRfqRequest(e) {
+      e.preventDefault();
+      const targetCompany = document.getElementById('rfq-target-company')
+        ? document.getElementById('rfq-target-company').value
+        : '동남정밀금속';
+      const category = document.getElementById('rfq-mat-cat').value;
+      const spec = document.getElementById('rfq-spec').value.trim();
+      const qty = parseInt(document.getElementById('rfq-qty').value, 10) || 1;
+      const dueDate = document.getElementById('rfq-due-date').value.trim();
+      const buyerName = document.getElementById('rfq-buyer-name').value.trim();
+      const buyerPhone = document.getElementById('rfq-buyer-phone').value.trim();
+      const fileInput = document.getElementById('rfq-drawing-file');
+      const drawingName = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0].name : '도면첨부없음 (치수기재)';
+      const note = document.getElementById('rfq-proc-note').value.trim();
+
+      const newRfq = {
+        id: `RFQ-${getNowShortYmd()}-0${rfqRequests.length + 1}`,
+        date: getNowDateTimeStr(),
+        buyerId: currentUser ? currentUser.id : 'guest',
+        targetCompany,
+        category,
+        spec,
+        qty,
+        dueDate,
+        buyerName,
+        buyerPhone,
+        drawingName,
+        note,
+        status: 'WAITING',
+        partnerName: targetCompany,
+        quotedPrice: 0,
+        partnerReply: ''
+      };
+      rfqRequests.unshift(newRfq);
+      if (!currentUser && !guestSessionRfqIds.includes(newRfq.id)) {
+        guestSessionRfqIds.unshift(newRfq.id);
+      }
+      document.getElementById('rfq-spec').value = '';
+      document.getElementById('rfq-proc-note').value = '';
+      saveStateToStorage();
+      renderRfqList();
+      showToast(`도면·맞춤제작 견적요청 [${newRfq.id}]이 [${targetCompany}] 앞으로 등록되었습니다.`);
+    }
+
+    function submitRfqPartnerQuote(rfqId) {
+      const item = rfqRequests.find(r => r.id === rfqId);
+      if (!item) return;
+      const priceEl = document.getElementById(`rfq-quote-price-${rfqId}`);
+      const replyEl = document.getElementById(`rfq-quote-reply-${rfqId}`);
+      const priceVal = parseInt(priceEl ? priceEl.value : '0', 10) || 0;
+      const replyVal = replyEl ? replyEl.value.trim() : '';
+      if (priceVal < 1000 || !replyVal) {
+        showToast('제시할 견적 금액(1,000원 이상)과 답변 내용을 모두 입력해 주세요.');
+        return;
+      }
+      item.status = 'QUOTED';
+      item.quotedPrice = priceVal;
+      item.partnerReply = replyVal;
+      item.partnerName = (currentUser && currentUser.name) ? currentUser.name : (item.targetCompany && item.targetCompany !== '전체 입점 파트너사 (공통 요청)' ? item.targetCompany : '동남정밀금속');
+      saveStateToStorage();
+      renderRfqList();
+      showToast(`[${item.id}] 견적 회신(${priceVal.toLocaleString()}원)이 완료되었습니다.`);
+    }
+
+    function orderFromRfqQuote(rfqId) {
+      const item = rfqRequests.find(r => r.id === rfqId);
+      if (!item || item.status !== 'QUOTED' || !item.quotedPrice) return;
+      const supply = Math.round(item.quotedPrice / 1.1);
+      const vat = item.quotedPrice - supply;
+      const cartItem = {
+        cartId: `CART-RFQ-${Date.now()}`,
+        materialId: materials[0] ? materials[0].id : 'MAT-101',
+        code: item.id,
+        category: item.category,
+        materialName: `[RFQ 도면·맞춤제작] ${item.category} (${item.spec})`,
+        partner: item.partnerName || '동남정밀금속',
+        origSpec: item.spec,
+        t: 10,
+        mode: 'CUT',
+        reqW: 300,
+        reqL: 200,
+        reqQty: item.qty,
+        platesNeeded: 1,
+        cutCount: item.qty,
+        cutSpec: `특수규격 ${item.spec} (${item.qty}EA) / 도면:${item.drawingName} / ${item.note}`,
+        scrapOption: `RFQ 확정견적 (${item.dueDate})`,
+        weightKg: Number((item.qty * 1.5).toFixed(2)),
+        baseCost: Math.max(1000, supply - 4000),
+        cutCost: 0,
+        shipCost: 4000,
+        vat: vat,
+        total: item.quotedPrice
+      };
+      cartItems.push(cartItem);
+      saveStateToStorage();
+      renderCartUI();
+      updateBadges();
+      closeModal('rfqCustomModal');
+      openCartOrderModal();
+      showToast(`[${item.id}] 확정 견적 품목이 주문서로 연동되었습니다.`);
+    }
+
+    function renderRfqList() {
+      const badgeEl = document.getElementById('badge-rfq-count');
+      if (badgeEl) badgeEl.textContent = '';
+      const container = document.getElementById('rfq-list-container');
+      if (!container) return;
+      const isCorp = Boolean(currentUser && (currentUser.role === 'CORPORATE' || currentUser.type === 'CORPORATE'));
+      const canQuote = Boolean(currentUser && (currentUser.role === 'CORPORATE' || currentUser.role === 'ADMIN' || currentUser.type === 'CORPORATE' || currentUser.type === 'ADMIN'));
+      const visibleRfqs = getVisibleRfqRequestsForCurrentUser();
+
+      if (visibleRfqs.length === 0) {
+        const emptyMsg = isCorp
+          ? `현재 귀사(${currentUser.name}) 앞으로 접수된 도면·맞춤제작 견적요청 내역이 없습니다.`
+          : `내가 요청한 도면·맞춤제작 견적요청 내역이 없습니다. 위 양식에서 견적을 요청하실 파트너 회사와 규격을 입력해 등록해 보세요.`;
+        container.innerHTML = `<div style="padding:28px 16px; text-align:center; color:var(--text-secondary); border:1px dashed var(--border-color); background:#fff; border-radius:3px; font-size:12.5px;">${emptyMsg}</div>`;
+        return;
+      }
+
+      container.innerHTML = visibleRfqs.map(r => {
+        const isQuoted = (r.status === 'QUOTED' && r.quotedPrice > 0);
+        return `
+          <div class="qna-card" style="margin-bottom:10px;">
+            <div class="qna-card-header">
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span class="state-badge ${isQuoted ? 'state-done' : 'state-wait'}">${isQuoted ? '견적산출 완료' : '견적산출 대기'}</span>
+                <strong style="font-family:var(--font-mono); font-size:12.5px;">[${r.id}]</strong>
+                <span class="tag-square tag-cut">${r.category}</span>
+                <strong style="font-size:13px;">규격: ${r.spec} (${r.qty}EA)</strong>
+                <span class="tag-square tag-raw" style="font-weight:700; color:var(--brand-dark); background:var(--brand-light); border:1px solid var(--brand-border);">요청대상: ${r.targetCompany || '전체 파트너사 공통'}</span>
+              </div>
+              <span style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">${r.buyerName} | 희망납기: ${r.dueDate} | ${r.date}</span>
+            </div>
+            <div style="font-size:12px; color:var(--text-primary); margin-bottom:6px;">
+              <strong>가공·공차 요청사항:</strong> ${r.note} <span style="color:var(--brand-dark); font-family:var(--font-mono); margin-left:6px;">[첨부도면: ${r.drawingName}]</span>
+            </div>
+            ${isQuoted ? `
+              <div class="qna-answer-box" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div style="flex:1; min-width:200px;">
+                  <div style="font-size:11.5px; font-weight:800; color:var(--brand-dark); margin-bottom:2px;">
+                    [파트너 공장 공식 견적 회신: ${r.partnerName}] — 확정 견적가: <span style="color:var(--price-red); font-family:var(--font-mono); font-size:14px;">${r.quotedPrice.toLocaleString()}원 (VAT·직배송비 포함)</span>
+                  </div>
+                  <div style="font-size:12px;">${r.partnerReply}</div>
+                </div>
+                <button type="button" class="btn-mall btn-mall-brand" style="padding:7px 14px; font-size:12px;" onclick="orderFromRfqQuote('${r.id}')">제시된 견적가로 바로 주문</button>
+              </div>
+            ` : ''}
+            ${canQuote ? `
+              <div style="margin-top:8px; padding-top:8px; border-top:1px dashed var(--border-color); display:flex; gap:6px; flex-wrap:wrap;">
+                <input type="number" class="erp-input" id="rfq-quote-price-${r.id}" placeholder="제시 견적금액(원, VAT포함)" value="${r.quotedPrice || ''}" style="width:170px; font-family:var(--font-mono); font-weight:700;" />
+                <input type="text" class="erp-input" id="rfq-quote-reply-${r.id}" placeholder="파트너 공장 납기·가공 가능 여부 회신 입력..." value="${r.partnerReply || ''}" style="flex:1; min-width:200px;" />
+                <button type="button" class="btn-mall btn-mall-dark" style="padding:6px 12px; font-size:11.5px;" onclick="submitRfqPartnerQuote('${r.id}')">${isQuoted ? '견적 회신 수정' : '견적 회신 등록'}</button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderMallBizInfoFooter() {
+      const infoEl = document.getElementById('footer-biz-info-text');
+      const phoneEl = document.getElementById('footer-cs-phone');
+      const hoursEl = document.getElementById('footer-cs-hours');
+      if (infoEl) {
+        infoEl.innerHTML = `
+          상호명: ${mallBizConfig.companyName} | 대표자: ${mallBizConfig.ceoName} | 사업자등록번호: ${mallBizConfig.bizNo} | 통신판매업신고: ${mallBizConfig.licenseNo}<br/>
+          사업장 소재지: ${mallBizConfig.address} | 전국 제휴 파트너 공장: [공장 섭외 및 입점 계약 후 표기]<br/>
+          개인정보보호책임자: ${mallBizConfig.ceoName} | 대표 이메일: ${mallBizConfig.email}<br/>
+          Copyright (c) 2026 JATURI MARKET. All rights reserved.
+        `;
+      }
+      if (phoneEl) phoneEl.textContent = mallBizConfig.phone;
+      if (hoursEl) {
+        hoursEl.innerHTML = `
+          운영시간: ${mallBizConfig.hours}<br/>
+          파트너 공장 입점·대량재단 문의: ${mallBizConfig.email}
+        `;
+      }
+      const mapIds = {
+        'admin-biz-company': 'companyName',
+        'admin-biz-ceo': 'ceoName',
+        'admin-biz-no': 'bizNo',
+        'admin-biz-license': 'licenseNo',
+        'admin-biz-addr': 'address',
+        'admin-biz-phone': 'phone',
+        'admin-biz-email': 'email',
+        'admin-biz-hours': 'hours'
+      };
+      Object.entries(mapIds).forEach(([elId, key]) => {
+        const el = document.getElementById(elId);
+        if (el && mallBizConfig[key]) el.value = mallBizConfig[key];
+      });
+      const previewImg = document.getElementById('admin-biz-seal-preview-img');
+      if (previewImg && mallBizConfig.sealImageUrl) {
+        previewImg.src = mallBizConfig.sealImageUrl;
+      }
+    }
+
+    function previewSealImageUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        mallBizConfig.sealImageUrl = evt.target.result;
+        const previewImg = document.getElementById('admin-biz-seal-preview-img');
+        if (previewImg) previewImg.src = mallBizConfig.sealImageUrl;
+        saveStateToStorage();
+        renderPrintableDocument();
+        showToast('직인 이미지가 변경되었습니다. 견적서 및 거래명세서에 즉시 반영됩니다.');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function saveMallBizConfig(e) {
+      e.preventDefault();
+      mallBizConfig = {
+        companyName: document.getElementById('admin-biz-company').value.trim(),
+        ceoName: document.getElementById('admin-biz-ceo').value.trim(),
+        bizNo: document.getElementById('admin-biz-no').value.trim(),
+        licenseNo: document.getElementById('admin-biz-license').value.trim(),
+        address: document.getElementById('admin-biz-addr').value.trim(),
+        phone: document.getElementById('admin-biz-phone').value.trim(),
+        email: document.getElementById('admin-biz-email').value.trim(),
+        hours: document.getElementById('admin-biz-hours').value.trim(),
+        sealImageUrl: getActiveSealImageUrl()
+      };
+      saveStateToStorage();
+      renderMallBizInfoFooter();
+      renderPrintableDocument();
+      showToast('상용 쇼핑몰 사업자 정보 및 견적서·거래명세서 공급자 설정이 저장되었습니다.');
+    }
+
+    function exportOrdersToCsv(scope) {
+      const targetOrders = (scope === 'SELLER') ? getSellerOrdersForCurrentUser() : orders;
+      if (!targetOrders || targetOrders.length === 0) {
+        showToast('내보낼 거래 내역이 없습니다.');
+        return;
+      }
+      const headers = ['주문번호', '주문일시', '공급파트너', '주문자(소속)', '연락처', '배송지주소', '품목명', '원판규격', '재단및후가공스펙', '결제및증빙구분', '총결제금액(원)', '수수료공제(원)', '파트너실정산액(원)', '진행상태', '택배사', '송장번호', '정산여부'];
+      const escCsv = (v) => '"' + String(v === undefined || v === null ? '' : v).replace(/"/g, '""') + '"';
+      const rows = [headers.map(escCsv).join(',')];
+      targetOrders.forEach(o => {
+        const fee = Math.round((o.totalAmount || 0) * (commissionRate / 100));
+        const net = (o.totalAmount || 0) - fee;
+        const stInfo = getOrderStatusInfo(o);
+        rows.push([
+          o.id, o.date, o.partner, o.buyer, o.phone || '', o.address || '',
+          o.materialName, o.origSpec, o.cutSpec, o.payMethod || '',
+          o.totalAmount || 0, fee, net, stInfo.label,
+          o.courier || '', o.waybill || '', o.settled ? '정산완료' : '정산대기'
+        ].map(escCsv).join(','));
+      });
+      const csvContent = '\uFEFF' + rows.join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `자투리마켓_${scope === 'SELLER' ? '파트너수주정산' : '전체거래정산'}_${getNowCompactYmd()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('엑셀(CSV) 파일이 다운로드되었습니다.');
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       loadStateFromStorage();
       detectViewportMode();
@@ -11444,6 +12739,9 @@
       renderProductDetailCommunity();
       renderNoticeBoard();
       renderAdminQnaBoard();
+      renderMallBizInfoFooter();
+      renderRecentViewedBar();
+      renderRfqList();
       updateBadges();
       handlePortOneMobileRedirectReturn();
     });
